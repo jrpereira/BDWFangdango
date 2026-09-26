@@ -29,14 +29,28 @@ local Widget=MC.load('widget')
 local Objects=MC.load('objects')
 local kinds={'ability','consumable'}
 
-local function hideBackground(wheel,kind,onCleanup)
-    local background=Widget.property(wheel,'background')
-    assert(Objects.valid(background),kind..' wheel background unavailable')
-    local opacity=Widget.opacity(background)
-    onCleanup(function()
-        if Objects.valid(background) then Widget.setOpacity(background,opacity) end
-    end)
-    Widget.setOpacity(background,0)
+local function findChild(root,name)
+    if not Objects.valid(root) then return nil end
+    local full=Objects.call(root,'GetFullName')
+    if type(full)=='string' and full:sub(-#name-1)=='.'..name then return root end
+    local count=Objects.call(root,'GetChildrenCount')
+    if type(count)~='number' then return nil end
+    for index=0,count-1 do
+        local found=findChild(Objects.call(root,'GetChildAt',index),name)
+        if found then return found end
+    end
+end
+
+local function hideDecorations(panel,kind,onCleanup)
+    local names=kind=='ability' and {'cross','Darken','Glow'} or {'cross'}
+    for _,name in ipairs(names) do
+        local decoration=assert(findChild(panel,name),kind..' '..name..' unavailable')
+        local opacity=Widget.opacity(decoration)
+        onCleanup(function()
+            if Objects.valid(decoration) then Widget.setOpacity(decoration,opacity) end
+        end)
+        Widget.setOpacity(decoration,0)
+    end
 end
 
 local function plan(measured,factor,spacing,margin,tightness)
@@ -106,7 +120,7 @@ bar.attach = function(objects,params,original)
             Widget.reparent(button,panel)
             Widget.position(button,measured[kind][index],point.x,point.y,scale)
         end
-        hideBackground(wheel,kind,params.onCleanup)
+        hideDecorations(panel,kind,params.onCleanup)
     end
     return original
 end

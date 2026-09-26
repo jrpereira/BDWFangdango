@@ -67,10 +67,10 @@ for _,kind in ipairs({'ability','consumable'}) do
     objects[kind=='ability' and 'abilities' or 'consumables'],
         objects[kind..'_box'],objects[kind..'_panel']=wheel,box,panel
     switcher:AddChild(wheel);wheel:AddChild(box);box:AddChild(panel)
-    wheel.cross=widget(kind..'Cross');panel:AddChild(wheel.cross)
-    wheel.background=widget(kind..'Background');panel:AddChild(wheel.background)
+    wheel.inner=widget(kind..'.Inner');panel:AddChild(wheel.inner)
+    wheel.cross=widget(kind..'.cross');wheel.inner:AddChild(wheel.cross)
     if kind=='ability' then
-        wheel.Darken=widget('Darken');wheel.Glow=widget('Glow')
+        wheel.Darken=widget(kind..'.Darken');wheel.Glow=widget(kind..'.Glow')
         panel:AddChild(wheel.Darken);panel:AddChild(wheel.Glow)
     end
     box.WidthOverride,box.HeightOverride=321,234
@@ -131,9 +131,9 @@ assert(y1>y2)
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel=objects[kind=='ability' and 'abilities' or 'consumables']
     assert(wheel:GetParent()==owner and wheel.opacity==1)
-    assert(wheel.background.opacity==0 and wheel.cross.opacity==1)
+    assert(wheel.cross.opacity==0)
 end
-assert(objects.abilities.Darken.opacity==1 and objects.abilities.Glow.opacity==1)
+assert(objects.abilities.Darken.opacity==0 and objects.abilities.Glow.opacity==0)
 -- Group/Flat access owns wheel panel opacity while Bar owns only decoration opacity.
 objects.consumables:SetRenderOpacity(0.3)
 assert(manager:update(switcher,objects,params(100,0,0)))
@@ -182,7 +182,6 @@ assert(manager:detach(switcher))
 near(objects.consumables.opacity,0.3)
 assert(switcher:GetChildAt(0)==objects.abilities and switcher:GetChildAt(1)==objects.consumables)
 assert(switcher.active==1)
-assert(objects.abilities.background.opacity==1 and objects.consumables.background.opacity==1)
 assert(objects.abilities.cross.opacity==1 and objects.consumables.cross.opacity==1)
 assert(objects.abilities.Darken.opacity==1 and objects.abilities.Glow.opacity==1)
 for _,kind in ipairs({'ability','consumable'}) do
@@ -190,7 +189,7 @@ for _,kind in ipairs({'ability','consumable'}) do
     assert(box.WidthOverride==321 and not box.bOverride_WidthOverride)
     assert(box.HeightOverride==234 and box.bOverride_HeightOverride)
     for index,button in ipairs(objects.buttons[kind..'Slots'])do
-        assert(objects[kind..'_panel']:GetChildAt(index+(kind=='ability' and 3 or 1))==button)
+        assert(objects[kind..'_panel']:GetChildAt(index+(kind=='ability' and 2 or 0))==button)
         near(button.RenderTransform.Translation.X,0);near(button.RenderTransform.Scale.X,1)
     end
 end
