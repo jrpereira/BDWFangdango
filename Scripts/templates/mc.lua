@@ -25,6 +25,17 @@ function wheels.attach(objects,params,original)
             X=consumablePosition.X+switcherPosition.X,
             Y=consumablePosition.Y+switcherPosition.Y})
     end
+    local function readback(widget)
+        local ok,result=pcall(function()
+            local position=Widget.translation(widget)
+            return 'opacity='..tostring(Widget.opacity(widget))
+                ..' scale='..tostring(Widget.scale(widget).X)
+                ..' x='..tostring(position.X)..' y='..tostring(position.Y)
+        end)
+        return ok and result or 'unavailable ('..tostring(result)..')'
+    end
+    print('[Fangdango] Wheels applied ability '..readback(ability)
+        ..'; consumable '..readback(consumable))
     return original
 end
 

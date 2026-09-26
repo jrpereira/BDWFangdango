@@ -223,6 +223,12 @@ local host={
     onError=function(e) errors[#errors+1]=e end,
 }
 local Runtime=require('mc.runtime')
+local originalWheelsAttach=template.attach
+local runtimeAttachCalls=0
+template.attach=function(...)
+    runtimeAttachCalls=runtimeAttachCalls+1
+    return originalWheelsAttach(...)
+end
 local model=require('mc.menu_model').build(
     {category},
     {template},{root..'/Scripts/templates/mc_wheels.lua'})
@@ -234,6 +240,14 @@ assert(next(runtime:attachments(template.id)), 'runtime did not attach')
 runtime:select('player.quickslots',{[template.id]=distant})
 assert(switcher:GetChildrenCount()==1 and consumable:GetParent()==owner)
 assert(next(runtime:attachments(template.id)), 'runtime lost distant attachment')
+local attachedDistant=runtimeAttachCalls
+runtime:event({kind='changed',object=switcher,epoch=runtime.epoch})
+assert(runtimeAttachCalls==attachedDistant,
+    'lifecycle reconciliation must not reattach an intentionally moved wheel')
+assert(next(runtime:attachments(template.id)),
+    'lifecycle reconciliation must retain the distant attachment')
+assert(consumable:GetParent()==owner and switcher:GetChildrenCount()==1,
+    'reconciliation must not restore the intentionally moved wheel')
 runtime:select('player.quickslots',{[template.id]=swap})
 assert(switcher:GetChildrenCount()==2)
 assert(next(runtime:attachments(template.id)),
