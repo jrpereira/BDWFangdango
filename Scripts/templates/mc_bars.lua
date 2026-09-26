@@ -71,6 +71,7 @@ local function plan(measured,factor,spacing,margin,tightness)
 end
 
 bar.attach = function(objects,params,original)
+    print('[Fangdango] Bar attach')
     local settings=params.settings
     local scale=settings.Size/100
     local factor=math.abs(scale)

@@ -7,6 +7,7 @@ local wheels=MC.template('wheels',defaults)
 local bar=MC.template('bars',defaults)
 
 function wheels.attach(objects,params,original)
+    print('[Fangdango] Wheels attach Style=' .. tostring(params.settings.Style))
     local switcher,ability,consumable=objects.switcher,objects.abilities,objects.consumables
 
     if params.settings.Style==0 then
