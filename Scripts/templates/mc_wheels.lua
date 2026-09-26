@@ -42,7 +42,7 @@ local fields = {
         order=4, visibleWhen='Style', visibleValues={1}},
 }
 local template = {
-    name='Wheels', module='Fangdango', managed=true, category='player.quickslots', version='0.2.1',
+    name='Wheels', version='0.2.1',
     targets={'switcher',abilities={properties={'opacity'}},consumables={properties={'opacity'}}},
     description='Swap wheels in place or display both at separate positions.',
     settings={},

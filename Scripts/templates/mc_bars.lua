@@ -10,7 +10,7 @@ local targets={
     },
 }
 local bar = {
-    name='Bar', module='Fangdango', managed=true, category='player.quickslots', version='0.2.1',
+    name='Bar',
     description='Arrange two quickslot wheels side by side, from staggered diamonds to a straight row.',
     targets=targets, settings={Spacing=10},
     menu={target='module',enabled=true,fields={

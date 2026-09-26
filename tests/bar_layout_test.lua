@@ -1,5 +1,5 @@
 package.path='ModCoreTemplates/Scripts/?.lua;'..package.path
-local bar=dofile('Fangdango/Scripts/templates/mc.lua')[2]
+local bar=dofile('Fangdango/Scripts/templates/mc.lua')[3]
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
 local graph=require('mc.selectors').compile(category.targets)
 local State=require('mc.target_state')

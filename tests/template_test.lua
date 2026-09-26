@@ -1,7 +1,7 @@
 local root = 'Fangdango'
 package.path = root .. '/../ModCoreTemplates/Scripts/?.lua;' .. package.path
 local definitions=dofile(root .. '/Scripts/templates/mc.lua')
-local wheels,template=definitions[1],definitions[1]
+local wheels,template=definitions[2],definitions[2]
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
 category.targets.switcher.object='switcher'
 local graph=require('mc.selectors').compile(category.targets)
@@ -122,6 +122,21 @@ local groupKey={binding={mode=2},groupIndex=1}
 local swap={Style=0,WheelsX=20,WheelsY=40,WheelsSize=80,WheelsOpacity=60}
 local targets={switcher=switcher,abilities=ability,consumables=consumable,buttons={}}
 for _,name in ipairs(buttonNames) do targets.buttons[#targets.buttons+1]=buttons[name].widget end
+local minima=definitions[1]
+local minimaManager=Manager.new(minima,State.specs(graph,minima.targets),graph.order)
+local minimaState={selectedGroup=1,defaultGroup=1,
+    groupTypes={[1]='ability',[2]='consumable'}}
+local secondWheelHold={binding={mode=2},groupIndex=2}
+switcher:SetActiveWidgetIndex(0)
+assert(minimaManager:attach(switcher,targets,params({})))
+assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==0)
+assert(Delivery.deliver({},minimaState,secondWheelHold,'Started',controls))
+assert(switcher:GetActiveWidgetIndex()==1)
+assert(Delivery.deliver({},minimaState,secondWheelHold,'Completed',controls))
+assert(switcher:GetActiveWidgetIndex()==0)
+assert(minimaManager:detach(switcher))
+assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==0)
+switcher:SetActiveWidgetIndex(1)
 local wheelsManager=Manager.new(wheels,
     State.specs(graph,wheels.targets),graph.order)
 assert(wheelsManager:attach(switcher,targets,params({Style=1,Wheel1X=-100,Wheel2X=200})))

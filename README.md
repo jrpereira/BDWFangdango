@@ -8,6 +8,7 @@ Arrange your ability and consumable wheels to suit your playstyle. Show both at 
 
 | Setting | What it does |
 |---|---|
+| **Minima** | Keeps the native one-wheel view. ModCoreControls can show Wheel 2 while its group key is held, then return to Wheel 1 on release. |
 | **Swap** | Shows one wheel at a time, with both using the same position, size, and opacity. This is the default. |
 | **Distant** | Shows both wheels, with separate appearance settings for each. |
 | **X / Y** | Moves the wheel horizontally or vertically from its usual position. |
@@ -49,8 +50,8 @@ background opacity, button order, transforms and SizeBox overrides.
 - [ModCoreTemplates](https://www.nexusmods.com/thebloodofdawnwalker/mods/641),
   with managed template attachment and SizeBox override restoration support.
 
-Wheels in Swap style requires ModCoreControls for group-focus events.
-Bar and Distant do not subscribe to these events.
+Minima and Wheels in Swap style use ModCoreControls for hold-based group
+switching. Bar and Distant display both wheels and do not use the switcher.
 
 ## Installation
 
@@ -67,6 +68,8 @@ Bar and Distant do not subscribe to these events.
 Open **Mod Settings** and find **Fangdango**. Select **Wheels**, choose
 **Swap** or **Distant**, then adjust the visible settings and choose **Apply**.
 Start with Swap at 100% size and opacity, then change one setting at a time.
+Select **Minima** for the native one-wheel layout; configure the Wheel 2 hold
+binding in ModCoreControls to switch wheels while the key is held.
 
 Updating from **Wheels++**? Select **Wheels** again; the older option has been
 removed. This Wheels update is awaiting in-game verification.
@@ -90,15 +93,16 @@ See the [changelog](CHANGELOG.md) for changes.
 
 ## Template integration
 
-`Scripts/templates/mc.lua` loads the Wheels and Bar definitions. Their menu
-schemas are separate; Bar does not use Wheels' Swap / Distant settings or MCC's
-Grouped / Flat Access Method. The managed `attach(objects, params, original)`
+`Scripts/templates/mc.lua` loads the Minima, Wheels and Bar definitions. Minima
+keeps both wheels in the native switcher and lets ModCoreControls handle the hold
+binding. Their menu schemas are separate; Bar does not use Wheels' Swap /
+Distant settings or MCC's Grouped / Flat Access Method. The managed
+`attach(objects, params, original)`
 callback returns the captured original state. MCT restores declared properties on
 updates and detach, and restores the previous layout after a failed update.
 
-Wheels' Swap attachment follows MCC's `ControlGroupFocused` event to set the
-switcher index (ability 0, consumable 1). It uses managed `params.onCleanup` to
-remove subscriptions on update, detach or world teardown. Bar has no focus
-subscription. Bar's declaration and transform are in `Scripts/templates/mc_bars.lua`.
+ModCoreControls changes the native switcher index (ability 0, consumable 1) on
+group hold and release. Fangdango does not subscribe to group-focus events.
+Bar's declaration and transform are in `Scripts/templates/mc_bars.lua`.
 
 Offline lifecycle tests do not establish live-game acceptance.

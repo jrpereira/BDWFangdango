@@ -1,8 +1,10 @@
--- Fangdango owns the two layouts; MCT owns target capture and restoration.
+-- Fangdango owns the visual layouts; MCT owns target capture and restoration.
 local MC=require('mc')
 local Widget=MC('widget')
-local wheels=MC.template('wheels')
-local bar=MC.template('bars')
+local defaults={module='Fangdango',managed=true,category='player.quickslots',version='0.2.1'}
+local minima=MC.template('minima',defaults)
+local wheels=MC.template('wheels',defaults)
+local bar=MC.template('bars',defaults)
 
 function wheels.attach(objects,params,original)
     local switcher,ability,consumable=objects.switcher,objects.abilities,objects.consumables
@@ -25,4 +27,4 @@ function wheels.attach(objects,params,original)
     return original
 end
 
-return {wheels,bar}
+return {minima,wheels,bar}
