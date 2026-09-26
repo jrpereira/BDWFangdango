@@ -55,13 +55,13 @@ switching. Bar and Distant display both wheels and do not use the switcher.
 
 ## Installation
 
-1. Close the game completely. Extract the mod download so its `_ModCore_Fangtango`
+1. Close the game completely. Extract the mod download so its `_ModCore_Fangdango`
    folder sits directly inside the game's `ue4ss/Mods` folder.
 2. Download any missing dependencies above and install them with the game closed.
    Use each download's instructions: some archives already include the full
    game-folder path, and UE4SS itself does not install inside `Mods`.
 3. Ensure the mods are enabled in your UE4SS setup or mod manager, then restart
-   the game. Avoid an extra nested `_ModCore_Fangtango/_ModCore_Fangtango` folder.
+   the game. Avoid an extra nested `_ModCore_Fangdango/_ModCore_Fangdango` folder.
 
 ## First use
 

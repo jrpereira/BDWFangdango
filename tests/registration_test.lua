@@ -1,9 +1,9 @@
 package.path = 'ModCoreTemplates/Scripts/?.lua;' .. package.path
 local definitions=dofile('Fangdango/Scripts/templates/mc.lua')
 local minima,template,bar=definitions[1],definitions[2],definitions[3]
-local minimaPath='_ModCore_Fangtango/Scripts/templates/mc_minima.lua'
-local path='_ModCore_Fangtango/Scripts/templates/mc_wheels.lua'
-local barPath='_ModCore_Fangtango/Scripts/templates/mc_bars.lua'
+local minimaPath='_ModCore_Fangdango/Scripts/templates/mc_minima.lua'
+local path='_ModCore_Fangdango/Scripts/templates/mc_wheels.lua'
+local barPath='_ModCore_Fangdango/Scripts/templates/mc_bars.lua'
 assert(minima.name=='Minima' and minima.category=='player.quickslots')
 assert(minima.module=='Fangdango' and minima.managed and minima.version=='0.2.1')
 assert(type(minima.attach)=='function' and minima.targets[1]=='switcher')
