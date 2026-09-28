@@ -1,7 +1,8 @@
 -- Fangdango owns the visual layouts; MCT owns target capture and restoration.
 local MC=require('mc')
 local Widget=MC('widget')
-local defaults={module='Fangdango',managed=true,category='player.quickslots',version='0.2.1'}
+local defaults={module='Fangdango',author='Jorge Pereira (kell)',
+    category='player.quickslots',version='0.2.1'}
 local minima=MC.template('minima',defaults)
 local wheels=MC.template('wheels',defaults)
 local bar=MC.template('bars',defaults)
@@ -16,7 +17,7 @@ function wheels.attach(objects,params,original)
     else
         local owner=MC.parent(switcher)
         assert(switcher:RemoveChild(consumable)~=false, 'could not separate wheel')
-        assert(MC.valid(owner:AddChild(consumable)), 'could not attach distant wheel')
+        assert(MC.valid(owner:AddChild(consumable)), 'could not attach separate wheel')
         local switcherPosition=Widget.translation(switcher)
         local consumablePosition=original.consumables.position
         Widget.appearance(ability,params.settings,'Wheel1',original.abilities.position)
@@ -24,18 +25,10 @@ function wheels.attach(objects,params,original)
         Widget.appearance(consumable,params.settings,'Wheel2',{
             X=consumablePosition.X+switcherPosition.X,
             Y=consumablePosition.Y+switcherPosition.Y})
+        Widget.setScale(consumable,params.settings.Wheel2Size * 0.85 / 100)
     end
-    local function readback(widget)
-        local ok,result=pcall(function()
-            local position=Widget.translation(widget)
-            return 'opacity='..tostring(Widget.opacity(widget))
-                ..' scale='..tostring(Widget.scale(widget).X)
-                ..' x='..tostring(position.X)..' y='..tostring(position.Y)
-        end)
-        return ok and result or 'unavailable ('..tostring(result)..')'
-    end
-    print('[Fangdango] Wheels applied ability '..readback(ability)
-        ..'; consumable '..readback(consumable))
+    print('[Fangdango] Wheels applied ability '..Widget.readback(ability)
+        ..'; consumable '..Widget.readback(consumable))
     return original
 end
 

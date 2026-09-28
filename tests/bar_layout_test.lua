@@ -1,7 +1,7 @@
 package.path='ModCoreTemplates/Scripts/?.lua;'..package.path
 local bar=dofile('Fangdango/Scripts/templates/mc.lua')[3]
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
-local graph=require('mc.selectors').compile(category.targets)
+local graph=require('mc.selectors').compile(category.objects)
 local State=require('mc.target_state')
 local Manager=require('mc.managed_template')
 local function widget(name)
@@ -17,6 +17,7 @@ local function widget(name)
     function w:AddChild(child)
         assert(child.parent==nil)
         self.children[#self.children+1]=child
+        self.maxChildren=math.max(self.maxChildren or 0,#self.children)
         child.parent=self
         child.Slot={Padding={Left=0,Top=0,Right=0,Bottom=0},HorizontalAlignment=0,VerticalAlignment=0}
         function child.Slot:IsValid() return true end
@@ -53,15 +54,50 @@ end
 
 local owner,switcher=widget('Owner'),widget('Switcher')
 owner:AddChild(switcher)
-function owner:GetCachedGeometry() return 'owner geometry' end
-StaticFindObject=function(path)
-    assert(path=='/Script/UMG.Default__SlateBlueprintLibrary')
-    return {ScreenToWidgetLocal=function(_,context,geometry,screen,result,window)
-        assert(context==owner and geometry=='owner geometry' and window)
-        result.X=(screen.X-160)/2;result.Y=(screen.Y-100)/2
-    end}
+local tree={name='WidgetTree'}
+function tree:IsValid() return true end
+function switcher:GetOuter() return tree end
+local hudRoot=widget('HUD Root')
+tree.RootWidget=hudRoot
+local addHudChild=hudRoot.AddChild
+function hudRoot:AddChild(child)
+    local slot=addHudChild(self,child)
+    function slot:GetClass() return {GetName=function() return 'OverlaySlot' end} end
+    return slot
 end
-local objects={switcher=switcher,buttons={abilitySlots={},consumableSlots={}}}
+local function canvasAddChild(self,child)
+    assert(child.parent==nil)
+    self.children[#self.children+1]=child
+    child.parent=self
+    child.Slot={LayoutData={},bAutoSize=false}
+    function child.Slot:IsValid() return true end
+    function child.Slot:GetClass() return {GetName=function() return 'CanvasPanelSlot' end} end
+    function child.Slot:SetLayout(value) self.LayoutData=value end
+    function child.Slot:SetAutoSize(value) self.bAutoSize=value end
+    return child.Slot
+end
+StaticFindObject=function(path)
+    if path=='/Script/UMG.Overlay' or path=='/Script/UMG.TextBlock'
+        or path=='/Script/UMG.SizeBox' or path=='/Script/UMG.Border'
+        or path=='/Script/UMG.CanvasPanel' then
+        return {path=path}
+    end
+    if path=='/Script/Engine.Default__KismetTextLibrary' then
+        return {Conv_StringToText=function(_,text) return text end}
+    end
+    error('unexpected class lookup: '..path)
+end
+StaticConstructObject=function(class,outer)
+    assert(outer==tree)
+    local created=widget(class.path)
+    function created:SetText(value) self.text=value end
+    function created:SetWidthOverride(value) self.WidthOverride=value end
+    function created:SetHeightOverride(value) self.HeightOverride=value end
+    function created:SetBrushColor(value) self.BrushColor=value end
+    if class.path=='/Script/UMG.CanvasPanel' then created.AddChild=canvasAddChild end
+    return created
+end
+local objects={switcher=switcher,hud_root=hudRoot,buttons={abilitySlots={},consumableSlots={}}}
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel,box,panel=widget(kind),widget(kind..'Box'),widget(kind..'Panel')
     objects[kind=='ability' and 'abilities' or 'consumables'],
@@ -90,7 +126,14 @@ for _,kind in ipairs({'ability','consumable'}) do
     end
 end
 switcher.active=1
-local manager=Manager.new(bar,State.specs(graph,bar.targets),graph.order)
+local originalAttach=bar.attach
+bar.attach=function(named,params,original)
+    assert(named.actions and named.actions:GetParent()==hudRoot,
+        'MCT must attach Actions to the HUD before Bar attach')
+    return originalAttach(named,params,original)
+end
+local manager=Manager.new(bar,State.specs(graph,bar.objects),graph.order,
+    {{name='actions',class='/Script/UMG.CanvasPanel',from='switcher',parent='hud_root'}})
 local function params(size,margin,tightness)
     return {settings={Size=size or 100,Margin=margin or 0,
         Spacing=10,Tightness=tightness or -25},
@@ -104,11 +147,37 @@ local function bounds(button)
         transform.Translation.Y+pivot.Y*size.Y*(1-scale)+math.min(0,scale*size.Y)
 end
 assert(manager:attach(switcher,objects,params()))
-assert(switcher:GetChildrenCount()==0)
+assert(switcher.maxChildren==4,'both bait panels must be added before the native wheels move')
+assert(switcher:GetChildrenCount()==2)
+local panelA,panelB=switcher:GetChildAt(0),switcher:GetChildAt(1)
+assert(panelA~=objects.actions and panelB~=objects.actions)
+assert(objects.actions:GetParent()==hudRoot and objects.actions:GetChildrenCount()==2)
+near(objects.actions.RenderTransform.Translation.X,0)
+near(objects.actions.RenderTransform.Translation.Y,0)
+assert(objects.actions.Slot:GetClass():GetName()=='OverlaySlot')
+assert(objects.actions.Slot.HorizontalAlignment==1)
+assert(objects.actions.Slot.VerticalAlignment==1)
+assert(objects.actions.Slot.Padding.Left==0 and objects.actions.Slot.Padding.Top==0)
+assert(objects.actions:GetChildAt(0)==objects.abilities)
+assert(objects.actions:GetChildAt(1)==objects.consumables)
+for _,wheel in ipairs({objects.abilities,objects.consumables}) do
+    assert(wheel.Slot:GetClass():GetName()=='CanvasPanelSlot' and wheel.Slot.bAutoSize)
+end
+local markerA,markerB=panelA:GetChildAt(0),panelB:GetChildAt(0)
+assert(markerA.WidthOverride==280 and markerA.HeightOverride==90)
+assert(markerB.WidthOverride==280 and markerB.HeightOverride==90)
+assert(markerA:GetChildAt(0).BrushColor.R>markerA:GetChildAt(0).BrushColor.B)
+assert(markerB:GetChildAt(0).BrushColor.B>markerB:GetChildAt(0).BrushColor.R)
+assert(markerA:GetChildAt(0):GetChildAt(0).text=='HUD BAIT')
+assert(markerB:GetChildAt(0):GetChildAt(0).text=='AA BAIT')
+switcher:SetActiveWidgetIndex(1)
+assert(switcher:GetActiveWidgetIndex()==1 and switcher:GetChildAt(1)==panelB)
+switcher:SetActiveWidgetIndex(0)
+assert(switcher:GetActiveWidgetIndex()==0 and switcher:GetChildAt(0)==panelA)
 near(objects.ability_box.WidthOverride,265)
 near(objects.consumable_box.WidthOverride,265)
-near(objects.abilities.RenderTransform.Translation.X+265,400)
-near(objects.consumables.RenderTransform.Translation.X,400)
+near(objects.abilities.RenderTransform.Translation.X+265,0)
+near(objects.consumables.RenderTransform.Translation.X,0)
 local function point(kind,index)
     local button=objects.buttons[kind..'Slots'][index]
     assert(button:GetParent()==objects[kind..'_panel'])
@@ -130,7 +199,7 @@ near(y2,y4);near(y2,y5);near(y2,y8)
 assert(y1>y2)
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel=objects[kind=='ability' and 'abilities' or 'consumables']
-    assert(wheel:GetParent()==owner and wheel.opacity==1)
+    assert(wheel:GetParent()==objects.actions and wheel.opacity==1)
     assert(wheel.cross.opacity==0)
 end
 assert(objects.abilities.Darken.opacity==0 and objects.abilities.Glow.opacity==0)
@@ -155,14 +224,14 @@ end
 assert(manager:update(switcher,objects,params(150,20)))
 near(objects.ability_box.WidthOverride,397.5)
 near(objects.ability_box.HeightOverride,252)
-near(objects.abilities.RenderTransform.Translation.X+397.5,390)
-near(objects.consumables.RenderTransform.Translation.X,410)
+near(objects.abilities.RenderTransform.Translation.X+397.5,-10)
+near(objects.consumables.RenderTransform.Translation.X,10)
 near(objects.abilities.RenderTransform.Translation.Y,
     objects.consumables.RenderTransform.Translation.Y)
 assert(manager:update(switcher,objects,params(-50,-100)))
 near(objects.ability_box.WidthOverride,132.5)
-near(objects.abilities.RenderTransform.Translation.X+132.5,450)
-near(objects.consumables.RenderTransform.Translation.X,350)
+near(objects.abilities.RenderTransform.Translation.X+132.5,50)
+near(objects.consumables.RenderTransform.Translation.X,-50)
 for index,button in ipairs(objects.buttons.abilitySlots)do
     near(button.RenderTransform.Scale.X,-0.5)
 end
@@ -181,6 +250,8 @@ objects.consumable_panel.AddChild=add
 assert(manager:detach(switcher))
 near(objects.consumables.opacity,0.3)
 assert(switcher:GetChildAt(0)==objects.abilities and switcher:GetChildAt(1)==objects.consumables)
+assert(panelA:GetParent()==nil and panelB:GetParent()==nil)
+assert(objects.actions:GetParent()==nil and objects.actions:GetChildrenCount()==0)
 assert(switcher.active==1)
 assert(objects.abilities.cross.opacity==1 and objects.consumables.cross.opacity==1)
 assert(objects.abilities.Darken.opacity==1 and objects.abilities.Glow.opacity==1)
@@ -197,4 +268,4 @@ end
 objects.buttons.abilitySlots[1].desired.X=0
 assert(not manager:attach(switcher,objects,params()))
 assert(switcher:GetChildrenCount()==2)
-print('PASS Bar: two staggered/flat wheels, transparent backgrounds, rollback and restoration')
+print('PASS Bar: centered Actions host, two switcher baits, layout, rollback and restoration')

@@ -4,7 +4,7 @@
 return {
     name='Minima',
     description='Show one native quickslot wheel at a time using ModCoreControls hold switching.',
-    targets={'switcher','abilities','consumables'},
+    objects={'switcher','abilities','consumables'},
     attach=function(_,_,original)
         print('[Fangdango] Minima attach')
         return original

@@ -3,19 +3,22 @@ package.path = root .. '/../ModCoreTemplates/Scripts/?.lua;' .. package.path
 local definitions=dofile(root .. '/Scripts/templates/mc.lua')
 local wheels,template=definitions[2],definitions[2]
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
-category.targets.switcher.object='switcher'
-local graph=require('mc.selectors').compile(category.targets)
+category.objects.switcher.object='switcher'
+local graph=require('mc.selectors').compile(category.objects)
 local State=require('mc.target_state')
 local Manager=require('mc.managed_template')
-local manager=Manager.new(template,State.specs(graph,template.targets),graph.order)
+local manager=Manager.new(template,State.specs(graph,template.objects),graph.order)
 local screen={width=1920,height=1080,left=0,center=960,right=1920,
     bottom=0,middle=540,top=1080}
 local function params(settings)
     local effective={}
+    for key,value in pairs(wheels.settings) do effective[key]=value end
     for _,field in ipairs(wheels.menu.fields) do
-        local value=settings[field.id]
-        if value==nil then value=field.default end
-        effective[field.id]=value
+        if field.type~='navigation' then
+            local value=settings[field.id]
+            if value==nil then value=field.default end
+            effective[field.id]=value
+        end
     end
     return {settings=effective,screen=screen}
 end
@@ -111,6 +114,7 @@ hud.WBP_AA_Quickslots=ability
 hud.WBP_HUD_Quickslots=consumable
 hud.WBP_HUD_Quickslots_ChangePrompt=prompt
 hud.QuickslotsSwitcher=switcher
+switcher.owner=hud
 FindAllOf=function(class) return class=='WBP_GameHUD_C' and {hud} or {} end
 local controls=dofile('ModCoreControls/Scripts/mcc/player_actions/quickslot_service.lua').new()
 local Delivery=dofile('ModCoreControls/Scripts/mcc/player_actions/delivery.lua')
@@ -119,11 +123,11 @@ local groupState={selectedGroup=2,defaultGroup=2,
 local groupKey={binding={mode=2},groupIndex=1}
 
 
-local swap={Style=0,WheelsX=20,WheelsY=40,WheelsSize=80,WheelsOpacity=60}
+local swap={Style=0,WheelsX=20,WheelsY=40,WheelsSize=90}
 local targets={switcher=switcher,abilities=ability,consumables=consumable,buttons={}}
 for _,name in ipairs(buttonNames) do targets.buttons[#targets.buttons+1]=buttons[name].widget end
 local minima=definitions[1]
-local minimaManager=Manager.new(minima,State.specs(graph,minima.targets),graph.order)
+local minimaManager=Manager.new(minima,State.specs(graph,minima.objects),graph.order)
 local minimaState={selectedGroup=1,defaultGroup=1,
     groupTypes={[1]='ability',[2]='consumable'}}
 local secondWheelHold={binding={mode=2},groupIndex=2}
@@ -138,7 +142,7 @@ assert(minimaManager:detach(switcher))
 assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==0)
 switcher:SetActiveWidgetIndex(1)
 local wheelsManager=Manager.new(wheels,
-    State.specs(graph,wheels.targets),graph.order)
+    State.specs(graph,wheels.objects),graph.order)
 assert(wheelsManager:attach(switcher,targets,params({Style=1,Wheel1X=-100,Wheel2X=200})))
 assert(consumable:GetParent()==owner and ability:GetParent()==switcher
     and switcher:GetChildrenCount()==1 and switcher:GetActiveWidgetIndex()==0)
@@ -156,9 +160,12 @@ assert(Delivery.deliver({},groupState,groupKey,'Completed',controls))
 assert(switcher:GetActiveWidgetIndex()==1)
 assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==1)
 assert(ability.RenderTransform.Translation.X==20 and consumable.RenderTransform.Translation.X==20)
-assert(ability.RenderTransform.Scale.X==0.8 and consumable.opacity==0.6)
+assert(ability.RenderTransform.Scale.X==0.9 and consumable.opacity==1)
+assert(require('mc.widget').readback(ability):find('opacity=1 scale=0.9 x=20 y=40',1,true))
 local distant={Style=1,Wheel1X=-100,Wheel1Y=10,Wheel2X=200,Wheel2Y=30}
 assert(update(switcher,distant,targets))
+assert(math.abs(consumable.RenderTransform.Scale.X-0.765)<0.00001
+    and consumable.opacity==0.85)
 assert(switcher:GetActiveWidgetIndex()==0)
 assert(Delivery.deliver({},groupState,groupKey,'Started',controls)
     and switcher:GetActiveWidgetIndex()==0,
@@ -216,7 +223,9 @@ local host={
     end,
     member=function(parent,path)
         local current=parent
-        for name in path:gmatch('[^.]+') do current=current and current[name] end
+        for name in path:gmatch('[^.]+') do
+            current=current and (name=='@owner' and current.owner or current[name])
+        end
         return current
     end,
     subscribe=function() return function() end end,
@@ -262,7 +271,7 @@ assert(#errors==1 and errors[1].stage=='update',
     'errors='..#errors..' first='..tostring(errors[1] and errors[1].stage)
         ..' message='..tostring(errors[1] and errors[1].message))
 assert(switcher:GetChildrenCount()==2 and ability.RenderTransform.Translation.X==20)
-assert(consumable.opacity==0.6)
+assert(consumable.opacity==1)
 owner.AddChild=originalAdd
 runtime:select('player.quickslots',{})
 assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==1)

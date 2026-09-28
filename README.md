@@ -9,13 +9,12 @@ Arrange your ability and consumable wheels to suit your playstyle. Show both at 
 | Setting | What it does |
 |---|---|
 | **Minima** | Keeps the native one-wheel view. ModCoreControls can show Wheel 2 while its group key is held, then return to Wheel 1 on release. |
-| **Swap** | Shows one wheel at a time, with both using the same position, size, and opacity. This is the default. |
-| **Distant** | Shows both wheels, with separate appearance settings for each. |
+| **Swap** | Shows one wheel at a time, with both using the same position and size. This is the default. |
+| **Separate** | Shows both wheels, with separate positions and size choices. Wheel 2 displays at 85% of its chosen size and opacity. |
 | **X / Y** | Moves the wheel horizontally or vertically from its usual position. |
-| **Size** | Changes wheel size. 100% is the normal size. |
-| **Opacity** | Changes visibility, from invisible at 0% to fully visible at 100%. |
+| **Size** | Choose Small (70%), Medium (90%), or Large (110%). Wheel 2 applies an additional 85% scale. |
 
-In Distant mode, **Wheel 1** contains abilities and **Wheel 2** contains
+In Separate mode, **Wheel 1** contains abilities and **Wheel 2** contains
 consumables. Each style remembers its settings when you switch to the other.
 The mod rearranges the existing wheels; it does not add skills or change their keys.
 
@@ -51,7 +50,7 @@ background opacity, button order, transforms and SizeBox overrides.
   with managed template attachment and SizeBox override restoration support.
 
 Minima and Wheels in Swap style use ModCoreControls for hold-based group
-switching. Bar and Distant display both wheels and do not use the switcher.
+switching. Bar and Separate display both wheels and do not use the switcher.
 
 ## Installation
 
@@ -66,8 +65,10 @@ switching. Bar and Distant display both wheels and do not use the switcher.
 ## First use
 
 Open **Mod Settings** and find **Fangdango**. Select **Wheels**, choose
-**Swap** or **Distant**, then adjust the visible settings and choose **Apply**.
-Start with Swap at 100% size and opacity, then change one setting at a time.
+**Swap** or **Separate** under **Visual Layout**, then adjust the visible settings
+and choose **Apply**. Use **Edit controls** directly below Visual Layout to open
+the **ModCore Controls** page and configure **Control Layout** (Grouped or Flat).
+Start with Medium size, then change one setting at a time.
 Select **Minima** for the native one-wheel layout; configure the Wheel 2 hold
 binding in ModCoreControls to switch wheels while the key is held.
 
@@ -78,8 +79,8 @@ removed. This Wheels update is awaiting in-game verification.
 
 - **No Fangdango page or Wheels option:** check that the required mods are
   enabled and that your ModCoreTemplates version supports Wheels, then restart.
-- **A wheel disappeared:** restore its opacity and size to 100%, and X/Y to 0.
-  In Distant mode, give Wheel 2 a different X value so the wheels do not overlap.
+- **A wheel disappeared:** restore its size to Medium and X/Y to 0.
+  In Separate mode, give Wheel 2 a different X value so the wheels do not overlap.
 - **A key behaves differently than expected:** Fangdango changes appearance.
   Check the game's controls or your input mod's settings.
 
@@ -96,7 +97,7 @@ See the [changelog](CHANGELOG.md) for changes.
 `Scripts/templates/mc.lua` loads the Minima, Wheels and Bar definitions. Minima
 keeps both wheels in the native switcher and lets ModCoreControls handle the hold
 binding. Their menu schemas are separate; Bar does not use Wheels' Swap /
-Distant settings or MCC's Grouped / Flat Access Method. The managed
+Separate settings or MCC's Grouped / Flat Control Layout. The managed
 `attach(objects, params, original)`
 callback returns the captured original state. MCT restores declared properties on
 updates and detach, and restores the previous layout after a failed update.

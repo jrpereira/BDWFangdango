@@ -1,5 +1,5 @@
-local targets={
-    switcher={},abilities={},consumables={},
+local objectSpec={
+    switcher={},hud_root={},actions={},abilities={},consumables={},
     ability_box={properties={'widthOverride','heightOverride'}},
     consumable_box={properties={'widthOverride','heightOverride'}},
     ability_panel={},consumable_panel={},
@@ -12,8 +12,8 @@ local targets={
 local bar = {
     name='Bar',
     description='Arrange two quickslot wheels side by side, from staggered diamonds to a straight row.',
-    targets=targets, settings={Spacing=10},
-    menu={target='module',enabled=true,fields={
+    objects=objectSpec, settings={Spacing=10},
+    menu={enabled=true,fields={
         {id='Tightness',type='integer',group='Bar',label='Tightness',
             min=-25,max=50,step=5,suffix='%',default=-25,order=1},
         {id='Size',type='integer',group='Bar',label='Size',
@@ -28,6 +28,47 @@ local MC=require('mc')
 local Widget=MC.load('widget')
 local Objects=MC.load('objects')
 local kinds={'ability','consumable'}
+
+local function baitPanel(tree,label,color)
+    local panel=assert(StaticConstructObject(
+        assert(StaticFindObject('/Script/UMG.Overlay'),'Overlay class unavailable'),tree),
+        'could not construct switcher panel')
+    local size=assert(StaticConstructObject(
+        assert(StaticFindObject('/Script/UMG.SizeBox'),'SizeBox class unavailable'),tree),
+        'could not construct switcher marker size box')
+    size:SetWidthOverride(280)
+    size:SetHeightOverride(90)
+    local background=assert(StaticConstructObject(
+        assert(StaticFindObject('/Script/UMG.Border'),'Border class unavailable'),tree),
+        'could not construct switcher marker background')
+    background:SetBrushColor(color)
+    local marker=assert(StaticConstructObject(
+        assert(StaticFindObject('/Script/UMG.TextBlock'),'TextBlock class unavailable'),tree),
+        'could not construct switcher marker')
+    local text=assert(StaticFindObject('/Script/Engine.Default__KismetTextLibrary'),
+        'text conversion unavailable')
+    marker:SetText(text:Conv_StringToText(label))
+    assert(Objects.valid(background:AddChild(marker)),'could not add switcher marker text')
+    assert(Objects.valid(size:AddChild(background)),'could not add switcher marker background')
+    assert(Objects.valid(panel:AddChild(size)),'could not add switcher marker size box')
+    return panel
+end
+
+local function moveToActions(widget,actions)
+    local previous=assert(Objects.parent(widget),'quickslot parent unavailable')
+    assert(previous:RemoveChild(widget)~=false,'could not detach quickslot')
+    local slot=assert(actions:AddChild(widget),'could not add quickslot to Actions')
+    assert(Objects.valid(slot),'Actions quickslot slot unavailable')
+    local slotClass=Objects.call(slot,'GetClass')
+    assert(Objects.call(slotClass,'GetName')=='CanvasPanelSlot',
+        'Actions does not provide a CanvasPanelSlot')
+    slot:SetLayout({
+        Offsets={Left=0,Top=0,Right=0,Bottom=0},
+        Anchors={Minimum={X=0,Y=0},Maximum={X=0,Y=0}},
+        Alignment={X=0,Y=0},
+    })
+    slot:SetAutoSize(true)
+end
 
 local function findChild(root,name)
     if not Objects.valid(root) then return nil end
@@ -91,13 +132,35 @@ bar.attach = function(objects,params,original)
     local factor=math.abs(scale)
     local spacing=(settings.Spacing or 10)/100
     local margin=settings.Margin or 0
-    local owner=assert(MC.parent(objects.switcher),'HUD panel unavailable')
-    local slate=assert(StaticFindObject('/Script/UMG.Default__SlateBlueprintLibrary'),
-        'Slate coordinate conversion unavailable')
-    local center={X=0,Y=0}
-    slate:ScreenToWidgetLocal(owner,owner:GetCachedGeometry(),
-        {X=params.screen.center,Y=params.screen.middle},center,true)
-    center={X=Widget.number(center,'X'),Y=Widget.number(center,'Y')}
+    local switcher=objects.switcher
+    local tree=assert(switcher:GetOuter(),'QuickslotsSwitcher WidgetTree unavailable')
+    local hudRoot=objects.hud_root
+    assert(Objects.valid(hudRoot),'HUD root invalid')
+    assert(Objects.same(Objects.parent(objects.actions),hudRoot),
+        'Actions must be attached to the HUD before Bar attach')
+    local panels={}
+    params.onCleanup(function()
+        -- Restore the native wheels before removing their temporary host.
+        for _,wheel in ipairs({objects.abilities,objects.consumables}) do
+            if Objects.valid(wheel) and not Objects.same(Objects.parent(wheel),switcher) then
+                Widget.reparent(wheel,switcher)
+            end
+        end
+        for _,panel in ipairs(panels) do
+            if Objects.valid(panel) and Objects.same(Objects.parent(panel),switcher) then
+                assert(switcher:RemoveChild(panel)~=false,'could not remove switcher bait')
+            end
+        end
+    end)
+    local bait={
+        {label='HUD BAIT',color={R=0.8,G=0.12,B=0.08,A=0.85}},
+        {label='AA BAIT',color={R=0.06,G=0.25,B=0.8,A=0.85}},
+    }
+    for _,spec in ipairs(bait) do
+        local panel=baitPanel(tree,spec.label,spec.color)
+        panels[#panels+1]=panel
+        assert(Objects.valid(switcher:AddChild(panel)),'could not add switcher bait')
+    end
     -- Measure before reparenting the two wheel widgets and arranging their buttons.
     local measured={ability={},consumable={}}
     for _,kind in ipairs(kinds) do
@@ -106,15 +169,35 @@ bar.attach = function(objects,params,original)
         end
     end
     local groups=plan(measured,factor,spacing,margin,settings.Tightness or -25)
+    local actionsSlot=assert(Widget.property(objects.actions,'Slot'),'Actions HUD slot unavailable')
+    assert(Objects.valid(actionsSlot),'Actions HUD slot unavailable')
+    local slotClass=Objects.call(actionsSlot,'GetClass')
+    local slotName=Objects.call(slotClass,'GetName')
+    if slotName=='CanvasPanelSlot' then
+        actionsSlot:SetLayout({
+            Offsets={Left=0,Top=0,Right=0,Bottom=0},
+            Anchors={Minimum={X=0.5,Y=0.5},Maximum={X=0.5,Y=0.5}},
+            Alignment={X=0,Y=0},
+        })
+        actionsSlot:SetAutoSize(true)
+    else
+        local centered,why=pcall(function()
+            actionsSlot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
+            actionsSlot:SetHorizontalAlignment(1)
+            actionsSlot:SetVerticalAlignment(1)
+        end)
+        assert(centered,'HUD root slot '..tostring(slotName)..' cannot center Actions: '..tostring(why))
+    end
+    Widget.setTranslation(objects.actions,0,0)
     for _,kind in ipairs(kinds) do
         local wheel=objects[kind=='ability' and 'abilities' or 'consumables']
         local box,panel=objects[kind..'_box'],objects[kind..'_panel']
         local group=groups[kind]
-        Widget.reparent(wheel,owner)
+        moveToActions(wheel,objects.actions)
         Widget.setScale(wheel,1)
         box:SetWidthOverride(group.width)
         box:SetHeightOverride(group.height)
-        Widget.setTranslation(wheel,center.X+group.x,center.Y+group.y)
+        Widget.setTranslation(wheel,group.x,group.y)
         for index,button in ipairs(objects.buttons[kind..'Slots']) do
             local point=group.points[index]
             Widget.reparent(button,panel)
@@ -122,6 +205,7 @@ bar.attach = function(objects,params,original)
         end
         hideDecorations(panel,kind,params.onCleanup)
     end
+    switcher:SetActiveWidgetIndex(math.min(1,math.max(0,original.switcher.activeIndex)))
     return original
 end
 
