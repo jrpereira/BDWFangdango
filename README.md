@@ -54,13 +54,13 @@ switching. Bar and Separate display both wheels and do not use the switcher.
 
 ## Installation
 
-1. Close the game completely. Extract the mod download so its `_ModCore_Fangdango`
+1. Close the game completely. Extract the mod download so its `_ModCore_X_Fangdango`
    folder sits directly inside the game's `ue4ss/Mods` folder.
 2. Download any missing dependencies above and install them with the game closed.
    Use each download's instructions: some archives already include the full
    game-folder path, and UE4SS itself does not install inside `Mods`.
 3. Ensure the mods are enabled in your UE4SS setup or mod manager, then restart
-   the game. Avoid an extra nested `_ModCore_Fangdango/_ModCore_Fangdango` folder.
+   the game. Avoid an extra nested `_ModCore_X_Fangdango/_ModCore_X_Fangdango` folder.
 
 ## First use
 
@@ -94,7 +94,8 @@ See the [changelog](CHANGELOG.md) for changes.
 
 ## Template integration
 
-`Scripts/templates/mc.lua` loads the Minima, Wheels and Bar definitions. Minima
+UE4SS loads `Scripts/main.lua`, which calls `M.addTemplate(...)` for Minima,
+Wheels, and Bar; no template-folder scan or aggregate `mc.lua` is required. Minima
 keeps both wheels in the native switcher and lets ModCoreControls handle the hold
 binding. Their menu schemas are separate; Bar does not use Wheels' Swap /
 Separate settings or MCC's Grouped / Flat Control Layout. The managed
@@ -104,6 +105,6 @@ updates and detach, and restores the previous layout after a failed update.
 
 ModCoreControls changes the native switcher index (ability 0, consumable 1) on
 group hold and release. Fangdango does not subscribe to group-focus events.
-Bar's declaration and transform are in `Scripts/templates/mc_bars.lua`.
+Bar's declaration and transform are in `Scripts/mc_bars.lua`.
 
 Offline lifecycle tests do not establish live-game acceptance.

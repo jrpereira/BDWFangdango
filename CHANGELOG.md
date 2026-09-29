@@ -1,5 +1,8 @@
 # Changelog
 
+- Register Minima, Wheels, and Bar individually through `mc.addTemplate`.
+- Rename the installed mod folder to `_ModCore_X_Fangdango`.
+
 ## 0.2.1 — Wheels update
 
 - Replace Wheels++ with **Wheels**. Select the new option after updating.

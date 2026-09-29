@@ -1,5 +1,5 @@
 package.path='ModCoreTemplates/Scripts/?.lua;'..package.path
-local bar=dofile('Fangdango/Scripts/templates/mc.lua')[3]
+local bar=dofile('Fangdango/tests/load_templates.lua')()[3]
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
 local graph=require('mc.selectors').compile(category.objects)
 local State=require('mc.target_state')
@@ -53,6 +53,8 @@ local function widget(name)
 end
 
 local owner,switcher=widget('Owner'),widget('Switcher')
+local layoutPasses=0
+function switcher:ForceLayoutPrepass() layoutPasses=layoutPasses+1 end
 owner:AddChild(switcher)
 local tree={name='WidgetTree'}
 function tree:IsValid() return true end
@@ -119,7 +121,6 @@ for _,kind in ipairs({'ability','consumable'}) do
         local button=widget(kind..index)
         button.RenderTransformPivot={X=0.5,Y=0.25}
         button.desired={X=100,Y=80}
-        function button:ForceLayoutPrepass()end
         function button:GetDesiredSize()return self.desired end
         panel:AddChild(button)
         objects.buttons[kind..'Slots'][index]=button
@@ -147,6 +148,7 @@ local function bounds(button)
         transform.Translation.Y+pivot.Y*size.Y*(1-scale)+math.min(0,scale*size.Y)
 end
 assert(manager:attach(switcher,objects,params()))
+assert(layoutPasses==1,'Bar attach must perform one layout prepass for all buttons')
 assert(switcher.maxChildren==4,'both bait panels must be added before the native wheels move')
 assert(switcher:GetChildrenCount()==2)
 local panelA,panelB=switcher:GetChildAt(0),switcher:GetChildAt(1)

@@ -10,17 +10,16 @@ local objectSpec={
     },
 }
 local bar = {
-    name='Bar',
+    name='Bar',category='player.quickslots',
     description='Arrange two quickslot wheels side by side, from staggered diamonds to a straight row.',
     objects=objectSpec, settings={Spacing=10},
-    menu={enabled=true,fields={
-        {id='Tightness',type='integer',group='Bar',label='Tightness',
-            min=-25,max=50,step=5,suffix='%',default=-25,order=1},
-        {id='Size',type='integer',group='Bar',label='Size',
-            min=-50,max=150,step=5,suffix='%',default=100,order=2},
-        {id='Margin',type='integer',group='Bar',label='Margin',
-            min=-100,max=100,step=1,default=0,order=3},
-    },groups={{id='Bar',label='Bar',order=1}}},
+    menu={{id='Bar',label='Bar',fields={
+        {id='Tightness',label='Tightness',
+            values={min=-25,max=50,step=5,suffix='%'},default=-25},
+        {id='Size',label='Size',
+            values={min=-50,max=150,step=5,suffix='%'},default=100},
+        {id='Margin',label='Margin',values={min=-100,max=100,step=1},default=0},
+    }}},
 }
 
 -- Slot identity: 0=Left, 1=Top, 2=Right, 3=Bottom.
@@ -162,6 +161,7 @@ bar.attach = function(objects,params,original)
         assert(Objects.valid(switcher:AddChild(panel)),'could not add switcher bait')
     end
     -- Measure before reparenting the two wheel widgets and arranging their buttons.
+    Widget.prepareLayout(switcher)
     local measured={ability={},consumable={}}
     for _,kind in ipairs(kinds) do
         for index,button in ipairs(objects.buttons[kind..'Slots']) do

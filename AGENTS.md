@@ -1,7 +1,7 @@
 # Fangdango development
 
 In the Gaming workspace, read the shared `RULES.md` and relevant procedures before
-working on this module. Keep template source in `Scripts/templates/`, other runtime source in `Scripts/`, tests
+working on this module. Keep template and runtime source in `Scripts/`, tests
 in `tests/`, tooling in `tools/`, and public documentation in `docs/`.
 
 Keep the mod focused on layouts for the eight existing Ability and Consumable

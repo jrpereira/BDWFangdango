@@ -3,10 +3,10 @@
 -- Wheel 1 on release.
 return {
     name='Minima',
+    category='player.quickslots',
     description='Show one native quickslot wheel at a time using ModCoreControls hold switching.',
     objects={'switcher','abilities','consumables'},
     attach=function(_,_,original)
-        print('[Fangdango] Minima attach')
         return original
     end,
 }
