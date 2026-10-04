@@ -1,289 +1,161 @@
-local root = 'Fangdango'
-package.path = root .. '/../ModCoreTemplates/Scripts/?.lua;' .. package.path
-local definitions=dofile(root .. '/tests/load_templates.lua')()
-local wheels,template=definitions[2],definitions[2]
+package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;'..package.path
+local definitions=dofile('Fangdango/tests/load_templates.lua')()
+local template=definitions[1]
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
-category.objects.switcher.object='switcher'
-local graph=require('mc.selectors').compile(category.objects)
-local State=require('mc.target_state')
-local Manager=require('mc.managed_template')
-local manager=Manager.new(template,State.specs(graph,template.objects),graph.order)
-local screen={width=1920,height=1080,left=0,center=960,right=1920,
-    bottom=0,middle=540,top=1080}
-local function params(settings)
-    local effective={}
-    for key,value in pairs(wheels.settings) do effective[key]=value end
-    local _,groups=require('mc.provider_settings').template(wheels.menu,wheels.variations)
-    for _,group in ipairs(groups) do
-        for _,field in ipairs(group.fields) do
-            if field.type~='navigation' then
-                local value=settings[field.id]
-                if value==nil then value=field.default end
-                effective[field.id]=value
-            end
-        end
-    end
-    return {settings=effective,screen=screen}
-end
-local function attach(root,settings,targets) return manager:attach(root,targets,params(settings)) end
-local function update(root,settings,targets) return manager:update(root,targets,params(settings)) end
-local function detach(root) return manager:detach(root) end
+local Objects=require('mc.objects')
+local Runtime=require('mc.runtime')
 
-local function widget(name)
-    local w = {
-        name=name, children={}, RenderTransform={Translation={X=0,Y=0},Scale={X=1,Y=1}},
-        opacity=1, active=0,
-    }
-    function w:IsValid() return self.invalid ~= true end
+local function widget(name,class)
+    local w={name=name,class=class,children={},opacity=1,
+        RenderTransform={Translation={X=0,Y=0},Scale={X=1,Y=1}},
+        RenderTransformPivot={X=0,Y=0}}
+    function w:IsValid() return true end
     function w:GetFullName() return self.name end
+    function w:GetAddress() return self.name end
+    function w:GetOuter() return self.outer end
     function w:GetParent() return self.parent end
     function w:GetChildrenCount() return #self.children end
     function w:GetChildAt(index) return self.children[index+1] end
+    function w:GetDesiredSize() return {X=200,Y=160} end
+    function w:ForceLayoutPrepass() end
+    function w:GetRenderOpacity() return self.opacity end
+    function w:SetRenderOpacity(value) self.opacity=value end
+    function w:SetRenderTranslation(value) self.RenderTransform.Translation=value end
+    function w:SetRenderScale(value) self.RenderTransform.Scale=value end
     function w:AddChild(child)
-        assert(child.parent==nil)
+        assert(not child.parent)
         self.children[#self.children+1]=child
         child.parent=self
-        child.Slot={Padding={Left=0,Top=0,Right=0,Bottom=0},HorizontalAlignment=0,VerticalAlignment=0}
-        function child.Slot:IsValid() return true end
-        function child.Slot:GetClass() return {GetName=function() return 'WidgetSwitcherSlot' end} end
-        function child.Slot:SetPadding(value) self.Padding=value end
-        function child.Slot:SetHorizontalAlignment(value) self.HorizontalAlignment=value end
-        function child.Slot:SetVerticalAlignment(value) self.VerticalAlignment=value end
-        return child.Slot
+        local canvas=self.class=='CanvasPanel'
+        local slot={Padding={Left=0,Top=0,Right=0,Bottom=0},
+            HorizontalAlignment=0,VerticalAlignment=0,
+            LayoutData={Offsets={Left=0,Top=0,Right=0,Bottom=0},
+                Anchors={Minimum={X=0,Y=0},Maximum={X=0,Y=0}},Alignment={X=0,Y=0}},
+            ZOrder=0,bAutoSize=false}
+        function slot:IsValid() return true end
+        function slot:GetClass() return {GetName=function()
+            return canvas and 'CanvasPanelSlot' or 'WidgetSwitcherSlot'
+        end} end
+        function slot:SetLayout(value) assert(canvas);self.LayoutData=value end
+        function slot:SetAutoSize(value) assert(canvas);self.bAutoSize=value end
+        function slot:SetZOrder(value) self.ZOrder=value end
+        function slot:SetPosition(value)
+            assert(canvas)
+            if self.failPosition then self.failPosition=false;error('injected position failure') end
+            self.LayoutData.Offsets.Left,self.LayoutData.Offsets.Top=value.X,value.Y
+        end
+        function slot:SetSize(value)
+            assert(canvas)
+            self.LayoutData.Offsets.Right,self.LayoutData.Offsets.Bottom=value.X,value.Y
+        end
+        function slot:SetPadding(value) self.Padding=value end
+        function slot:SetHorizontalAlignment(value) self.HorizontalAlignment=value end
+        function slot:SetVerticalAlignment(value) self.VerticalAlignment=value end
+        child.Slot=slot
+        return slot
     end
     function w:RemoveChild(child)
-        for index,item in ipairs(self.children) do
-            if item==child then
-                table.remove(self.children,index)
-                child.parent=nil
-                return true
-            end
+        for index,value in ipairs(self.children) do
+            if value==child then table.remove(self.children,index);child.parent=nil;return true end
         end
         return false
     end
-    function w:GetActiveWidgetIndex() return self.active end
-    function w:SetActiveWidgetIndex(index) self.active=index end
-    function w:SetActiveWidget(child)
-        for index,item in ipairs(self.children) do
-            if item==child then self.active=index-1; return end
-        end
-        error('active widget is not a child')
-    end
-    function w:SetRenderTranslation(value) self.RenderTransform.Translation=value end
-    function w:SetRenderScale(value) self.RenderTransform.Scale=value end
-    function w:GetRenderOpacity() return self.opacity end
-    function w:SetRenderOpacity(value) self.opacity=value end
     return w
 end
 
-local service={}
-function service:valid(value) return type(value)=='table' and value.IsValid and value:IsValid() end
-function service:identity(value) return value:GetFullName() end
-function service:same(a,b) return self:valid(a) and self:valid(b) and self:identity(a)==self:identity(b) end
-function service:parent(value) return value:GetParent() end
-local hud=widget('WBP_GameHUD_C /Engine/Transient.GameHUD')
-local owner=widget('Panel /Engine/Transient.Panel')
-local switcher=widget('Switcher /Engine/Transient.Switcher')
-StaticFindObject=function(path)assert(path=='/Engine/Transient.Switcher');return switcher end
-local ability=widget('WBP_AA_Quickslots_C /Engine/Transient.Abilities')
-local consumable=widget('WBP_HUD_Quickslots_C /Engine/Transient.Consumables')
-local prompt=widget('Prompt /Engine/Transient.Prompt')
-local buttonNames={
-    'ability_left','ability_top','ability_right','ability_bottom',
-    'consumable_left','consumable_top','consumable_right','consumable_bottom',
-}
-local buttons={}
-local abilityBindings=widget('Ability bindings')
-local consumableBindings=widget('Consumable bindings')
-ability:AddChild(abilityBindings)
-consumable:AddChild(consumableBindings)
-ability.WBP_AA_Quickslots_Bindings=abilityBindings
-consumable.WBP_HUD_Quickslots_Bindings=consumableBindings
-for _,name in ipairs(buttonNames) do
-    local bindings=name:match('^ability') and abilityBindings or consumableBindings
-    local button=widget(name)
-    bindings:AddChild(button)
-    bindings[name:match('_(%w+)$'):gsub('^%l',string.upper)]=button
-    buttons[name]={widget=button,parent=bindings}
-end
-hud:AddChild(owner)
-hud:AddChild(prompt)
-owner:AddChild(switcher)
-switcher:AddChild(ability)
-switcher:AddChild(consumable)
-switcher:SetActiveWidgetIndex(1)
-hud.WBP_AA_Quickslots=ability
-hud.WBP_HUD_Quickslots=consumable
+local hud=widget('HUD','UserWidget')
+local tree=widget('Tree','WidgetTree')
+local root=widget('HUD root','Overlay')
+local switcher=widget('Switcher','WidgetSwitcher')
+local ability=widget('Abilities','WBP_AA_Quickslots_C')
+local consumable=widget('Consumables','WBP_HUD_Quickslots_C')
+local prompt=widget('Prompt','Widget')
+hud.WidgetTree={RootWidget=root}
+hud.WBP_AA_Quickslots,hud.WBP_HUD_Quickslots=ability,consumable
 hud.WBP_HUD_Quickslots_ChangePrompt=prompt
-hud.QuickslotsSwitcher=switcher
-switcher.owner=hud
-FindAllOf=function(class) return class=='WBP_GameHUD_C' and {hud} or {} end
-local Delivery=dofile('ModCoreControls/Scripts/mc_quickslots.lua')
-local controls=Delivery.new()
-assert(controls:bind({hud=hud},1))
-local groupState={selectedGroup=2,defaultGroup=2,
-    groupTypes={[1]='ability',[2]='consumable'}}
-local groupKey={mode=2,action={type='focus',group=1}}
-
-
-local swap={Style=0,WheelsX=20,WheelsY=40,WheelsSize=90}
-local targets={switcher=switcher,abilities=ability,consumables=consumable,buttons={}}
-for _,name in ipairs(buttonNames) do targets.buttons[#targets.buttons+1]=buttons[name].widget end
-local minima=definitions[1]
-local minimaManager=Manager.new(minima,State.specs(graph,minima.objects),graph.order)
-local minimaState={selectedGroup=1,defaultGroup=1,
-    groupTypes={[1]='ability',[2]='consumable'}}
-local secondWheelHold={mode=2,action={type='focus',group=2}}
-switcher:SetActiveWidgetIndex(0)
-assert(minimaManager:attach(switcher,targets,params({})))
-assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==0)
-assert(Delivery.deliver(minimaState,secondWheelHold,'Started',controls))
-assert(switcher:GetActiveWidgetIndex()==1)
-assert(Delivery.deliver(minimaState,secondWheelHold,'Completed',controls))
-assert(switcher:GetActiveWidgetIndex()==0)
-assert(minimaManager:detach(switcher))
-assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==0)
-switcher:SetActiveWidgetIndex(1)
-local wheelsManager=Manager.new(wheels,
-    State.specs(graph,wheels.objects),graph.order)
-assert(wheelsManager:attach(switcher,targets,params({Style=1,Wheel1X=-100,Wheel2X=200})))
-assert(consumable:GetParent()==owner and ability:GetParent()==switcher
-    and switcher:GetChildrenCount()==1 and switcher:GetActiveWidgetIndex()==0)
-assert(ability.RenderTransform.Translation.X==-100
-    and consumable.RenderTransform.Translation.X==200)
-for _,record in pairs(buttons) do assert(record.widget:GetParent()==record.parent) end
-assert(wheelsManager:detach(switcher))
-assert(switcher:GetChildAt(0)==ability and switcher:GetChildAt(1)==consumable)
-assert(switcher:GetActiveWidgetIndex()==1)
-assert(attach(switcher,swap,targets))
-for _,record in pairs(buttons) do assert(record.widget:GetParent()==record.parent) end
-assert(Delivery.deliver(groupState,groupKey,'Started',controls))
-assert(switcher:GetActiveWidgetIndex()==0)
-assert(Delivery.deliver(groupState,groupKey,'Completed',controls))
-assert(switcher:GetActiveWidgetIndex()==0)
-assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==0)
-assert(ability.RenderTransform.Translation.X==20 and consumable.RenderTransform.Translation.X==20)
-assert(ability.RenderTransform.Scale.X==0.9 and consumable.opacity==1)
-assert(require('mc.widget').readback(ability):find('opacity=1 scale=0.9 x=20 y=40',1,true))
-local distant={Style=1,Wheel1X=-100,Wheel1Y=10,Wheel2X=200,Wheel2Y=30}
-assert(update(switcher,distant,targets))
-assert(math.abs(consumable.RenderTransform.Scale.X-0.7225)<0.00001
-    and consumable.opacity==0.85)
-assert(switcher:GetActiveWidgetIndex()==0)
-assert(Delivery.deliver(groupState,groupKey,'Started',controls)
-    and switcher:GetActiveWidgetIndex()==0,
-    'detached wheels stay visible while MCC changes control groups')
-assert(Delivery.deliver(groupState,groupKey,'Completed',controls))
-for _,record in pairs(buttons) do assert(record.widget:GetParent()==record.parent) end
-assert(ability:GetParent()==switcher and consumable:GetParent()==owner)
-assert(ability.RenderTransform.Translation.X==-100 and consumable.RenderTransform.Translation.X==200)
-assert(update(switcher,distant,targets))
-assert(ability.RenderTransform.Translation.X==-100)
-assert(update(switcher,swap,targets))
-assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==1)
-assert(detach(switcher,swap))
-for _,record in pairs(buttons) do
-    assert(record.widget:GetParent()==record.parent)
-    assert(record.widget.RenderTransform.Translation.X==0)
+switcher.owner,switcher.outer=hud,tree
+root:AddChild(switcher)
+switcher:AddChild(consumable)
+switcher:AddChild(ability)
+ability.Slot:SetPadding({Left=17,Top=18,Right=19,Bottom=20})
+StaticFindObject=function(path) return {path=path} end
+local made=0
+StaticConstructObject=function(class,outer)
+    assert(outer==tree)
+    made=made+1
+    return widget('Created '..made,class.path:match('([^%.]+)$'))
 end
-assert(ability.RenderTransform.Translation.X==0 and consumable.RenderTransform.Translation.X==0)
-assert(ability.opacity==1 and consumable.opacity==1)
-local originalAdd=owner.AddChild
-function owner:AddChild() error('injected attachment failure') end
-local failed,why=attach(switcher,distant,targets)
-assert(not failed and why:find('injected attachment failure',1,true))
-assert(switcher:GetChildrenCount()==2 and ability:GetParent()==switcher)
-owner.AddChild=originalAdd
-local originalSwitcherAdd=switcher.AddChild
-owner.AddChild=function() error('injected attachment failure') end
-switcher.AddChild=function() error('injected restoration failure') end
-failed,why=attach(switcher,distant,targets)
-assert(not failed and why:find('restoration failed',1,true))
-owner.AddChild,switcher.AddChild=originalAdd,originalSwitcherAdd
-assert(detach(switcher,{}))
-assert(switcher:GetChildrenCount()==2 and ability:GetParent()==switcher
-    and consumable:GetParent()==switcher,
-    'failed initial attach must retain a restoration record')
-assert(attach(switcher,distant,targets))
-assert(detach(switcher,{}))
--- Exercise the actual new runtime's selection, update and detach dispatch.
+FName=function(value) return value end
 local errors={}
-local host={
-    valid=function(o) return service:valid(o) end,
-    identity=function(o) return service:identity(o) end,
-    ready=function() return true end,
-    matches=function(o,s) return s.object=='switcher' and o==switcher
-        or s.class=='WBP_AA_Quickslots_C' and o==ability
-        or s.class=='WBP_HUD_Quickslots_C' and o==consumable end,
-    parent=function(o) return service:parent(o) end,
-    watch=function() end,
-    screen=function() return screen end,
-    find=function(s) return s.object=='switcher' and {switcher} or {} end,
-    child=function(parent,class)
-        for _,child in ipairs(parent.children) do
-            if child:GetFullName():match('^(%S+)')==class then return child end
-        end
+local host={valid=Objects.valid,identity=function(value) return value.name end,
+    ready=function() return true end,parent=Objects.parent,watch=function() end,
+    screen=function() return {width=1920,height=1080,scale=1} end,
+    matches=function(value,selector)
+        return selector.object==category.objects.switcher.object and value==switcher
+            or selector.class==value.class
     end,
-    member=function(parent,path)
-        local current=parent
+    find=function() return {switcher} end,
+    member=function(value,path)
         for name in path:gmatch('[^.]+') do
-            current=current and (name=='@owner' and current.owner or current[name])
+            value=value and (name=='@owner' and value.owner or value[name])
         end
-        return current
+        return value
+    end,
+    child=function(value,class)
+        for _,child in ipairs(value.children) do if child.class==class then return child end end
     end,
     subscribe=function() return function() end end,
-    onError=function(e) errors[#errors+1]=e end,
-}
-local Runtime=require('mc.runtime')
-local originalWheelsAttach=template.attach
-local runtimeAttachCalls=0
-template.attach=function(...)
-    runtimeAttachCalls=runtimeAttachCalls+1
-    return originalWheelsAttach(...)
+    onError=function(value) errors[#errors+1]=value end}
+local model=require('mc.menu_model').build({category},{template},
+    {'Fangdango/Scripts/mc_wheels.lua'})
+template=model.templates[1]
+local state={revision=0,controls={group={}}}
+local runtime=Runtime.new(host,model.categories,model.templates,state)
+local function select(margin)
+    runtime:select(category.name,{[template.id]={WheelsA=7,WheelsM=margin,WheelsR=1,WheelsS=100}})
 end
-local model=require('mc.menu_model').build(
-    {category},
-    {template},{root..'/Scripts/mc_wheels.lua'})
-local runtime=Runtime.new(host,model.categories,model.templates)
 runtime:start()
-runtime:select('player.quickslots',{[template.id]=swap})
-assert(switcher:GetChildrenCount()==2)
-assert(next(runtime:attachments(template.id)), 'runtime did not attach')
-runtime:select('player.quickslots',{[template.id]=distant})
-assert(switcher:GetChildrenCount()==1 and consumable:GetParent()==owner)
-assert(next(runtime:attachments(template.id)), 'runtime lost distant attachment')
-local attachedDistant=runtimeAttachCalls
+assert(made==0,'unselected category must leave the native hierarchy intact')
+select(0)
+assert(next(runtime:attachments(template.id)),'current Wheels must attach through the runtime')
+local actions=ability:GetParent()
+assert(actions.class=='CanvasPanel' and actions:GetParent()==root
+    and consumable:GetParent()==actions and made==3,
+    'MCT must place both wheels directly in its canvas without host buttons')
+assert(switcher:GetChildrenCount()==2 and prompt.opacity==0)
+local firstY=ability.Slot.LayoutData.Offsets.Top
+select(20)
+local updatedY=ability.Slot.LayoutData.Offsets.Top
+assert(updatedY~=firstY and made==3 and ability:GetParent()==actions,
+    'settings update must reposition the existing wheels')
 runtime:event({kind='changed',object=switcher,epoch=runtime.epoch})
-assert(runtimeAttachCalls==attachedDistant,
-    'lifecycle reconciliation must not reattach an intentionally moved wheel')
-assert(next(runtime:attachments(template.id)),
-    'lifecycle reconciliation must retain the distant attachment')
-assert(consumable:GetParent()==owner and switcher:GetChildrenCount()==1,
-    'reconciliation must not restore the intentionally moved wheel')
-runtime:select('player.quickslots',{[template.id]=swap})
-assert(switcher:GetChildrenCount()==2)
-assert(next(runtime:attachments(template.id)),
-    'runtime lost swap attachment: '..tostring(errors[#errors] and errors[#errors].message))
--- Failed update must report failure and restore the previous successful layout.
-function owner:AddChild(child)
-    if child==consumable then error('injected update failure') end
-    return originalAdd(self,child)
-end
-runtime:select('player.quickslots',{[template.id]=distant})
-assert(#errors==1 and errors[1].stage=='update',
-    'errors='..#errors..' first='..tostring(errors[1] and errors[1].stage)
-        ..' message='..tostring(errors[1] and errors[1].message))
-assert(switcher:GetChildrenCount()==2 and ability.RenderTransform.Translation.X==20)
-assert(consumable.opacity==1)
-owner.AddChild=originalAdd
-runtime:select('player.quickslots',{})
-assert(switcher:GetChildrenCount()==2 and switcher:GetActiveWidgetIndex()==1)
-assert(ability.RenderTransform.Translation.X==0 and ability.opacity==1)
-for _,record in pairs(buttons) do assert(record.widget:GetParent()==record.parent) end
--- Readiness failure must be false, not nil (nil means success in MCT).
-local missing=widget('Switcher missing')
-local ready,reason=attach(missing,swap,{})
-assert(ready==false and reason:match('^not_ready'))
-assert(detach(missing,swap))
+assert(made==3 and ability.Slot.LayoutData.Offsets.Top==updatedY,
+    'reconciliation must retain the current wheel layout')
+ability.Slot.failPosition=true
+select(40)
+assert(#errors==1 and errors[1].stage=='update'
+    and errors[1].message:find('injected position failure',1,true))
+assert(ability.Slot.LayoutData.Offsets.Top==updatedY
+    and next(runtime:attachments(template.id)),
+    'failed settings update must recover the previous successful layout')
+local dim=template.settings.focus.dim
+assert(ability.opacity==1 and consumable.opacity==1,'no focus reported: both wheels stay opaque')
+-- The MCT event hub records ModCore Controls' focus, then notifies the runtime.
+state.events={['controls.group.focus']={revision=1}}
+state.revision=1;state.controls.group.from=1;state.controls.group.to=2
+runtime:stateChanged({name='controls.group.focus',revision=1,group={from=1,to=2}})
+assert(ability.opacity==dim and consumable.opacity==1,'focus event must dim the unfocused wheel')
+ability.Slot.failPosition=nil
+select(0)
+assert(ability.opacity==dim and consumable.opacity==1,'a rebuild must keep the current focus')
+state.revision=2;state.controls.group.from=2;state.controls.group.to=1
+runtime:stateChanged({name='controls.group.focus',revision=2,group={from=2,to=1}})
+assert(ability.opacity==1 and consumable.opacity==dim,'focus must follow each event')
+runtime:select(category.name,{})
+assert(ability.opacity==1 and consumable.opacity==1,'leaving the layout restores wheel opacity')
+assert(ability:GetParent()==switcher and consumable:GetParent()==switcher)
+assert(switcher:GetChildAt(0)==consumable and switcher:GetChildAt(1)==ability)
+assert(ability.Slot.Padding.Left==17 and ability.Slot.Padding.Bottom==20)
+assert(actions:GetParent()==nil and root:GetChildrenCount()==1 and prompt.opacity==1)
 runtime:stop()
-print('Fangdango new-runtime attach/update/detach, rollback and readiness passed')
+print('PASS: current Wheels runtime attach, update, reconciliation, rollback and native restoration')

@@ -1,5 +1,6 @@
 local Defaults=require('mc.template_defaults')
 local Metadata=require('mc.module_metadata')
+local Bootstrap=require('mc.bootstrap')
 
 return function()
     local entries={}
@@ -9,7 +10,8 @@ return function()
     dofile('Fangdango/Scripts/main.lua')
     local definitions={}
     for _,entry in ipairs(entries) do
-        local definition=Defaults.apply(assert(loadfile(entry.path))())
+        -- Load as MCT does, so template helpers resolve from Fangdango's Scripts folder.
+        local definition=Defaults.apply(Bootstrap.executeTemplate(entry.path))
         definitions[#definitions+1]=Metadata.apply(definition,entry.path)
     end
     return definitions,entries

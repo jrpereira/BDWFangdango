@@ -1,78 +1,82 @@
-local objectSpec={
-    switcher={},hud_root={},actions={},abilities={},consumables={},
-    ability_box={properties={'widthOverride','heightOverride'}},
-    consumable_box={properties={'widthOverride','heightOverride'}},
-    ability_panel={},consumable_panel={},
-    buttons={
-        abilitySlots={'ability_button_left','ability_button_top','ability_button_right','ability_button_bottom'},
-        consumableSlots={'consumable_button_left','consumable_button_top','consumable_button_right','consumable_button_bottom'},
-        properties={'parent','order','slot','position','size'},
+local MC = require('mc')
+local Widget = MC.load('widget')
+local Objects = MC.load('objects')
+local Helpers=require('fangdango.helpers')
+
+local template = {
+    name='Bars Fangdango',
+    description='Arrange quickslot keys in a horizontal or vertical bar.',
+
+    category='player.quickslots',
+    settings={focus={dim=0.7}},
+    events={
+        ['controls.group.focus']=Helpers.onGroupFocus,
     },
-}
-local bar = {
-    name='Bar',category='player.quickslots',
-    description='Arrange two quickslot wheels side by side, from staggered diamonds to a straight row.',
-    objects=objectSpec, settings={Spacing=10},
-    menu={{id='Bar',label='Bar',fields={
-        {id='Tightness',label='Tightness',
-            values={min=-25,max=50,step=5,suffix='%'},default=-25},
-        {id='Size',label='Size',
-            values={min=-50,max=150,step=5,suffix='%'},default=100},
-        {id='Margin',label='Margin',values={min=-100,max=100,step=1},default=0},
-    }}},
+    -- Both wheels overlap at the chosen edge, as in Wheels' Overlap placement.
+    -- Bars then lines every key and its binding label up from that shared
+    -- center; nothing is reparented.
+    objects={
+        wheels={abilities={},consumables={},
+            properties={'box','slot','position','size','opacity'}},
+        change_prompt={properties={'opacity'}},
+        buttons={
+            abilitySlots={'ability_button_left','ability_button_top','ability_button_right','ability_button_bottom'},
+            consumableSlots={'consumable_button_left','consumable_button_top','consumable_button_right','consumable_button_bottom'},
+            properties={'slot','position','size'},
+        },
+        labels={
+            abilityLabels={'ability_left','ability_top','ability_right','ability_bottom'},
+            consumableLabels={'consumable_left','consumable_top','consumable_right','consumable_bottom'},
+            properties={'slot','position','size','opacity'},
+        },
+    },
+    menu = {
+        {id='Bars', label='Bars', fields={
+            {id='.A', label='Orientation', values={[7]='Horizontal', [5]='Vertical'}, default=7},
+            {id='.S', label='Size',
+                values={min=-50,max=100,step=10,suffix='%'}, default=100},
+            {id='.M', label='Margin to Screen Edge',
+                values={min=-100,max=100,step=1}, default=0},
+        }},
+    }
 }
 
--- Slot identity: 0=Left, 1=Top, 2=Right, 3=Bottom.
-local MC=require('mc')
-local Widget=MC.load('widget')
-local Objects=MC.load('objects')
-local kinds={'ability','consumable'}
+-- Spacing between neighbouring keys, as a fraction of the key size.
+local SPC=0.075
+-- Slots are listed Left, Top, Right, Bottom; the bar runs L, T, B, R per wheel.
+local sequence={1,2,4,3}
 
-local function baitPanel(tree,label,color)
-    local panel=assert(StaticConstructObject(
-        assert(StaticFindObject('/Script/UMG.Overlay'),'Overlay class unavailable'),tree),
-        'could not construct switcher panel')
-    local size=assert(StaticConstructObject(
-        assert(StaticFindObject('/Script/UMG.SizeBox'),'SizeBox class unavailable'),tree),
-        'could not construct switcher marker size box')
-    size:SetWidthOverride(280)
-    size:SetHeightOverride(90)
-    local background=assert(StaticConstructObject(
-        assert(StaticFindObject('/Script/UMG.Border'),'Border class unavailable'),tree),
-        'could not construct switcher marker background')
-    background:SetBrushColor(color)
-    local marker=assert(StaticConstructObject(
-        assert(StaticFindObject('/Script/UMG.TextBlock'),'TextBlock class unavailable'),tree),
-        'could not construct switcher marker')
-    local text=assert(StaticFindObject('/Script/Engine.Default__KismetTextLibrary'),
-        'text conversion unavailable')
-    marker:SetText(text:Conv_StringToText(label))
-    assert(Objects.valid(background:AddChild(marker)),'could not add switcher marker text')
-    assert(Objects.valid(size:AddChild(background)),'could not add switcher marker background')
-    assert(Objects.valid(panel:AddChild(size)),'could not add switcher marker size box')
-    return panel
+-- Offset of a shown key from the shared center, which is the edge between the
+-- two wheels. Shown keys are one pitch apart: abilities end half a pitch before
+-- the center and consumables start half a pitch after it, so neither wheel
+-- moves when the other gains or loses keys. Horizontal runs right; vertical
+-- runs down, so abilities end up above.
+local function fan(w,i,n,vertical,pitchX,pitchY)
+    local along=w==1 and i-n-0.5 or i-0.5
+    if vertical then return 0,along*pitchY end
+    return along*pitchX,0
 end
 
-local function moveToActions(widget,actions)
-    local previous=assert(Objects.parent(widget),'quickslot parent unavailable')
-    assert(previous:RemoveChild(widget)~=false,'could not detach quickslot')
-    local slot=assert(actions:AddChild(widget),'could not add quickslot to Actions')
-    assert(Objects.valid(slot),'Actions quickslot slot unavailable')
-    local slotClass=Objects.call(slot,'GetClass')
-    assert(Objects.call(slotClass,'GetName')=='CanvasPanelSlot',
-        'Actions does not provide a CanvasPanelSlot')
-    slot:SetLayout({
-        Offsets={Left=0,Top=0,Right=0,Bottom=0},
-        Anchors={Minimum={X=0,Y=0},Maximum={X=0,Y=0}},
-        Alignment={X=0,Y=0},
-    })
-    slot:SetAutoSize(true)
+-- Empty slots take no place in the bar. A consumable slot is empty without a
+-- displayed item; an ability slot is empty while its ability widget is hidden.
+local function filled(button,w)
+    if w==2 then
+        return Objects.valid(Widget.property(button,'Displayed Item Asset'))
+    end
+    local ability=Widget.property(button,'AbilityWidget')
+    return Objects.valid(ability) and Objects.call(ability,'IsVisible')~=false
 end
 
+-- Decorations are named children, not members, so MCT cannot target them.
+-- Find them by name and restore them through onCleanup.
+local decorationNames={{'cross','Darken','Glow','Dpad'},{'cross','Dpad'}}
 local function findChild(root,name)
     if not Objects.valid(root) then return nil end
     local full=Objects.call(root,'GetFullName')
     if type(full)=='string' and full:sub(-#name-1)=='.'..name then return root end
+    -- A UserWidget is not a panel; its children hang off its WidgetTree's root.
+    local tree=Widget.property(Widget.property(root,'WidgetTree'),'RootWidget')
+    if tree then return findChild(tree,name) end
     local count=Objects.call(root,'GetChildrenCount')
     if type(count)~='number' then return nil end
     for index=0,count-1 do
@@ -81,132 +85,97 @@ local function findChild(root,name)
     end
 end
 
-local function hideDecorations(panel,kind,onCleanup)
-    local names=kind=='ability' and {'cross','Darken','Glow'} or {'cross'}
+local function hideDecorations(wheel,names,onCleanup)
     for _,name in ipairs(names) do
-        local decoration=assert(findChild(panel,name),kind..' '..name..' unavailable')
-        local opacity=Widget.opacity(decoration)
-        onCleanup(function()
-            if Objects.valid(decoration) then Widget.setOpacity(decoration,opacity) end
-        end)
-        Widget.setOpacity(decoration,0)
+        local decoration=findChild(wheel,name)
+        if decoration then
+            local opacity=Widget.opacity(decoration)
+            onCleanup(function()
+                if Objects.valid(decoration) then Widget.setOpacity(decoration,opacity) end
+            end)
+            Widget.setOpacity(decoration,0)
+        end
     end
 end
 
-local function plan(measured,factor,spacing,margin,tightness)
-    local blend=(tightness+25)/75
-    assert(blend>=0 and blend<=1,'Tightness must be between -25 and 50')
-    local groups={}
-    for _,kind in ipairs(kinds) do
-        local boxes=measured[kind]
-        local maxWidth,maxHeight=0,0
-        for _,box in ipairs(boxes) do
-            maxWidth=math.max(maxWidth,box.width*factor)
-            maxHeight=math.max(maxHeight,box.height*factor)
-        end
-        local pitch=maxWidth*(1+spacing)
-        local rowHeight=maxHeight*(1+spacing)*(1-blend)
-        local compact=kind=='ability' and {0,0.5,1,1.5} or {0,0.5,1.5,1}
-        local upper=kind=='ability' and {[2]=true,[4]=true} or {[1]=true,[4]=true}
-        local points,width={},0
-        for index,box in ipairs(boxes) do
-            local x=(compact[index]*(1-blend)+(index-1)*blend)*pitch
-            local y=upper[index] and 0 or rowHeight
-            points[index]={x=x,y=y}
-            width=math.max(width,x+box.width*factor)
-        end
-        groups[kind]={points=points,width=width,height=rowHeight+maxHeight}
-    end
-    local height=math.max(groups.ability.height,groups.consumable.height)
-    groups.ability.x=-groups.ability.width-margin/2
-    groups.consumable.x=margin/2
-    groups.ability.y,groups.consumable.y=-height/2,-height/2
-    return groups
-end
-
-bar.attach = function(objects,params,original)
-    print('[Fangdango] Bar attach')
-    local settings=params.settings
-    local scale=settings.Size/100
+-- Center a widget in its overlay, then place its scaled center at x,y from there.
+local function center(widget,box,x,y,scale)
+    local slot=assert(Widget.slot(widget),'quickslot widget slot unavailable')
+    slot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
+    slot:SetHorizontalAlignment(2)
+    slot:SetVerticalAlignment(2)
     local factor=math.abs(scale)
-    local spacing=(settings.Spacing or 10)/100
-    local margin=settings.Margin or 0
-    local switcher=objects.switcher
-    local tree=assert(switcher:GetOuter(),'QuickslotsSwitcher WidgetTree unavailable')
-    local hudRoot=objects.hud_root
-    assert(Objects.valid(hudRoot),'HUD root invalid')
-    assert(Objects.same(Objects.parent(objects.actions),hudRoot),
-        'Actions must be attached to the HUD before Bar attach')
-    local panels={}
-    params.onCleanup(function()
-        -- Restore the native wheels before removing their temporary host.
-        for _,wheel in ipairs({objects.abilities,objects.consumables}) do
-            if Objects.valid(wheel) and not Objects.same(Objects.parent(wheel),switcher) then
-                Widget.reparent(wheel,switcher)
+    Widget.position(widget,box,x+box.width*(1-factor)/2,y+box.height*(1-factor)/2,scale)
+end
+
+-- A label may be empty while its key is unbound; it still moves with its key.
+local function labelBox(label)
+    local ok,box=pcall(Widget.measure,label)
+    if ok then return box end
+    local pivot=Widget.property(label,'RenderTransformPivot')
+    return {width=0,height=0,pivotX=tonumber(Widget.property(pivot,'X')) or 0.5,
+        pivotY=tonumber(Widget.property(pivot,'Y')) or 0.5}
+end
+
+template.attach = function(objects, params, original)
+    local settings=params.settings
+    local abilityBox=original.wheels.abilities.box
+    local consumableBox=original.wheels.consumables.box
+
+    local positions=Helpers.pair({WheelsA=settings.BarsA,WheelsR=0,WheelsS=100,
+        WheelsM=settings.BarsM},params.screen,abilityBox,consumableBox)
+    local wheels={objects.wheels.abilities,objects.wheels.consumables}
+    local slots={objects.buttons.abilitySlots,objects.buttons.consumableSlots}
+    local labels={objects.labels.abilityLabels,objects.labels.consumableLabels}
+
+    local scale=settings.BarsS/100
+    local factor=math.abs(scale)
+    local vertical=Widget.relative(settings.BarsA).X~=0
+
+    -- Lay out the shown keys in bar order: L, T, B, R of each wheel. An empty
+    -- key may have no size, so the pitch comes from the first shown key.
+    local shown,counts,first={},{},nil
+    for w=1,2 do
+        shown[w],counts[w]={},0
+        for _,index in ipairs(sequence) do
+            if filled(slots[w][index],w) then
+                counts[w]=counts[w]+1
+                shown[w][index]=counts[w]
+                first=first or Widget.measure(slots[w][index])
             end
         end
-        for _,panel in ipairs(panels) do
-            if Objects.valid(panel) and Objects.same(Objects.parent(panel),switcher) then
-                assert(switcher:RemoveChild(panel)~=false,'could not remove switcher bait')
+    end
+    local W,H=first and first.width*factor or 0,first and first.height*factor or 0
+    local pitchX,pitchY=W*(1+SPC),H*(1+SPC)
+
+    for w=1,2 do
+        local position=positions[w]
+        local placed, reason=Widget.canvasPosition(wheels[w], position.box, position.x, position.y, 1)
+        assert(placed,reason)
+        hideDecorations(wheels[w],decorationNames[w],params.onCleanup)
+
+        for index,button in ipairs(slots[w]) do
+            local label=labels[w][index]
+            local place=shown[w][index]
+            if place then
+                local x,y=fan(w,place,counts[w],vertical,pitchX,pitchY)
+                center(button,Widget.measure(button),x,y,scale)
+                -- The binding label sits centered on its key's top edge, clear of
+                -- the consumable count at the bottom-right. Text is never mirrored.
+                center(label,labelBox(label),x,y-H/2,factor)
+            else
+                -- An empty key draws nothing; hide its label too.
+                Widget.setOpacity(label,0)
             end
         end
-    end)
-    local bait={
-        {label='HUD BAIT',color={R=0.8,G=0.12,B=0.08,A=0.85}},
-        {label='AA BAIT',color={R=0.06,G=0.25,B=0.8,A=0.85}},
-    }
-    for _,spec in ipairs(bait) do
-        local panel=baitPanel(tree,spec.label,spec.color)
-        panels[#panels+1]=panel
-        assert(Objects.valid(switcher:AddChild(panel)),'could not add switcher bait')
     end
-    -- Measure before reparenting the two wheel widgets and arranging their buttons.
-    Widget.prepareLayout(switcher)
-    local measured={ability={},consumable={}}
-    for _,kind in ipairs(kinds) do
-        for index,button in ipairs(objects.buttons[kind..'Slots']) do
-            measured[kind][index]=Widget.measure(button)
-        end
-    end
-    local groups=plan(measured,factor,spacing,margin,settings.Tightness or -25)
-    local actionsSlot=assert(Widget.property(objects.actions,'Slot'),'Actions HUD slot unavailable')
-    assert(Objects.valid(actionsSlot),'Actions HUD slot unavailable')
-    local slotClass=Objects.call(actionsSlot,'GetClass')
-    local slotName=Objects.call(slotClass,'GetName')
-    if slotName=='CanvasPanelSlot' then
-        actionsSlot:SetLayout({
-            Offsets={Left=0,Top=0,Right=0,Bottom=0},
-            Anchors={Minimum={X=0.5,Y=0.5},Maximum={X=0.5,Y=0.5}},
-            Alignment={X=0,Y=0},
-        })
-        actionsSlot:SetAutoSize(true)
-    else
-        local centered,why=pcall(function()
-            actionsSlot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
-            actionsSlot:SetHorizontalAlignment(1)
-            actionsSlot:SetVerticalAlignment(1)
-        end)
-        assert(centered,'HUD root slot '..tostring(slotName)..' cannot center Actions: '..tostring(why))
-    end
-    Widget.setTranslation(objects.actions,0,0)
-    for _,kind in ipairs(kinds) do
-        local wheel=objects[kind=='ability' and 'abilities' or 'consumables']
-        local box,panel=objects[kind..'_box'],objects[kind..'_panel']
-        local group=groups[kind]
-        moveToActions(wheel,objects.actions)
-        Widget.setScale(wheel,1)
-        box:SetWidthOverride(group.width)
-        box:SetHeightOverride(group.height)
-        Widget.setTranslation(wheel,group.x,group.y)
-        for index,button in ipairs(objects.buttons[kind..'Slots']) do
-            local point=group.points[index]
-            Widget.reparent(button,panel)
-            Widget.position(button,measured[kind][index],point.x,point.y,scale)
-        end
-        hideDecorations(panel,kind,params.onCleanup)
-    end
-    switcher:SetActiveWidgetIndex(math.min(1,math.max(0,original.switcher.activeIndex)))
+    -- The native prompt describes swapping the switcher's active panel; Bars
+    -- shows every key at once.
+    Widget.setOpacity(objects.change_prompt,0)
+    -- A rebuild restores native opacity; apply the current focus.
+    template.events['controls.group.focus'](params,
+        {name='controls.group.focus',group=params.state.controls.group},objects)
     return original
 end
 
-return bar
+return template

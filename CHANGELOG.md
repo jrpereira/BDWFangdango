@@ -1,6 +1,12 @@
 # Changelog
 
-- Register Minima, Wheels, and Bar individually through `mc.addTemplate`.
+- Dim the wheel without focus to 50% in Wheels (except Overlap) and Bar, following
+  ModCore Controls' focus through ModCoreTemplates.
+- Bars sizes each wheel's frame to its row again, so keys are no longer laid out
+  outside the wheel panel after the host buttons were removed.
+- Position the quickslot wheels directly in the ModCoreTemplates canvas, which no
+  longer wraps them in host buttons. Clicking a wheel no longer fades between them.
+- Register Wheels and Bar individually through `mc.addTemplate`.
 - Rename the installed mod folder to `_ModCore_X_Fangdango`.
 
 ## 0.2.1 — Wheels update

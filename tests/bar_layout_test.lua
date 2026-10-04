@@ -1,5 +1,5 @@
-package.path='ModCoreTemplates/Scripts/?.lua;'..package.path
-local bar=dofile('Fangdango/tests/load_templates.lua')()[3]
+package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;'..package.path
+local bar=dofile('Fangdango/tests/load_templates.lua')()[2]
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
 local graph=require('mc.selectors').compile(category.objects)
 local State=require('mc.target_state')
@@ -11,6 +11,7 @@ local function widget(name)
     }
     function w:IsValid() return self.invalid ~= true end
     function w:GetFullName() return self.name end
+    function w:GetAddress() return self.name..'-address' end
     function w:GetParent() return self.parent end
     function w:GetChildrenCount() return #self.children end
     function w:GetChildAt(index) return self.children[index+1] end
@@ -71,45 +72,76 @@ local function canvasAddChild(self,child)
     assert(child.parent==nil)
     self.children[#self.children+1]=child
     child.parent=self
-    child.Slot={LayoutData={},bAutoSize=false}
+    child.Slot={LayoutData={Offsets={Left=0,Top=0,Right=0,Bottom=0},
+        Anchors={Minimum={X=0,Y=0},Maximum={X=0,Y=0}},Alignment={X=0,Y=0}},
+        ZOrder=0,bAutoSize=false}
     function child.Slot:IsValid() return true end
     function child.Slot:GetClass() return {GetName=function() return 'CanvasPanelSlot' end} end
-    function child.Slot:SetLayout(value) self.LayoutData=value end
+    function child.Slot:SetLayout(value)
+        self.LayoutData=value
+        self.position={X=value.Offsets.Left,Y=value.Offsets.Top}
+    end
     function child.Slot:SetAutoSize(value) self.bAutoSize=value end
+    function child.Slot:SetPosition(value)
+        self.position=value
+        self.LayoutData.Offsets.Left=value.X
+        self.LayoutData.Offsets.Top=value.Y
+    end
+    function child.Slot:SetSize(value)
+        self.size=value
+        self.LayoutData.Offsets.Right=value.X
+        self.LayoutData.Offsets.Bottom=value.Y
+    end
+    function child.Slot:SetZOrder(value) self.ZOrder=value end
     return child.Slot
 end
 StaticFindObject=function(path)
-    if path=='/Script/UMG.Overlay' or path=='/Script/UMG.TextBlock'
-        or path=='/Script/UMG.SizeBox' or path=='/Script/UMG.Border'
-        or path=='/Script/UMG.CanvasPanel' then
+    if path=='/Script/UMG.Overlay' or path=='/Script/UMG.CanvasPanel' then
         return {path=path}
-    end
-    if path=='/Script/Engine.Default__KismetTextLibrary' then
-        return {Conv_StringToText=function(_,text) return text end}
     end
     error('unexpected class lookup: '..path)
 end
+FName=function(value) return value end
+local createdCount=0
 StaticConstructObject=function(class,outer)
     assert(outer==tree)
-    local created=widget(class.path)
+    createdCount=createdCount+1
+    local created=widget(class.path..createdCount)
     function created:SetText(value) self.text=value end
     function created:SetWidthOverride(value) self.WidthOverride=value end
     function created:SetHeightOverride(value) self.HeightOverride=value end
     function created:SetBrushColor(value) self.BrushColor=value end
-    if class.path=='/Script/UMG.CanvasPanel' then created.AddChild=canvasAddChild end
+    if class.path=='/Script/UMG.CanvasPanel' then
+        created.AddChild=canvasAddChild
+        function created:ForceLayoutPrepass() layoutPasses=layoutPasses+1 end
+    end
     return created
 end
-local objects={switcher=switcher,hud_root=hudRoot,buttons={abilitySlots={},consumableSlots={}}}
+local objects={switcher=switcher,hud_root=hudRoot,change_prompt=widget('Change prompt'),
+    wheels={},panels={},boxes={},buttons={abilitySlots={},consumableSlots={}},
+    labels={abilityLabels={},consumableLabels={}},decorations={ability={},consumable={}}}
+local nativeBoxes={}
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel,box,panel=widget(kind),widget(kind..'Box'),widget(kind..'Panel')
-    objects[kind=='ability' and 'abilities' or 'consumables'],
-        objects[kind..'_box'],objects[kind..'_panel']=wheel,box,panel
+    objects[kind=='ability' and 'abilities' or 'consumables']=wheel
+    wheel.RenderTransformPivot={X=0.5,Y=0.5}
+    function wheel:GetDesiredSize() return {X=200,Y=160} end
+    objects.panels[kind..'_panel']=panel
+    nativeBoxes[kind]=box
+    objects.boxes[kind..'_box']=box
     switcher:AddChild(wheel);wheel:AddChild(box);box:AddChild(panel)
+    -- Like the native UserWidget, the wheel reaches its tree only through
+    -- WidgetTree.RootWidget, not as panel children.
+    wheel.WidgetTree={RootWidget=box}
+    function wheel:GetChildrenCount() error('UserWidget is not a panel') end
     wheel.inner=widget(kind..'.Inner');panel:AddChild(wheel.inner)
     wheel.cross=widget(kind..'.cross');wheel.inner:AddChild(wheel.cross)
+    objects.decorations[kind][1]=wheel.cross
     if kind=='ability' then
         wheel.Darken=widget(kind..'.Darken');wheel.Glow=widget(kind..'.Glow')
         panel:AddChild(wheel.Darken);panel:AddChild(wheel.Glow)
+        objects.decorations.ability[2]=wheel.Darken
+        objects.decorations.ability[3]=wheel.Glow
     end
     box.WidthOverride,box.HeightOverride=321,234
     box.bOverride_WidthOverride,box.bOverride_HeightOverride=false,true
@@ -122,23 +154,62 @@ for _,kind in ipairs({'ability','consumable'}) do
         button.RenderTransformPivot={X=0.5,Y=0.25}
         button.desired={X=100,Y=80}
         function button:GetDesiredSize()return self.desired end
+        -- Ability L and B are empty: their ability widget is hidden, and the
+        -- empty L has no size. Consumables all hold an item.
+        if kind=='ability' then
+            local empty=index==1 or index==4
+            if index==1 then button.desired={X=0,Y=0} end
+            button.AbilityWidget={IsValid=function() return true end,
+                IsVisible=function() return not empty end}
+        else
+            button['Displayed Item Asset']={IsValid=function() return true end}
+        end
         panel:AddChild(button)
         objects.buttons[kind..'Slots'][index]=button
     end
+    -- The binding labels live in a nested Bindings UserWidget with a Dpad image.
+    local bindings,bindingsBox,bindingsPanel=widget(kind..'.Bindings'),
+        widget(kind..'.BindingsBox'),widget(kind..'.BindingsPanel')
+    panel:AddChild(bindings);bindings:AddChild(bindingsBox);bindingsBox:AddChild(bindingsPanel)
+    bindings.WidgetTree={RootWidget=bindingsBox}
+    function bindings:GetChildrenCount() error('UserWidget is not a panel') end
+    wheel.Dpad=widget(kind..'.Dpad');bindingsPanel:AddChild(wheel.Dpad)
+    for index=1,4 do
+        local label=widget(kind..'.Label'..index)
+        label.RenderTransformPivot={X=0.5,Y=0.5}
+        -- An unbound key's label can be empty; it must still move with its key.
+        label.desired=(kind=='consumable' and index==4) and {X=0,Y=0} or {X=30,Y=20}
+        function label:GetDesiredSize() return self.desired end
+        bindingsPanel:AddChild(label)
+        objects.labels[kind..'Labels'][index]=label
+    end
 end
 switcher.active=1
-local originalAttach=bar.attach
-bar.attach=function(named,params,original)
-    assert(named.actions and named.actions:GetParent()==hudRoot,
-        'MCT must attach Actions to the HUD before Bar attach')
-    return originalAttach(named,params,original)
+assert(bar.loaded==nil,'Bar must not install a click-transition runtime')
+local sharedGraph=require('mc.selectors').project(graph,category.sharedObjects)
+local sharedCreated={}
+for _,name in ipairs(sharedGraph.order) do
+    local selector=sharedGraph.byName[name]
+    if selector.create then
+        sharedCreated[#sharedCreated+1]={name=name,class=selector.class,from=selector.from,
+            parent=selector.parent,reparent=selector.reparent,destination=selector.destination,
+            reparentLayout=selector.reparentLayout,opacity=selector.opacity,
+            layout=selector.layout,prepass=selector.prepass}
+    end
 end
-local manager=Manager.new(bar,State.specs(graph,bar.objects),graph.order,
-    {{name='actions',class='/Script/UMG.CanvasPanel',from='switcher',parent='hud_root'}})
-local function params(size,margin,tightness)
-    return {settings={Size=size or 100,Margin=margin or 0,
-        Spacing=10,Tightness=tightness or -25},
-        screen={center=960,middle=540}}
+local sharedTargets={}
+local sharedDefinition={attach=function(_,_,original) return original end}
+local sharedManager=Manager.new(sharedDefinition,
+    State.specs(sharedGraph,category.sharedObjects),sharedGraph.order,sharedCreated)
+local barGraph=require('mc.selectors').project(graph,bar.objects)
+local manager=Manager.new(bar,State.specs(barGraph,bar.objects),barGraph.order)
+-- Orientation 7 is Horizontal (bottom/center), 5 is Vertical (right/center).
+-- ModCore Controls has reported abilities (group 1) as focused.
+local function params(size,margin,orientation,state)
+    return {settings={BarsS=size or 100,BarsM=margin or 0,BarsA=orientation or 7,
+            focus=bar.settings.focus},
+        screen={width=1920,height=1080,scale=1,center=960,middle=540},
+        state=state or {controls={group={from=1,to=1}}}}
 end
 local function near(a,b) assert(math.abs(a-b)<0.00001,tostring(a)..' ~= '..tostring(b)) end
 local function bounds(button)
@@ -147,127 +218,144 @@ local function bounds(button)
     return transform.Translation.X+pivot.X*size.X*(1-scale)+math.min(0,scale*size.X),
         transform.Translation.Y+pivot.Y*size.Y*(1-scale)+math.min(0,scale*size.Y)
 end
+assert(sharedManager:attach(switcher,sharedTargets,params(),objects))
+objects.actions=sharedTargets.actions
+objects.wheels.abilities=objects.abilities
+objects.wheels.consumables=objects.consumables
+local abilityWheel,consumableWheel=objects.abilities,objects.consumables
+local actions=assert(sharedTargets.actions)
+assert(abilityWheel:GetParent()==actions and consumableWheel:GetParent()==actions,
+    'MCT must place both wheels directly in its canvas without host buttons')
 assert(manager:attach(switcher,objects,params()))
-assert(layoutPasses==1,'Bar attach must perform one layout prepass for all buttons')
-assert(switcher.maxChildren==4,'both bait panels must be added before the native wheels move')
+assert(switcher.active==1,'Bar must not change the native switcher index')
+assert(objects.change_prompt.opacity==0,'Bar must hide the native swap prompt')
 assert(switcher:GetChildrenCount()==2)
 local panelA,panelB=switcher:GetChildAt(0),switcher:GetChildAt(1)
-assert(panelA~=objects.actions and panelB~=objects.actions)
-assert(objects.actions:GetParent()==hudRoot and objects.actions:GetChildrenCount()==2)
-near(objects.actions.RenderTransform.Translation.X,0)
-near(objects.actions.RenderTransform.Translation.Y,0)
-assert(objects.actions.Slot:GetClass():GetName()=='OverlaySlot')
-assert(objects.actions.Slot.HorizontalAlignment==1)
-assert(objects.actions.Slot.VerticalAlignment==1)
-assert(objects.actions.Slot.Padding.Left==0 and objects.actions.Slot.Padding.Top==0)
-assert(objects.actions:GetChildAt(0)==objects.abilities)
-assert(objects.actions:GetChildAt(1)==objects.consumables)
-for _,wheel in ipairs({objects.abilities,objects.consumables}) do
-    assert(wheel.Slot:GetClass():GetName()=='CanvasPanelSlot' and wheel.Slot.bAutoSize)
+assert(panelA~=actions and panelB~=actions)
+assert(actions:GetParent()==hudRoot and actions:GetChildrenCount()==2)
+assert(actions:GetChildAt(0)==abilityWheel and actions:GetChildAt(1)==consumableWheel)
+-- Both wheels share one box at the chosen edge, as in Wheels' Overlap placement.
+local function wheelsAt(x,y)
+    for _,wheel in ipairs({abilityWheel,consumableWheel}) do
+        near(wheel.Slot.position.X,x);near(wheel.Slot.position.Y,y)
+    end
 end
-local markerA,markerB=panelA:GetChildAt(0),panelB:GetChildAt(0)
-assert(markerA.WidthOverride==280 and markerA.HeightOverride==90)
-assert(markerB.WidthOverride==280 and markerB.HeightOverride==90)
-assert(markerA:GetChildAt(0).BrushColor.R>markerA:GetChildAt(0).BrushColor.B)
-assert(markerB:GetChildAt(0).BrushColor.B>markerB:GetChildAt(0).BrushColor.R)
-assert(markerA:GetChildAt(0):GetChildAt(0).text=='HUD BAIT')
-assert(markerB:GetChildAt(0):GetChildAt(0).text=='AA BAIT')
-switcher:SetActiveWidgetIndex(1)
-assert(switcher:GetActiveWidgetIndex()==1 and switcher:GetChildAt(1)==panelB)
-switcher:SetActiveWidgetIndex(0)
-assert(switcher:GetActiveWidgetIndex()==0 and switcher:GetChildAt(0)==panelA)
-near(objects.ability_box.WidthOverride,265)
-near(objects.consumable_box.WidthOverride,265)
-near(objects.abilities.RenderTransform.Translation.X+265,0)
-near(objects.consumables.RenderTransform.Translation.X,0)
-local function point(kind,index)
+wheelsAt(860,920)
+-- A widget's center offset from its overlay's center; keys and labels are
+-- center-aligned.
+local function centerOf(widget)
+    assert(widget.Slot.HorizontalAlignment==2 and widget.Slot.VerticalAlignment==2)
+    local x,y=bounds(widget)
+    local factor=math.abs(widget.RenderTransform.Scale.X)
+    return x+(factor-1)*widget.desired.X/2,y+(factor-1)*widget.desired.Y/2
+end
+local function offset(kind,index)
     local button=objects.buttons[kind..'Slots'][index]
-    assert(button:GetParent()==objects[kind..'_panel'])
-    local x,y=bounds(button)
-    local wheel=objects[kind=='ability' and 'abilities' or 'consumables']
-    return x+wheel.RenderTransform.Translation.X,y+wheel.RenderTransform.Translation.Y
+    assert(button:GetParent()==objects.panels[kind..'_panel'],'Bar must not reparent keys')
+    return centerOf(button)
 end
-local x1,y1=point('ability',1)
-local x2,y2=point('ability',2)
-local x3,y3=point('ability',3)
-local x4,y4=point('ability',4)
-local x5,y5=point('consumable',1)
-local x6,y6=point('consumable',2)
-local x7,y7=point('consumable',3)
-local x8,y8=point('consumable',4)
-assert(x1<x2 and x2<x3 and x3<x4 and x4<x5 and x5<x6 and x6<x8 and x8<x7)
-near(y1,y3);near(y1,y6);near(y1,y7)
-near(y2,y4);near(y2,y5);near(y2,y8)
-assert(y1>y2)
+-- Shown keys are one pitch (key size * 1.075) apart in bar order L,T,B,R.
+-- Empty slots take no place. Abilities end half a pitch before the center,
+-- consumables start half a pitch after it. Horizontal runs right, vertical
+-- runs down. Each binding label sits centered on its key's top edge; an empty
+-- key's label is hidden. Ability L and B are empty, so only T and R show.
+local along={ability={nil,-1.5,-0.5,nil},consumable={0.5,1.5,3.5,2.5}}
+local function lined(W,H,vertical)
+    for _,kind in ipairs({'ability','consumable'}) do
+        for index=1,4 do
+            local label=objects.labels[kind..'Labels'][index]
+            local a=along[kind][index]
+            if a then
+                local x,y=offset(kind,index)
+                local ex,ey=a*W*1.075,0
+                if vertical then ex,ey=0,a*H*1.075 end
+                near(x,ex);near(y,ey)
+                local lx,ly=centerOf(label)
+                near(lx,ex);near(ly,ey-H/2)
+                assert(label.RenderTransform.Scale.X>=0,'labels must not mirror')
+                assert(label.opacity==1)
+            else
+                assert(label.opacity==0,kind..' empty slot label must be hidden')
+            end
+        end
+    end
+end
+lined(100,80)
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel=objects[kind=='ability' and 'abilities' or 'consumables']
-    assert(wheel:GetParent()==objects.actions and wheel.opacity==1)
-    assert(wheel.cross.opacity==0)
+    assert(wheel:GetParent()==actions)
+    assert(wheel.cross.opacity==0 and wheel.Dpad.opacity==0)
 end
 assert(objects.abilities.Darken.opacity==0 and objects.abilities.Glow.opacity==0)
--- Group/Flat access owns wheel panel opacity while Bar owns only decoration opacity.
-objects.consumables:SetRenderOpacity(0.3)
-assert(manager:update(switcher,objects,params(100,0,0)))
-local _,middleTop=point('ability',2)
-local _,middleBottom=point('ability',1)
-assert(middleBottom-middleTop>0 and middleBottom-middleTop<y1-y2)
-assert(manager:update(switcher,objects,params(100,0,50)))
-near(objects.consumables.opacity,0.3)
-near(objects.ability_box.WidthOverride,430)
-local row={}
-for index=1,4 do
-    local x,y=point('ability',index);row[index]={x=x,y=y}
-    x,y=point('consumable',index);row[index+4]={x=x,y=y}
-end
-for index=2,8 do
-    assert(row[index-1].x<row[index].x)
-    near(row[1].y,row[index].y)
-end
-assert(manager:update(switcher,objects,params(150,20)))
-near(objects.ability_box.WidthOverride,397.5)
-near(objects.ability_box.HeightOverride,252)
-near(objects.abilities.RenderTransform.Translation.X+397.5,-10)
-near(objects.consumables.RenderTransform.Translation.X,10)
-near(objects.abilities.RenderTransform.Translation.Y,
-    objects.consumables.RenderTransform.Translation.Y)
-assert(manager:update(switcher,objects,params(-50,-100)))
-near(objects.ability_box.WidthOverride,132.5)
-near(objects.abilities.RenderTransform.Translation.X+132.5,50)
-near(objects.consumables.RenderTransform.Translation.X,-50)
-for index,button in ipairs(objects.buttons.abilitySlots)do
-    near(button.RenderTransform.Scale.X,-0.5)
+-- Attach applies the initial focus: abilities stay opaque, consumables dim.
+near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+assert(switcher.active==1,'Bar update must not change the native switcher index')
+local focusParams=params()
+bar.events['controls.group.focus'](focusParams,{name='controls.group.focus',group={from=2,to=1}},
+    {wheels={abilities=objects.abilities,consumables=objects.consumables}})
+near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+-- A rebuild applies the current focus from the state.
+assert(manager:update(switcher,objects,params(100,0,7,{controls={group={from=1,to=2}}})))
+near(objects.abilities.opacity,bar.settings.focus.dim);near(objects.consumables.opacity,1)
+-- Margin moves the shared center away from the screen edge.
+assert(manager:update(switcher,objects,params(100,20)))
+near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+wheelsAt(860,900)
+-- Vertical: one column at the right edge, abilities above the middle and
+-- consumables below, the nearest of each half a pitch (43) from it.
+assert(manager:update(switcher,objects,params(100,0,5)))
+wheelsAt(1720,460)
+lined(100,80,true)
+local _,abilityNearest=offset('ability',3)
+local _,consumableNearest=offset('consumable',1)
+near(abilityNearest,-43);near(consumableNearest,43)
+-- Negative size mirrors each key in place; the pitch uses its magnitude.
+assert(manager:update(switcher,objects,params(-50)))
+lined(50,40)
+for index,button in ipairs(objects.buttons.abilitySlots) do
+    near(button.RenderTransform.Scale.X,along.ability[index] and -0.5 or 1)
 end
 assert(manager:update(switcher,objects,params(0)))
-near(objects.ability_box.WidthOverride,0)
 assert(manager:update(switcher,objects,params()))
-near(objects.ability_box.WidthOverride,265)
-local add=objects.consumable_panel.AddChild
+local lastKey=objects.buttons.consumableSlots[4]
+local setScale=lastKey.SetRenderScale
 local fail=true
-function objects.consumable_panel:AddChild(child)
-    if fail then fail=false;error('injected Bar reparent failure') end
-    return add(self,child)
+function lastKey:SetRenderScale(value)
+    if fail then fail=false;error('injected Bar key failure') end
+    return setScale(self,value)
 end
 assert(not manager:update(switcher,objects,params(150)))
-objects.consumable_panel.AddChild=add
+lastKey.SetRenderScale=setScale
 assert(manager:detach(switcher))
-near(objects.consumables.opacity,0.3)
-assert(switcher:GetChildAt(0)==objects.abilities and switcher:GetChildAt(1)==objects.consumables)
-assert(panelA:GetParent()==nil and panelB:GetParent()==nil)
-assert(objects.actions:GetParent()==nil and objects.actions:GetChildrenCount()==0)
-assert(switcher.active==1)
+assert(objects.change_prompt.opacity==1,'detach must restore the native swap prompt')
+near(objects.consumables.opacity,1)
+assert(switcher:GetChildAt(0)==panelA and switcher:GetChildAt(1)==panelB)
+assert(actions:GetParent()==hudRoot and actions:GetChildrenCount()==2)
 assert(objects.abilities.cross.opacity==1 and objects.consumables.cross.opacity==1)
 assert(objects.abilities.Darken.opacity==1 and objects.abilities.Glow.opacity==1)
+assert(objects.abilities.Dpad.opacity==1 and objects.consumables.Dpad.opacity==1)
 for _,kind in ipairs({'ability','consumable'}) do
-    local box=objects[kind..'_box']
+    for _,label in ipairs(objects.labels[kind..'Labels']) do
+        assert(label.Slot.HorizontalAlignment==0 and label.Slot.VerticalAlignment==0)
+        near(label.RenderTransform.Translation.X,0);near(label.RenderTransform.Scale.X,1)
+    end
+end
+for _,kind in ipairs({'ability','consumable'}) do
+    local box=nativeBoxes[kind]
     assert(box.WidthOverride==321 and not box.bOverride_WidthOverride)
     assert(box.HeightOverride==234 and box.bOverride_HeightOverride)
     for index,button in ipairs(objects.buttons[kind..'Slots'])do
-        assert(objects[kind..'_panel']:GetChildAt(index+(kind=='ability' and 2 or 0))==button)
+        assert(objects.panels[kind..'_panel']:GetChildAt(index+(kind=='ability' and 2 or 0))==button)
+        assert(button.Slot.HorizontalAlignment==0 and button.Slot.VerticalAlignment==0)
         near(button.RenderTransform.Translation.X,0);near(button.RenderTransform.Scale.X,1)
     end
 end
--- An unavailable desired size must not partially move either group.
-objects.buttons.abilitySlots[1].desired.X=0
+-- A shown key without a size must not partially move either group.
+objects.buttons.abilitySlots[2].desired.X=0
 assert(not manager:attach(switcher,objects,params()))
 assert(switcher:GetChildrenCount()==2)
-print('PASS Bar: centered Actions host, two switcher baits, layout, rollback and restoration')
+assert(sharedManager:detach(switcher))
+assert(switcher:GetChildAt(0)==objects.abilities and switcher:GetChildAt(1)==objects.consumables)
+assert(panelA:GetParent()==nil and panelB:GetParent()==nil)
+assert(actions:GetParent()==nil and actions:GetChildrenCount()==0)
+print('PASS Bar: shared wheel canvas, layout, rollback and restoration')

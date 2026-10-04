@@ -1,82 +1,52 @@
-local MC=require('mc')
-local Widget=MC.load('widget')
+local MC = require('mc')
+local Widget = MC.load('widget')
+local Helpers=require('fangdango.helpers')
 
-local styleDescription=table.concat({
-    'The origins of Fangdango.',
-    'Like many events throughout history, this is also a matter of chance.',
-    'Because as lore goes, the makers of this world, enamoured as they were with creating and improving upon their creation, left some nuisances unresolved, and thus, the world adapted.',
-    'Fangdango is the result of that strife for more control over your own movements, art and discipline, flow and pure kinetic prowess.',
-    'The perfect timing that turns a forgotten scar, into an event that shapes human history.',
-    'Here you can choose whether you see both Wheels at a time, or just one. Use Edit controls below to open ModCore Controls for Grouped or Flat keys.',
-},' ')
-local descriptions={
-    Style=styleDescription,
-    WheelsX='Move both wheels horizontally from their usual position in Swap mode.',
-    WheelsY='Move both wheels vertically from their usual position in Swap mode.',
-    WheelsSize='Choose Small, Medium, or Large for the displayed wheel in Swap mode.',
-    Wheel1X='Move the ability wheel horizontally in Separate mode.',
-    Wheel1Y='Move the ability wheel vertically in Separate mode.',
-    Wheel1Size='Choose Small, Medium, or Large for the ability wheel in Separate mode.',
-    Wheel2X='Move the consumable wheel horizontally in Separate mode.',
-    Wheel2Y='Move the consumable wheel vertically in Separate mode.',
-    Wheel2Size='Choose Small, Medium, or Large for the consumable wheel. It displays at 85% of the selected size.',
-}
-local coord={min=-1000,max=1000,step=10}
-local size={[85]='Small',[100]='Medium',[110]='Large'}
-local menu = {
-    {id='Wheels',label='Wheels',variation={style=0},fields={
-        {id='.X',label='X',values=coord,default=0},
-        {id='.Y',label='Y',values=coord,default=0},
-        {id='.Size',label='Size',values=size,default=100,tab=true},
-    }},
-    {id='Wheel1',label='Wheel 1',variation={style=1},fields={
-        {id='.X',label='X',values=coord,default=0},
-        {id='.Y',label='Y',values=coord,default=0},
-        {id='.Size',label='Size',values=size,default=100,tab=true},
-    }},
-    {id='Wheel2',label='Wheel 2',variation={style=1},fields={
-        {id='.X',label='X',values=coord,default=0},
-        {id='.Y',label='Y',values=coord,default=-360},
-        {id='.Size',label='Size',values=size,default=85,tab=true},
-    }},
-}
-for _,group in ipairs(menu) do
-    for _,field in ipairs(group.fields) do
-        field.description=assert(descriptions[group.id..field.id:sub(2)])
-    end
-end
 local template = {
-    name='Wheels',category='player.quickslots',
-    objects={'switcher',abilities={properties={'opacity'}},consumables={properties={'opacity'}}},
-    description='Swap wheels in place or display both at separate positions.',
-    settings={WheelsOpacity=100,Wheel1Opacity=100,Wheel2Opacity=85},
-    variations={style={description=styleDescription,
-        values={[0]='Swap',[1]='Separate'},default=0}},
-    menu=menu,
+    name='Wheels Fangdango',
+    description='Position and size both quickslot wheels on the screen.',
+
+    category='player.quickslots',
+    settings={focus={dim=0.7}},
+    events={
+        ['controls.group.focus']=Helpers.onGroupFocus,
+    },
+    -- MCT's category lifecycle has already moved both wheels out of the native
+    -- switcher into its canvas. This template only owns their layout and the
+    -- swap prompt.
+    objects={
+        wheels={abilities={},consumables={}, properties={'box','slot','position','size','opacity'}},
+        change_prompt={properties={'opacity'}}
+    },
+    menu = {
+        {id='Wheels', label='Visual Options', fields={
+            {id='.A', label='Align to Screen Edge', values={[5]='Right/Center', [6]='Bottom/Right', [7]='Bottom/Center',}, default=6},
+            {id='.R', label='Relative Placement', values={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}, default=1},
+
+            {id='.S', label='Overall Size', values={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Larger'}, default=100},
+            {id='.M', label='Margin to Screen Edge',
+                values={min=0,max=100,step=10,suffix='%'}, default=0},
+        }},
+    }
 }
 
-template.attach = function (objects,params,original)
-    -- print('[Fangdango] Wheels attach Style=' .. tostring(params.settings.Style))
-    local switcher,ability,consumable=objects.switcher,objects.abilities,objects.consumables
+template.attach = function(objects, params, original)
+    local abilityBox=original.wheels.abilities.box
+    local consumableBox=original.wheels.consumables.box
 
-    if params.settings.Style==0 then
-        Widget.appearance(ability,params.settings,'Wheels',original.abilities.position)
-        Widget.appearance(consumable,params.settings,'Wheels',original.consumables.position)
-    else
-        local owner=MC.parent(switcher)
-        assert(switcher:RemoveChild(consumable)~=false, 'could not separate wheel')
-        assert(MC.valid(owner:AddChild(consumable)), 'could not attach separate wheel')
-        local switcherPosition=Widget.translation(switcher)
-        local consumablePosition=original.consumables.position
-        Widget.appearance(ability,params.settings,'Wheel1',original.abilities.position)
-        switcher:SetActiveWidget(ability)
-        Widget.appearance(consumable,params.settings,'Wheel2',{
-            X=consumablePosition.X+switcherPosition.X,
-            Y=consumablePosition.Y+switcherPosition.Y})
-        Widget.setScale(consumable,params.settings.Wheel2Size * 0.85 / 100)
+    local positions,scale=Helpers.pair(params.settings,params.screen, abilityBox ,consumableBox)
+    local wheels={objects.wheels.abilities,objects.wheels.consumables}
+    for w=1,2 do
+        local position=positions[w]
+        local placed, reason=Widget.canvasPosition(wheels[w], position.box, position.x, position.y, scale)
+        assert(placed,reason)
     end
-    -- print('[Fangdango] Wheels applied ability '..Widget.readback(ability)
-    --     ..'; consumable '..Widget.readback(consumable))
+    -- The native prompt describes swapping the switcher's active panel. It is
+    -- meaningful only when both wheel layouts deliberately overlap.
+    Widget.setOpacity(objects.change_prompt,params.settings.WheelsR==0 and 1 or 0)
+    -- A rebuild restores native opacity; apply the current focus.
+    template.events['controls.group.focus'](params,
+        {name='controls.group.focus',group=params.state.controls.group},objects)
     return original
 end
 

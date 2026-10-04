@@ -8,7 +8,6 @@ Arrange your ability and consumable wheels to suit your playstyle. Show both at 
 
 | Setting | What it does |
 |---|---|
-| **Minima** | Keeps the native one-wheel view. ModCoreControls can show Wheel 2 while its group key is held, then return to Wheel 1 on release. |
 | **Swap** | Shows one wheel at a time, with both using the same position and size. This is the default. |
 | **Separate** | Shows both wheels, with separate positions and size choices. Wheel 2 displays at 85% of its chosen size and opacity. |
 | **X / Y** | Moves the wheel horizontally or vertically from its usual position. |
@@ -20,25 +19,31 @@ The mod rearranges the existing wheels; it does not add skills or change their k
 
 ## Bar
 
-Select **Bar** to place both wheel containers side by side. Set Size
+Select **Bar** to arrange each wheel's keys horizontally or vertically. Set Size
 (−50% to 150%, default 100%) and Margin (−100 to 100, default 0).
 Spacing is fixed at 10% of each preceding button's rendered width or height.
+Horizontal places the ability group left of center and the consumable group right
+of center. Vertical places abilities above center and consumables below it.
 Positive Margin separates the groups; negative Margin overlaps them.
 
 **Tightness** runs from
-−25% (two staggered diamond rows) to +50% (one straight row of slots 1–8).
-At −25%, the upper row is 2, 4 | 5, 8 and the lower row is 1, 3 | 6, 7.
-The ability box's right edge and consumable box's left edge meet at screen center.
+−25% (half-width pitch) to +50% (full-width pitch). The order remains
+Left, Top, Bottom, Right: Left/Bottom stay on one row and Top/Right on the other.
+Vertical transposes the same pattern. The two group edges meet at screen center.
 Margin is split equally across the two sides. Negative Size mirrors the buttons,
 and 0% hides them.
 
 The layout keeps both wheel widgets as containers, reparents their existing
 buttons into each wheel's Overlay, and sizes its SizeBox to fit. It sets each
 wheel's `background` opacity to zero, leaving its other decoration and buttons
-alone. It leaves the ability and
-consumable panels' opacity alone so access-mode dimming can act on each entire
-group. Selecting another layout restores the native containers,
+alone. Selecting another layout restores the native containers,
 background opacity, button order, transforms and SizeBox overrides.
+
+## Focus
+
+With ModCore Controls installed, Wheels (except Overlap) and Bar dim the wheel
+that does not have focus to 50% opacity, so you can see which wheel your slot
+keys use. The Default wheel set in ModCore Controls has focus at the start.
 
 ## Requirements
 
@@ -49,8 +54,8 @@ background opacity, button order, transforms and SizeBox overrides.
 - [ModCoreTemplates](https://www.nexusmods.com/thebloodofdawnwalker/mods/641),
   with managed template attachment and SizeBox override restoration support.
 
-Minima and Wheels in Swap style use ModCoreControls for hold-based group
-switching. Bar and Separate display both wheels and do not use the switcher.
+Wheels in Swap style uses ModCoreControls for hold-based group switching.
+Bar and Separate display both wheels and do not use the switcher.
 
 ## Installation
 
@@ -67,11 +72,8 @@ switching. Bar and Separate display both wheels and do not use the switcher.
 Open **Mod Settings** and find **Fangdango**. Select **Wheels**, choose
 **Swap** or **Separate** under **Visual Layout**, then adjust the visible settings
 and choose **Apply**. Use **Edit controls** directly below Visual Layout to open
-the **ModCore Controls** page and configure **Control Layout** (Grouped or Flat).
+the **ModCore Controls** page and configure **Control Layout** (Grouped or Global).
 Start with Medium size, then change one setting at a time.
-Select **Minima** for the native one-wheel layout; configure the Wheel 2 hold
-binding in ModCoreControls to switch wheels while the key is held.
-
 Updating from **Wheels++**? Select **Wheels** again; the older option has been
 removed. This Wheels update is awaiting in-game verification.
 
@@ -94,17 +96,21 @@ See the [changelog](CHANGELOG.md) for changes.
 
 ## Template integration
 
-UE4SS loads `Scripts/main.lua`, which calls `M.addTemplate(...)` for Minima,
-Wheels, and Bar; no template-folder scan or aggregate `mc.lua` is required. Minima
-keeps both wheels in the native switcher and lets ModCoreControls handle the hold
-binding. Their menu schemas are separate; Bar does not use Wheels' Swap /
-Separate settings or MCC's Grouped / Flat Control Layout. The managed
+UE4SS loads `Scripts/main.lua`, which calls `M.addTemplate(...)` for Wheels and
+Bar; no template-folder scan or aggregate `mc.lua` is required. Their menu schemas
+are separate; Bar does not use Wheels' Swap /
+Separate settings or MCC's Grouped / Global Control Layout. The managed
 `attach(objects, params, original)`
 callback returns the captured original state. MCT restores declared properties on
 updates and detach, and restores the previous layout after a failed update.
 
-ModCoreControls changes the native switcher index (ability 0, consumable 1) on
-group hold and release. Fangdango does not subscribe to group-focus events.
+ModCoreControls changes focus between abilities (group 1) and consumables
+(group 2) on group hold and release. Wheels and Bar declare `controls.group.focus`
+in their `events` table with `onGroupFocus` from `Scripts/fangdango/helpers.lua`.
+MCT registers it after loading the template and passes the live attachments, whose
+wheel opacity the handler sets. A rebuild restores native opacity, so `attach`
+invokes the same handler with the current focus from `params.state`. That focus
+is empty, so nothing dims, until ModCore Controls reports one.
 Bar's declaration and transform are in `Scripts/mc_bars.lua`.
 
 Offline lifecycle tests do not establish live-game acceptance.
