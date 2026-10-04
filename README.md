@@ -42,7 +42,7 @@ background opacity, button order, transforms and SizeBox overrides.
 ## Focus
 
 With ModCore Controls installed, Wheels (except Overlap) and Bar dim the wheel
-that does not have focus to 50% opacity, so you can see which wheel your slot
+that does not have focus to 70% opacity, so you can see which wheel your slot
 keys use. The Default wheel set in ModCore Controls has focus at the start.
 
 ## Requirements
@@ -96,7 +96,7 @@ See the [changelog](CHANGELOG.md) for changes.
 
 ## Template integration
 
-UE4SS loads `Scripts/main.lua`, which calls `M.addTemplate(...)` for Wheels and
+UE4SS loads `Scripts/main.lua`, which calls `M.registerTemplate(...)` for Wheels and
 Bar; no template-folder scan or aggregate `mc.lua` is required. Their menu schemas
 are separate; Bar does not use Wheels' Swap /
 Separate settings or MCC's Grouped / Global Control Layout. The managed
@@ -107,10 +107,11 @@ updates and detach, and restores the previous layout after a failed update.
 ModCoreControls changes focus between abilities (group 1) and consumables
 (group 2) on group hold and release. Wheels and Bar declare `controls.group.focus`
 in their `events` table with `onGroupFocus` from `Scripts/fangdango/helpers.lua`.
-MCT registers it after loading the template and passes the live attachments, whose
-wheel opacity the handler sets. A rebuild restores native opacity, so `attach`
-invokes the same handler with the current focus from `params.state`. That focus
-is empty, so nothing dims, until ModCore Controls reports one.
+MCT calls it as `onGroupFocus(params, event, objects)` once per live attachment,
+with the same `params` as `attach`; the dimmed opacity is the template setting
+`settings.focus.dim` (0.7). A rebuild restores native opacity, so `attach` invokes
+the same handler with the current focus from `params.state`. That focus is empty,
+so nothing dims, until ModCore Controls activates its Default wheel.
 Bar's declaration and transform are in `Scripts/mc_bars.lua`.
 
 Offline lifecycle tests do not establish live-game acceptance.
