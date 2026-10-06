@@ -1,9 +1,9 @@
 {
   "manifest_version": 1,
   "id": "Fangdango",
-  "name": "Fingertip Fangdango",
+  "name": "Quickslot Fangdango",
   "author": "Jorge Pereira (kell)",
-  "version": "0.2.1",
+  "version": "1.0.1",
   "description": "Arrange your ability and consumable wheels to suit your playstyle. Show both at once or switch between them, with adjustable position, size, and opacity. A little choreography for your combat HUD.",
   "dependencies": [
     {

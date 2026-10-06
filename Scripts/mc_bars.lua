@@ -33,18 +33,22 @@ local template = {
     menu = {
         {id='Bars', label='Bars', fields={
             {id='.A', label='Orientation', values={[7]='Horizontal', [5]='Vertical'}, default=7},
+            {id='.KH', label='Horizontal Key Indicators', values={[0]='Above', [1]='Below'}, default=0,
+                conditions={visible={field='.A', match={7}}}},
+            {id='.KV', label='Vertical Key Indicators', values={[0]='Left', [1]='Right'}, default=0,
+                conditions={visible={field='.A', match={5}}}},
             {id='.S', label='Size',
                 values={min=-50,max=100,step=10,suffix='%'}, default=100},
             {id='.M', label='Margin to Screen Edge',
-                values={min=-100,max=100,step=1}, default=0},
+                values={min=-100,max=100,step=10,suffix='%'}, default=0},
         }},
     }
 }
 
 -- Spacing between neighbouring keys, as a fraction of the key size.
 local SPC=0.075
--- Slots are listed Left, Top, Right, Bottom; the bar runs L, T, B, R per wheel.
-local sequence={1,2,4,3}
+-- Slots are listed Left, Top, Right, Bottom; the bar runs L, T, R, B per wheel.
+local sequence={1,2,3,4}
 
 -- Offset of a shown key from the shared center, which is the edge between the
 -- two wheels. Shown keys are one pitch apart: abilities end half a pitch before
@@ -121,8 +125,12 @@ template.attach = function(objects, params, original)
     local settings=params.settings
     local abilityBox=original.wheels.abilities.box
     local consumableBox=original.wheels.consumables.box
+    local boxes={abilityBox,consumableBox}
 
-    local positions=Helpers.pair({WheelsA=settings.BarsA,WheelsR=0,WheelsS=100,
+    -- Orientation 5 (Vertical) sits in the bottom-right corner; Horizontal at
+    -- bottom center.
+    local vertical=settings.BarsA==5
+    local positions=Helpers.pair({WheelsA=vertical and 6 or 7,WheelsR=0,WheelsS=100,
         WheelsM=settings.BarsM},params.screen,abilityBox,consumableBox)
     local wheels={objects.wheels.abilities,objects.wheels.consumables}
     local slots={objects.buttons.abilitySlots,objects.buttons.consumableSlots}
@@ -130,9 +138,8 @@ template.attach = function(objects, params, original)
 
     local scale=settings.BarsS/100
     local factor=math.abs(scale)
-    local vertical=Widget.relative(settings.BarsA).X~=0
 
-    -- Lay out the shown keys in bar order: L, T, B, R of each wheel. An empty
+    -- Lay out the shown keys in bar order: L, T, R, B of each wheel. An empty
     -- key may have no size, so the pitch comes from the first shown key.
     local shown,counts,first={},{},nil
     for w=1,2 do
@@ -148,21 +155,54 @@ template.attach = function(objects, params, original)
     local W,H=first and first.width*factor or 0,first and first.height*factor or 0
     local pitchX,pitchY=W*(1+SPC),H*(1+SPC)
 
+    -- Binding labels sit above or below their keys in a horizontal bar, left or
+    -- right of them in a vertical one. Right of the keys, the widest shown
+    -- label sets the column's reach.
+    local below=settings.BarsKH==1
+    local right=settings.BarsKV==1
+    local labelWidth=0
+    if vertical and right then
+        for w=1,2 do
+            for index in pairs(shown[w]) do
+                labelWidth=math.max(labelWidth,labelBox(labels[w][index]).width*factor)
+            end
+        end
+    end
+    local groupWidth=math.max(abilityBox.width,consumableBox.width)
+    local groupHeight=math.max(abilityBox.height,consumableBox.height)
+
     for w=1,2 do
         local position=positions[w]
         local placed, reason=Widget.canvasPosition(wheels[w], position.box, position.x, position.y, 1)
         assert(placed,reason)
         hideDecorations(wheels[w],decorationNames[w],params.onCleanup)
 
+        -- The vertical column, with any labels on its right, fills the corner:
+        -- its right edge and the bottom of a full consumable run meet the
+        -- wheels' shared box, so no key moves when another gains or loses its item.
+        local dx,dy=0,0
+        if vertical then
+            dx=groupWidth-boxes[w].width/2-W/2-(right and W*SPC+labelWidth or 0)
+            dy=groupHeight-boxes[w].height/2-(3.5*pitchY+H/2)
+        end
+
         for index,button in ipairs(slots[w]) do
             local label=labels[w][index]
             local place=shown[w][index]
             if place then
                 local x,y=fan(w,place,counts[w],vertical,pitchX,pitchY)
+                x,y=x+dx,y+dy
                 center(button,Widget.measure(button),x,y,scale)
-                -- The binding label sits centered on its key's top edge, clear of
-                -- the consumable count at the bottom-right. Text is never mirrored.
-                center(label,labelBox(label),x,y-H/2,factor)
+                -- In a horizontal bar the binding label sits centered on its key's
+                -- top or bottom edge; in a vertical one it sits left or right of
+                -- its key, level with it. Text is never mirrored.
+                local box=labelBox(label)
+                if vertical then
+                    local side=W/2+W*SPC+box.width*factor/2
+                    center(label,box,x+(right and side or -side),y,factor)
+                else
+                    center(label,box,x,y+(below and H/2 or -H/2),factor)
+                end
             else
                 -- An empty key draws nothing; hide its label too.
                 Widget.setOpacity(label,0)

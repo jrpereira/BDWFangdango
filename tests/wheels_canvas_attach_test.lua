@@ -86,14 +86,14 @@ local objects={actions=actions,
     wheels={abilities=abilities,consumables=consumables},change_prompt=prompt}
 local dim=template.settings.focus.dim
 -- ModCore Controls has reported abilities (group 1) as focused.
-local function attach(align,placement,to)
+local function attach(align,placement,to,margin)
     return template.attach(objects,
-        {settings={WheelsA=align,WheelsM=20,WheelsR=placement or 1,WheelsS=100,focus={dim=dim}},
+        {settings={WheelsA=align,WheelsM=margin or 0,WheelsR=placement or 1,WheelsS=100,focus={dim=dim}},
             screen={width=1920,height=1080,scale=1},
             state={controls={group={from=1,to=to or 1}}}},original)
 end
-local function check(align,x,y,x2,y2)
-    assert(attach(align)==original)
+local function check(align,x,y,x2,y2,margin)
+    assert(attach(align,nil,nil,margin)==original)
     assert(abilities.parent==actions and consumables.parent==actions)
     assert(abilitySlot.position.X==x and abilitySlot.position.Y==y)
     assert(consumableSlot.position.X==x2 and consumableSlot.position.Y==y2)
@@ -104,9 +104,13 @@ local function check(align,x,y,x2,y2)
     assert(abilities.opacity==1 and consumables.opacity==dim and prompt.opacity==0,
         'attach must apply the initial focus')
 end
-check(5,1700,380,1700,540) -- Right/Center: vertical edge
-check(6,1700,740,1700,900) -- Bottom/Right: includes vertical edge
-check(7,760,900,960,900) -- Bottom/Center: horizontal edge
+-- Margin 0% keeps the wheels 32 px from the edge.
+check(5,1688,380,1688,540) -- Right/Center: vertical edge
+check(6,1688,728,1688,888) -- Bottom/Right: includes vertical edge
+check(7,760,888,960,888) -- Bottom/Center: horizontal edge
+-- The margin is 8+24*(1+Margin/100) px: -100% is 8 px and 100% is 56 px.
+check(6,1712,752,1712,912,-100)
+check(6,1664,704,1664,864,100)
 attach(6,0)
 assert(prompt.opacity==1,'overlap must retain the native swap prompt')
 assert(abilities.opacity==1 and consumables.opacity==1,'overlapping wheels keep the native look')

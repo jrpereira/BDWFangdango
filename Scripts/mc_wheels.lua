@@ -25,7 +25,7 @@ local template = {
 
             {id='.S', label='Overall Size', values={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Larger'}, default=100},
             {id='.M', label='Margin to Screen Edge',
-                values={min=0,max=100,step=10,suffix='%'}, default=0},
+                values={min=-100,max=100,step=10,suffix='%'}, default=0},
         }},
     }
 }

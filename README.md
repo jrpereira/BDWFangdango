@@ -20,16 +20,21 @@ The mod rearranges the existing wheels; it does not add skills or change their k
 ## Bar
 
 Select **Bar** to arrange each wheel's keys horizontally or vertically. Set Size
-(−50% to 150%, default 100%) and Margin (−100 to 100, default 0).
+(−50% to 150%, default 100%) and Margin to Screen Edge, as in Wheels.
+
+Margin to Screen Edge runs from −100% to 100% in steps of 10%. The distance from
+the edge is 8 + 24 × (1 + Margin/100) pixels: 8 at −100%, 32 at 0% (default), and
+56 at 100%.
 Spacing is fixed at 10% of each preceding button's rendered width or height.
 Horizontal places the ability group left of center and the consumable group right
-of center. Vertical places abilities above center and consumables below it.
+of center. Vertical stacks one column in the bottom-right corner, abilities above
+consumables. Horizontal Key Indicators places each key's binding Above (default)
+or Below it; Vertical Key Indicators places it Left (default) or Right.
 Positive Margin separates the groups; negative Margin overlaps them.
 
 **Tightness** runs from
-−25% (half-width pitch) to +50% (full-width pitch). The order remains
-Left, Top, Bottom, Right: Left/Bottom stay on one row and Top/Right on the other.
-Vertical transposes the same pattern. The two group edges meet at screen center.
+−25% (half-width pitch) to +50% (full-width pitch). Each wheel's keys run
+Left, Top, Right, Bottom. Vertical transposes the same pattern. The two group edges meet at screen center.
 Margin is split equally across the two sides. Negative Size mirrors the buttons,
 and 0% hides them.
 
@@ -59,13 +64,13 @@ Bar and Separate display both wheels and do not use the switcher.
 
 ## Installation
 
-1. Close the game completely. Extract the mod download so its `_ModCore_X_Fangdango`
+1. Close the game completely. Extract the mod download so its `9_ModCore_Fangdango`
    folder sits directly inside the game's `ue4ss/Mods` folder.
 2. Download any missing dependencies above and install them with the game closed.
    Use each download's instructions: some archives already include the full
    game-folder path, and UE4SS itself does not install inside `Mods`.
 3. Ensure the mods are enabled in your UE4SS setup or mod manager, then restart
-   the game. Avoid an extra nested `_ModCore_X_Fangdango/_ModCore_X_Fangdango` folder.
+   the game. Avoid an extra nested `9_ModCore_Fangdango/9_ModCore_Fangdango` folder.
 
 ## First use
 

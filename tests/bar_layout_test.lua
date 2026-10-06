@@ -203,11 +203,12 @@ local sharedManager=Manager.new(sharedDefinition,
     State.specs(sharedGraph,category.sharedObjects),sharedGraph.order,sharedCreated)
 local barGraph=require('mc.selectors').project(graph,bar.objects)
 local manager=Manager.new(bar,State.specs(barGraph,bar.objects),barGraph.order)
--- Orientation 7 is Horizontal (bottom/center), 5 is Vertical (right/center).
+-- Orientation 7 is Horizontal (bottom/center), 5 is Vertical (bottom/right).
 -- ModCore Controls has reported abilities (group 1) as focused.
-local function params(size,margin,orientation,state)
+-- Key indicators default Above (BarsKH=0) and Left (BarsKV=0).
+local function params(size,margin,orientation,state,kh,kv)
     return {settings={BarsS=size or 100,BarsM=margin or 0,BarsA=orientation or 7,
-            focus=bar.settings.focus},
+            BarsKH=kh or 0,BarsKV=kv or 0,focus=bar.settings.focus},
         screen={width=1920,height=1080,scale=1,center=960,middle=540},
         state=state or {controls={group={from=1,to=1}}}}
 end
@@ -240,7 +241,8 @@ local function wheelsAt(x,y)
         near(wheel.Slot.position.X,x);near(wheel.Slot.position.Y,y)
     end
 end
-wheelsAt(860,920)
+-- Margin 0% keeps the shared box 32 px above the bottom edge.
+wheelsAt(860,888)
 -- A widget's center offset from its overlay's center; keys and labels are
 -- center-aligned.
 local function centerOf(widget)
@@ -254,13 +256,17 @@ local function offset(kind,index)
     assert(button:GetParent()==objects.panels[kind..'_panel'],'Bar must not reparent keys')
     return centerOf(button)
 end
--- Shown keys are one pitch (key size * 1.075) apart in bar order L,T,B,R.
+-- Shown keys are one pitch (key size * 1.075) apart in bar order L,T,R,B.
 -- Empty slots take no place. Abilities end half a pitch before the center,
 -- consumables start half a pitch after it. Horizontal runs right, vertical
 -- runs down. Each binding label sits centered on its key's top edge; an empty
 -- key's label is hidden. Ability L and B are empty, so only T and R show.
-local along={ability={nil,-1.5,-0.5,nil},consumable={0.5,1.5,3.5,2.5}}
-local function lined(W,H,vertical)
+-- Vertical labels sit left or right of their keys (side -1 or 1), level with
+-- them, past a gap of 7.5% of the key width; horizontal ones on the top or
+-- bottom edge (side -1 or 1).
+local along={ability={nil,-1.5,-0.5,nil},consumable={0.5,1.5,2.5,3.5}}
+local function lined(W,H,vertical,dx,dy,side)
+    side=side or -1
     for _,kind in ipairs({'ability','consumable'}) do
         for index=1,4 do
             local label=objects.labels[kind..'Labels'][index]
@@ -268,10 +274,14 @@ local function lined(W,H,vertical)
             if a then
                 local x,y=offset(kind,index)
                 local ex,ey=a*W*1.075,0
-                if vertical then ex,ey=0,a*H*1.075 end
+                if vertical then ex,ey=dx,dy+a*H*1.075 end
                 near(x,ex);near(y,ey)
                 local lx,ly=centerOf(label)
-                near(lx,ex);near(ly,ey-H/2)
+                if vertical then
+                    near(lx,ex+side*(W/2+W*0.075+label.desired.X/2));near(ly,ey)
+                else
+                    near(lx,ex);near(ly,ey+side*H/2)
+                end
                 assert(label.RenderTransform.Scale.X>=0,'labels must not mirror')
                 assert(label.opacity==1)
             else
@@ -297,18 +307,28 @@ near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.
 -- A rebuild applies the current focus from the state.
 assert(manager:update(switcher,objects,params(100,0,7,{controls={group={from=1,to=2}}})))
 near(objects.abilities.opacity,bar.settings.focus.dim);near(objects.consumables.opacity,1)
--- Margin moves the shared center away from the screen edge.
-assert(manager:update(switcher,objects,params(100,20)))
+-- Margin 100% moves the shared box to 56 px from the screen edge.
+assert(manager:update(switcher,objects,params(100,100)))
 near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
-wheelsAt(860,900)
--- Vertical: one column at the right edge, abilities above the middle and
--- consumables below, the nearest of each half a pitch (43) from it.
+wheelsAt(860,864)
+-- Horizontal labels can sit below their keys instead.
+assert(manager:update(switcher,objects,params(100,0,7,nil,1)))
+lined(100,80,false,nil,nil,1)
+-- Vertical: one column in the bottom-right corner. With labels on the left,
+-- the keys' right edge meets the box's right edge: 100-50=50. A full
+-- consumable run ends at the box's bottom: 80-(3.5*86+40)=-261. Abilities sit
+-- above the shared center, consumables below, the nearest of each half a
+-- pitch (43) from it.
 assert(manager:update(switcher,objects,params(100,0,5)))
-wheelsAt(1720,460)
-lined(100,80,true)
+wheelsAt(1688,888)
+lined(100,80,true,50,-261)
 local _,abilityNearest=offset('ability',3)
 local _,consumableNearest=offset('consumable',1)
-near(abilityNearest,-43);near(consumableNearest,43)
+near(abilityNearest,-261-43);near(consumableNearest,-261+43)
+-- With labels on the right, the widest shown label (30) reaches the box's
+-- right edge instead: 100-(50+7.5+30)=12.5.
+assert(manager:update(switcher,objects,params(100,0,5,nil,0,1)))
+lined(100,80,true,12.5,-261,1)
 -- Negative size mirrors each key in place; the pitch uses its magnitude.
 assert(manager:update(switcher,objects,params(-50)))
 lined(50,40)

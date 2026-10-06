@@ -1,9 +1,9 @@
 package.path = 'ModCoreTemplates/Scripts/?.lua;' .. package.path
 local definitions=dofile('Fangdango/tests/load_templates.lua')()
 local template,bar=definitions[1],definitions[2]
-local path='_ModCore_X_Fangdango/Scripts/mc_wheels.lua'
-local barPath='_ModCore_X_Fangdango/Scripts/mc_bars.lua'
-assert(template.category=='player.quickslots' and template.version=='0.2.1')
+local path='9_ModCore_Fangdango/Scripts/mc_wheels.lua'
+local barPath='9_ModCore_Fangdango/Scripts/mc_bars.lua'
+assert(template.category=='player.quickslots' and template.version=='1.0.1')
 assert(bar.category=='player.quickslots' and bar.name=='Bars Fangdango')
 assert(template.managed==nil and bar.managed==nil)
 assert(template.requiredTargets==nil and bar.requiredTargets==nil)
@@ -47,9 +47,16 @@ local barFields=bar.menu[1].fields
 assert(bar.menu~=template.menu and bar.menu[1].id=='Bars' and barFields[1].id=='.A')
 assert(barFields[1].values[7]=='Horizontal' and barFields[1].values[5]=='Vertical'
     and barFields[1].default==7)
-assert(#barFields==3 and barFields[2].id=='.S' and barFields[3].id=='.M')
-assert(barFields[2].values.min==-50 and barFields[2].values.max==100 and barFields[2].default==100)
-assert(barFields[3].values.min==-100 and barFields[3].values.max==100)
+assert(#barFields==5 and barFields[2].id=='.KH' and barFields[3].id=='.KV'
+    and barFields[4].id=='.S' and barFields[5].id=='.M')
+assert(barFields[2].values[0]=='Above' and barFields[2].values[1]=='Below'
+    and barFields[2].default==0)
+assert(barFields[3].values[0]=='Left' and barFields[3].values[1]=='Right'
+    and barFields[3].default==0)
+assert(barFields[4].values.min==-50 and barFields[4].values.max==100 and barFields[4].default==100)
+-- Margin matches Wheels' Margin to Screen Edge.
+assert(barFields[5].values.min==-100 and barFields[5].values.max==100
+    and barFields[5].values.step==10 and barFields[5].values.suffix=='%')
 assert(bar.objects.labels.abilityLabels[1]=='ability_left'
     and bar.objects.labels.consumableLabels[4]=='consumable_bottom')
 local model=require('mc.menu_model').build(
@@ -57,9 +64,19 @@ local model=require('mc.menu_model').build(
     {template,bar},{path,barPath})
 local menu=require('mc.menu').generate(model.registry)
 assert(template.menuTarget=='module' and bar.menuTarget=='module')
-local page=assert(menu.providers['ModCoreTemplates.module.Fangdango'])
-assert(page.author=='Jorge Pereira (kell)')
-assert(page.version=='0.2.1')
+-- Fangdango's module entry links to Controls > Visuals; settings live in the slot page.
+assert(menu.providers['ModCoreTemplates.module.Fangdango']==nil)
+local entry
+for _,candidate in ipairs(menu.pages) do
+    if candidate.id=='ModCoreTemplates.module.Fangdango' then entry=candidate end
+end
+assert(entry and entry.link=='controls:visuals' and entry.rows==nil)
+assert(entry.author=='Jorge Pereira (kell)')
+assert(entry.version=='1.0.1')
+local page=assert(menu.providers['ModCoreTemplates.slot.player.quickslots'])
+assert(page.slot=='controls:visuals')
+-- Saved Fangdango values are copied once from the module config, never removed.
+assert(page.migrate[1]=='9_ModCore_Fangdango/config.ini')
 local selector=menu.selectors['player.quickslots']
 local value,barValue
 for option,id in pairs(selector.byValue) do
@@ -84,13 +101,33 @@ assert(count==4)
 local align=rows[definition.settings.WheelsA]
 local placement=rows[definition.settings.WheelsR]
 assert(align and align.PresetLabels=='Right/Center|Bottom/Right|Bottom/Center')
+-- Each template's fields show only while that template is selected.
+assert(page.manifest:find('VisibleValues='..value..'\nVisibleWhen='..selector.id,1,true))
+assert(page.manifest:find('VisibleValues='..barValue..'\nVisibleWhen='..selector.id,1,true))
 assert(placement and placement.PresetLabels=='Overlap|Side by Side|Stacked|Perspective')
 local settings=menu.decodeState(values)['player.quickslots'].selections[template.id]
 assert(settings.WheelsA==6 and settings.WheelsM==0
     and settings.WheelsR==1 and settings.WheelsS==100)
+-- Unrecognized or legacy saved keys are ignored, never a failure.
+for _,legacy in ipairs({'MCT_WheelsSize','MCT_WheelsX','MCT_WheelsY','MCT_BarsR'}) do
+    values[legacy]=50
+end
+local tolerant=menu.decodeState(values)['player.quickslots'].selections[template.id]
+assert(tolerant.WheelsA==6 and tolerant.WheelsS==100 and tolerant.WheelsSize==nil)
 local orientation=rows[barDefinition.settings.BarsA]
-assert(barDefinition.settings.BarsR==nil,'Bars has no Tightness')
 assert(orientation and tonumber(orientation.Default)==7)
+local above=rows[barDefinition.settings.BarsKH]
+local side=rows[barDefinition.settings.BarsKV]
+assert(above and above.PresetLabels=='Above|Below')
+assert(side and side.PresetLabels=='Left|Right')
+-- Each Key Indicators row shows only for its own orientation, on the slot page too.
+assert(above.VisibleWhen==orientation.Id and tostring(above.VisibleValues)=='7')
+assert(side.VisibleWhen==orientation.Id and tostring(side.VisibleValues)=='5')
+assert(page.manifest:find('VisibleValues=7\nVisibleWhen='..orientation.Id,1,true))
+assert(page.manifest:find('VisibleValues=5\nVisibleWhen='..orientation.Id,1,true))
+values[selector.id]=barValue
+local barSettings=menu.decodeState(values)['player.quickslots'].selections[bar.id]
+assert(barSettings.BarsA==7 and barSettings.BarsKH==0 and barSettings.BarsKV==0)
 print('AF Wheels registration and settings contract passed')
 
 assert(#definitions==2 and definitions[1].name=='Wheels Fangdango'

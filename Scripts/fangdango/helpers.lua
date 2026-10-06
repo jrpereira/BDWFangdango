@@ -17,9 +17,17 @@ function M.onGroupFocus(params,event,objects)
     end
 end
 
+-- Margin to Screen Edge, in screen pixels: a fixed 8 plus 24 scaled by the
+-- setting, so -100% is 8, 0% is 32 and 100% is 56. Without a setting the
+-- layout is flush with the edge.
+local function marginPixels(percent)
+    if percent==nil then return 0 end
+    return 8+24*(1+percent/100)
+end
+
 function M.edge(screen,align,marginPercent,width,height)
     local direction=Widget.relative(align)
-    local margin=(100*(marginPercent or 0)/100)/(screen.scale or 1)
+    local margin=marginPixels(marginPercent)/(screen.scale or 1)
     return (direction.X+1)*(screen.width-width)/2-direction.X*margin,
         (1-direction.Y)*(screen.height-height)/2+direction.Y*margin
 end
@@ -51,7 +59,7 @@ function M.anchorGroups(groups,screen,align)
         maxX=math.max(maxX or group.x+group.width,group.x+group.width)
         maxY=math.max(maxY or group.y+group.height,group.y+group.height)
     end
-    local left,top=M.edge(screen,align,0,maxX-minX,maxY-minY)
+    local left,top=M.edge(screen,align,nil,maxX-minX,maxY-minY)
     for _,group in pairs(groups) do
         group.x=left+group.x-minX
         group.y=top+group.y-minY
