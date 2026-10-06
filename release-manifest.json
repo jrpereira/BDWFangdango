@@ -1,0 +1,15 @@
+{
+  "module": "9_ModCore_Fangdango",
+  "version_file": "mod.json",
+  "version_pattern": "\"version\"\\s*:\\s*\"([^\"]+)\"",
+  "files": {
+    "mod.json": "mod.json",
+    "enabled.txt": "enabled.txt",
+    "Scripts/fangdango/helpers.lua": "Scripts/fangdango/helpers.lua",
+    "Scripts/main.lua": "Scripts/main.lua",
+    "Scripts/mc_bars.lua": "Scripts/mc_bars.lua",
+    "Scripts/mc_wheels.lua": "Scripts/mc_wheels.lua",
+    "README.md": "README.md",
+    "CHANGELOG.md": "CHANGELOG.md"
+  }
+}
