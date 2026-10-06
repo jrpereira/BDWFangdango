@@ -2,9 +2,11 @@
 
 - Rename the mod to Quickslot Fangdango.
 - Vertical Bars sits in the bottom-right corner instead of middle right.
-- Margin to Screen Edge in Wheels and Bars runs from −100% to 100%, placing the
-  layout 8 + 24 × (1 + Margin/100) pixels from the edge: 8 at −100%, 32 at 0%
-  (default) and 56 at 100%.
+- Margin to Screen Edge in Wheels and Bars runs from 0% to 100%, placing the
+  layout 8 + 64 × Margin/100 pixels from the edge: 8 at 0%, 40 at 50%
+  (default) and 72 at 100%.
+- Size in Wheels and Bars is a picker: Smaller (80%), Small (90%), Standard
+  (100%, default), Large (110%) or Larger (120%).
 - Bars adds Horizontal Key Indicators (Above, Below) and Vertical Key Indicators
   (Left, Right) to place each binding label; vertical labels sit level with
   their keys. Each shows only for its own Orientation (requires ModCoreTemplates

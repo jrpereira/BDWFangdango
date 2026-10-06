@@ -37,10 +37,8 @@ local template = {
                 conditions={visible={field='.A', match={7}}}},
             {id='.KV', label='Vertical Key Indicators', values={[0]='Left', [1]='Right'}, default=0,
                 conditions={visible={field='.A', match={5}}}},
-            {id='.S', label='Size',
-                values={min=-50,max=100,step=10,suffix='%'}, default=100},
-            {id='.M', label='Margin to Screen Edge',
-                values={min=-100,max=100,step=10,suffix='%'}, default=0},
+            {id='.S', label='Size', values=Helpers.SIZES, default=100},
+            {id='.M', label='Margin to Screen Edge', values=Helpers.MARGINS, default=50},
         }},
     }
 }

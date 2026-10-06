@@ -23,9 +23,8 @@ local template = {
             {id='.A', label='Align to Screen Edge', values={[5]='Right/Center', [6]='Bottom/Right', [7]='Bottom/Center',}, default=6},
             {id='.R', label='Relative Placement', values={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}, default=1},
 
-            {id='.S', label='Overall Size', values={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Larger'}, default=100},
-            {id='.M', label='Margin to Screen Edge',
-                values={min=-100,max=100,step=10,suffix='%'}, default=0},
+            {id='.S', label='Overall Size', values=Helpers.SIZES, default=100},
+            {id='.M', label='Margin to Screen Edge', values=Helpers.MARGINS, default=50},
         }},
     }
 }

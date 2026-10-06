@@ -241,8 +241,8 @@ local function wheelsAt(x,y)
         near(wheel.Slot.position.X,x);near(wheel.Slot.position.Y,y)
     end
 end
--- Margin 0% keeps the shared box 32 px above the bottom edge.
-wheelsAt(860,888)
+-- Margin 0% keeps the shared box 8 px above the bottom edge.
+wheelsAt(860,912)
 -- A widget's center offset from its overlay's center; keys and labels are
 -- center-aligned.
 local function centerOf(widget)
@@ -307,10 +307,10 @@ near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.
 -- A rebuild applies the current focus from the state.
 assert(manager:update(switcher,objects,params(100,0,7,{controls={group={from=1,to=2}}})))
 near(objects.abilities.opacity,bar.settings.focus.dim);near(objects.consumables.opacity,1)
--- Margin 100% moves the shared box to 56 px from the screen edge.
+-- Margin 100% moves the shared box to 8+64=72 px from the screen edge.
 assert(manager:update(switcher,objects,params(100,100)))
 near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
-wheelsAt(860,864)
+wheelsAt(860,848)
 -- Horizontal labels can sit below their keys instead.
 assert(manager:update(switcher,objects,params(100,0,7,nil,1)))
 lined(100,80,false,nil,nil,1)
@@ -320,7 +320,7 @@ lined(100,80,false,nil,nil,1)
 -- above the shared center, consumables below, the nearest of each half a
 -- pitch (43) from it.
 assert(manager:update(switcher,objects,params(100,0,5)))
-wheelsAt(1688,888)
+wheelsAt(1712,912)
 lined(100,80,true,50,-261)
 local _,abilityNearest=offset('ability',3)
 local _,consumableNearest=offset('consumable',1)
@@ -329,13 +329,14 @@ near(abilityNearest,-261-43);near(consumableNearest,-261+43)
 -- right edge instead: 100-(50+7.5+30)=12.5.
 assert(manager:update(switcher,objects,params(100,0,5,nil,0,1)))
 lined(100,80,true,12.5,-261,1)
--- Negative size mirrors each key in place; the pitch uses its magnitude.
-assert(manager:update(switcher,objects,params(-50)))
-lined(50,40)
+-- Size scales each shown key in place, and the pitch with it.
+assert(manager:update(switcher,objects,params(80)))
+lined(80,64)
 for index,button in ipairs(objects.buttons.abilitySlots) do
-    near(button.RenderTransform.Scale.X,along.ability[index] and -0.5 or 1)
+    near(button.RenderTransform.Scale.X,along.ability[index] and 0.8 or 1)
 end
-assert(manager:update(switcher,objects,params(0)))
+assert(manager:update(switcher,objects,params(120)))
+lined(120,96)
 assert(manager:update(switcher,objects,params()))
 local lastKey=objects.buttons.consumableSlots[4]
 local setScale=lastKey.SetRenderScale
@@ -344,7 +345,7 @@ function lastKey:SetRenderScale(value)
     if fail then fail=false;error('injected Bar key failure') end
     return setScale(self,value)
 end
-assert(not manager:update(switcher,objects,params(150)))
+assert(not manager:update(switcher,objects,params(110)))
 lastKey.SetRenderScale=setScale
 assert(manager:detach(switcher))
 assert(objects.change_prompt.opacity==1,'detach must restore the native swap prompt')

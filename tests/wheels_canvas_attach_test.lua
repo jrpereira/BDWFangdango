@@ -104,13 +104,11 @@ local function check(align,x,y,x2,y2,margin)
     assert(abilities.opacity==1 and consumables.opacity==dim and prompt.opacity==0,
         'attach must apply the initial focus')
 end
--- Margin 0% keeps the wheels 32 px from the edge.
-check(5,1688,380,1688,540) -- Right/Center: vertical edge
-check(6,1688,728,1688,888) -- Bottom/Right: includes vertical edge
-check(7,760,888,960,888) -- Bottom/Center: horizontal edge
--- The margin is 8+24*(1+Margin/100) px: -100% is 8 px and 100% is 56 px.
-check(6,1712,752,1712,912,-100)
-check(6,1664,704,1664,864,100)
+-- The margin is 8+64*Margin/100 px: 0% is 8 px and 100% is 72 px.
+check(5,1712,380,1712,540) -- Right/Center: vertical edge
+check(6,1712,752,1712,912) -- Bottom/Right: includes vertical edge
+check(7,760,912,960,912) -- Bottom/Center: horizontal edge
+check(6,1648,688,1648,848,100)
 attach(6,0)
 assert(prompt.opacity==1,'overlap must retain the native swap prompt')
 assert(abilities.opacity==1 and consumables.opacity==1,'overlapping wheels keep the native look')

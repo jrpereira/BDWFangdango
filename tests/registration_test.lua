@@ -53,10 +53,21 @@ assert(barFields[2].values[0]=='Above' and barFields[2].values[1]=='Below'
     and barFields[2].default==0)
 assert(barFields[3].values[0]=='Left' and barFields[3].values[1]=='Right'
     and barFields[3].default==0)
-assert(barFields[4].values.min==-50 and barFields[4].values.max==100 and barFields[4].default==100)
--- Margin matches Wheels' Margin to Screen Edge.
-assert(barFields[5].values.min==-100 and barFields[5].values.max==100
-    and barFields[5].values.step==10 and barFields[5].values.suffix=='%')
+-- Size and Margin match Wheels.
+local wheelFields=template.menu[1].fields
+local sizes={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}
+for _,field in ipairs({barFields[4],wheelFields[3]}) do
+    assert(field.id=='.S' and field.default==100)
+    local count=0
+    for value,label in pairs(field.values) do
+        assert(sizes[value]==label);count=count+1
+    end
+    assert(count==5)
+end
+for _,field in ipairs({barFields[5],wheelFields[4]}) do
+    assert(field.id=='.M' and field.default==50 and field.values.min==0
+        and field.values.max==100 and field.values.step==10 and field.values.suffix=='%')
+end
 assert(bar.objects.labels.abilityLabels[1]=='ability_left'
     and bar.objects.labels.consumableLabels[4]=='consumable_bottom')
 local model=require('mc.menu_model').build(
@@ -64,17 +75,28 @@ local model=require('mc.menu_model').build(
     {template,bar},{path,barPath})
 local menu=require('mc.menu').generate(model.registry)
 assert(template.menuTarget=='module' and bar.menuTarget=='module')
--- Fangdango's module entry links to Controls > Visuals; settings live in the slot page.
-assert(menu.providers['ModCoreTemplates.module.Fangdango']==nil)
-local entry
-for _,candidate in ipairs(menu.pages) do
-    if candidate.id=='ModCoreTemplates.module.Fangdango' then entry=candidate end
-end
-assert(entry and entry.link=='controls:visuals' and entry.rows==nil)
+-- Fangdango's module page is a real page merged into Controls > Visuals: a
+-- notice linking there, then the same rows as the slot page.
+local entry=assert(menu.providers['ModCoreTemplates.module.Fangdango'])
+assert(entry.merged=='controls:visuals' and entry.module==nil and entry.link==nil)
 assert(entry.author=='Jorge Pereira (kell)')
 assert(entry.version=='1.0.1')
+assert(entry.rows and #entry.rows>1)
+local notice=entry.rows[1]
+assert(notice.Id=='MCT_MergedNotice' and notice.mcLinkPage=='controls:visuals'
+    and notice.Label=='These settings have been merged into Controls and can also be edited there')
+assert(notice.mcNavigation==1 and notice.mcType=='tab' and notice.mcLevel==5
+    and notice.PresetLabels=='Controls|Controls')
 local page=assert(menu.providers['ModCoreTemplates.slot.player.quickslots'])
 assert(page.slot=='controls:visuals')
+-- After the notice, its only navigation row, the module page edits the slot
+-- page's rows in the same order.
+assert(#entry.rows==#page.rows+1)
+for index,row in ipairs(page.rows) do
+    local moduleRow=entry.rows[index+1]
+    assert(moduleRow.Id==row.Id and moduleRow.mcNavigation==nil,
+        'module row differs from slot page: '..tostring(moduleRow.Id))
+end
 -- Saved Fangdango values are copied once from the module config, never removed.
 assert(page.migrate[1]=='9_ModCore_Fangdango/config.ini')
 local selector=menu.selectors['player.quickslots']
@@ -106,7 +128,7 @@ assert(page.manifest:find('VisibleValues='..value..'\nVisibleWhen='..selector.id
 assert(page.manifest:find('VisibleValues='..barValue..'\nVisibleWhen='..selector.id,1,true))
 assert(placement and placement.PresetLabels=='Overlap|Side by Side|Stacked|Perspective')
 local settings=menu.decodeState(values)['player.quickslots'].selections[template.id]
-assert(settings.WheelsA==6 and settings.WheelsM==0
+assert(settings.WheelsA==6 and settings.WheelsM==50
     and settings.WheelsR==1 and settings.WheelsS==100)
 -- Unrecognized or legacy saved keys are ignored, never a failure.
 for _,legacy in ipairs({'MCT_WheelsSize','MCT_WheelsX','MCT_WheelsY','MCT_BarsR'}) do

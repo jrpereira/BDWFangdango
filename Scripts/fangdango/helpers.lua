@@ -17,12 +17,15 @@ function M.onGroupFocus(params,event,objects)
     end
 end
 
--- Margin to Screen Edge, in screen pixels: a fixed 8 plus 24 scaled by the
--- setting, so -100% is 8, 0% is 32 and 100% is 56. Without a setting the
--- layout is flush with the edge.
+-- Size and Margin to Screen Edge, shared by Wheels and Bars.
+M.SIZES={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}
+M.MARGINS={min=0,max=100,step=10,suffix='%'}
+
+-- Margin to Screen Edge, in screen pixels: 8+64*Margin/100, so 0% is 8 and
+-- 100% is 72. Without a setting the layout is flush with the edge.
 local function marginPixels(percent)
     if percent==nil then return 0 end
-    return 8+24*(1+percent/100)
+    return 8+64*percent/100
 end
 
 function M.edge(screen,align,marginPercent,width,height)
