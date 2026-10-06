@@ -11,8 +11,11 @@ return function()
     local definitions={}
     for _,entry in ipairs(entries) do
         -- Load as MCT does, so template helpers resolve from Fangdango's Scripts folder.
-        local definition=Defaults.apply(Bootstrap.executeTemplate(entry.path))
-        definitions[#definitions+1]=Metadata.apply(definition,entry.path)
+        -- A file returns one template or a list of them.
+        local loaded=Bootstrap.executeTemplate(entry.path)
+        for _,template in ipairs(loaded.category and {loaded} or loaded) do
+            definitions[#definitions+1]=Metadata.apply(Defaults.apply(template),entry.path)
+        end
     end
     return definitions,entries
 end

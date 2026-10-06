@@ -10,10 +10,13 @@ joining in.
 
 - **Wheels:** choose Side by Side, Stacked, Overlap or Perspective placement.
   Anchor them at Right/Center, Bottom/Right or Bottom/Center.
-- **Bars:** line up your slots horizontally at the bottom center or vertically
-  at the bottom right. Empty slots are omitted.
-- **Key indicators:** put them above or below horizontal bars, or to the left
-  or right of vertical bars.
+- **Bars:** line up your slots horizontally at the bottom center (Underbar) or
+  vertically at the bottom right (Sidebar). Single bars put both wheels in one
+  row or column and omit empty slots; Double bars give each wheel its own and
+  can also sit at the bottom right (Underbar) or the middle of the right edge
+  (Sidebar).
+- **Key indicators:** put them on any side of a Single bar's keys. A Double bar
+  shows one per slot, between its two rows or columns.
 - **Size and margin:** choose from five sizes, from Smaller to Larger, and
   adjust the distance from the screen edge.
 
@@ -45,8 +48,9 @@ change the layout without it, but neither wheel dims to show focus.
    `9_ModCore_Fangdango/9_ModCore_Fangdango` folder.
 3. Enable the mods in your UE4SS setup or mod manager, then restart the game.
 4. Open **Mod Settings → Controls → Visuals** if ModCore Controls is installed,
-   or open the **Fangdango** page. In **Quickslots**, choose **Wheels Fangdango**
-   or **Bars Fangdango**, then select **Apply**.
+   or open the **Fangdango** page. In **Quickslots**, choose **Wheels**,
+   a **Single** or **Double Underbar**, or a **Single** or **Double Sidebar**,
+   then select **Apply**.
 
 Start with **Standard** size and **50%** margin, then adjust to taste. Increasing
 the margin moves the layout farther from the screen edge; it does not move it

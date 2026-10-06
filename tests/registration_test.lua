@@ -1,12 +1,26 @@
 package.path = 'ModCoreTemplates/Scripts/?.lua;' .. package.path
 local definitions=dofile('Fangdango/tests/load_templates.lua')()
-local template,bar=definitions[1],definitions[2]
+local template=definitions[1]
+-- Single and Double Underbar and Sidebar, by menu id.
+local bars,barList={},{}
+local barIds={'SingleUnderbar','DoubleUnderbar','SingleSidebar','DoubleSidebar'}
+local barNames={'Single Underbar','Double Underbar','Single Sidebar','Double Sidebar'}
+for index,id in ipairs(barIds) do
+    local definition=definitions[index+1]
+    assert(definition.category=='player.quickslots' and definition.name==barNames[index]
+        and definition.menu[1].id==id and definition.menu[1].label==barNames[index])
+    assert(definition.managed==nil and definition.requiredTargets==nil
+        and type(definition.attach)=='function')
+    for _,other in pairs(bars) do
+        assert(other.objects~=definition.objects and other.menu~=definition.menu)
+    end
+    bars[id],barList[index]=definition,definition
+end
+local bar=bars.SingleUnderbar
 local path='9_ModCore_Fangdango/Scripts/mc_wheels.lua'
 local barPath='9_ModCore_Fangdango/Scripts/mc_bars.lua'
 assert(template.category=='player.quickslots' and template.version=='1.0.1')
-assert(bar.category=='player.quickslots' and bar.name=='Bars Fangdango')
-assert(template.managed==nil and bar.managed==nil)
-assert(template.requiredTargets==nil and bar.requiredTargets==nil)
+assert(template.managed==nil and template.requiredTargets==nil)
 assert(template.objects.abilities==nil and template.objects.consumables==nil
     and template.objects.wheels.abilities.properties==nil
     and template.objects.wheels.properties[1]=='box'
@@ -43,20 +57,39 @@ for _,property in ipairs(bar.objects.buttons.properties) do
     assert(property~='parent' and property~='order','Bars must not reparent keys')
 end
 assert(template.render==nil)
-local barFields=bar.menu[1].fields
-assert(bar.menu~=template.menu and bar.menu[1].id=='Bars' and barFields[1].id=='.A')
-assert(barFields[1].values[7]=='Horizontal' and barFields[1].values[5]=='Vertical'
-    and barFields[1].default==7)
-assert(#barFields==5 and barFields[2].id=='.KH' and barFields[3].id=='.KV'
-    and barFields[4].id=='.S' and barFields[5].id=='.M')
-assert(barFields[2].values[0]=='Above' and barFields[2].values[1]=='Below'
-    and barFields[2].default==0)
-assert(barFields[3].values[0]=='Left' and barFields[3].values[1]=='Right'
-    and barFields[3].default==0)
--- Size and Margin match Wheels.
+-- No bar has Relative Placement. Single bars choose their Key Indicators,
+-- listing their own bar's sides first; Double bars share them between rows.
 local wheelFields=template.menu[1].fields
 local sizes={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}
-for _,field in ipairs({barFields[4],wheelFields[3]}) do
+local sizeFields,marginFields={wheelFields[3]},{wheelFields[4]}
+for id,definition in pairs(bars) do
+    local fields=definition.menu[1].fields
+    local single=id:match('^Single')~=nil
+    assert(#fields==3,id)
+    for _,field in ipairs(fields) do
+        assert(field.conditions==nil and field.id~='.R',id)
+    end
+    if single then
+        assert(fields[1].id=='.K' and fields[1].default==0)
+        local labels=id=='SingleUnderbar' and {'Above','Below','Left','Right'}
+            or {'Left','Right','Above','Below'}
+        for value=0,3 do assert(fields[1].values[value]==labels[value+1],id) end
+    else
+        -- Double bars choose their Position, numbered as MCT's alignments.
+        local position=fields[1]
+        assert(position.id=='.A' and position.label=='Position')
+        if id=='DoubleSidebar' then
+            assert(position.values[5]=='Middle/Right' and position.values[6]=='Bottom/Right'
+                and position.values[7]==nil and position.default==6)
+        else
+            assert(position.values[7]=='Bottom/Center' and position.values[6]=='Bottom/Right'
+                and position.values[5]==nil and position.default==7)
+        end
+    end
+    sizeFields[#sizeFields+1],marginFields[#marginFields+1]=fields[#fields-1],fields[#fields]
+end
+-- Size and Margin match Wheels.
+for _,field in ipairs(sizeFields) do
     assert(field.id=='.S' and field.default==100)
     local count=0
     for value,label in pairs(field.values) do
@@ -64,7 +97,7 @@ for _,field in ipairs({barFields[4],wheelFields[3]}) do
     end
     assert(count==5)
 end
-for _,field in ipairs({barFields[5],wheelFields[4]}) do
+for _,field in ipairs(marginFields) do
     assert(field.id=='.M' and field.default==50 and field.values.min==0
         and field.values.max==100 and field.values.step==10 and field.values.suffix=='%')
 end
@@ -72,9 +105,10 @@ assert(bar.objects.labels.abilityLabels[1]=='ability_left'
     and bar.objects.labels.consumableLabels[4]=='consumable_bottom')
 local model=require('mc.menu_model').build(
     {category},
-    {template,bar},{path,barPath})
+    {template,barList[1],barList[2],barList[3],barList[4]},{path,barPath,barPath,barPath,barPath})
 local menu=require('mc.menu').generate(model.registry)
-assert(template.menuTarget=='module' and bar.menuTarget=='module')
+assert(template.menuTarget=='module')
+for _,definition in ipairs(barList) do assert(definition.menuTarget=='module') end
 -- Fangdango's module page is a real page merged into Controls > Visuals: a
 -- notice linking there, then the same rows as the slot page.
 local entry=assert(menu.providers['ModCoreTemplates.module.Fangdango'])
@@ -100,16 +134,20 @@ end
 -- Saved Fangdango values are copied once from the module config, never removed.
 assert(page.migrate[1]=='9_ModCore_Fangdango/config.ini')
 local selector=menu.selectors['player.quickslots']
-local value,barValue
+local value
+local barValues,seenValues={},{}
 for option,id in pairs(selector.byValue) do
+    assert(not seenValues[option]);seenValues[option]=true
     if id==template.id then value=option end
-    if id==bar.id then barValue=option end
+    for barId,definition in pairs(bars) do
+        if id==definition.id then barValues[barId]=option end
+    end
 end
-assert(value and barValue and value~=barValue)
+assert(value)
+for _,barId in ipairs(barIds) do assert(barValues[barId],barId) end
 local definition=menu.definitions['player.quickslots'][value]
-assert(template.id==definition.id and template.name=='Wheels Fangdango')
+assert(template.id==definition.id and template.name=='Wheels')
 assert(not definition.access and not definition.direct)
-local barDefinition=menu.definitions['player.quickslots'][barValue]
 local rows,values={},{}
 for _,row in ipairs(page.rows) do
     rows[row.Id]=row
@@ -125,35 +163,36 @@ local placement=rows[definition.settings.WheelsR]
 assert(align and align.PresetLabels=='Right/Center|Bottom/Right|Bottom/Center')
 -- Each template's fields show only while that template is selected.
 assert(page.manifest:find('VisibleValues='..value..'\nVisibleWhen='..selector.id,1,true))
-assert(page.manifest:find('VisibleValues='..barValue..'\nVisibleWhen='..selector.id,1,true))
 assert(placement and placement.PresetLabels=='Overlap|Side by Side|Stacked|Perspective')
 local settings=menu.decodeState(values)['player.quickslots'].selections[template.id]
 assert(settings.WheelsA==6 and settings.WheelsM==50
     and settings.WheelsR==1 and settings.WheelsS==100)
--- Unrecognized or legacy saved keys are ignored, never a failure.
-for _,legacy in ipairs({'MCT_WheelsSize','MCT_WheelsX','MCT_WheelsY','MCT_BarsR'}) do
-    values[legacy]=50
+-- Each bar's rows show only while that bar is selected; its settings are named
+-- after its menu.
+for barId,definition in pairs(bars) do
+    local barValue=barValues[barId]
+    assert(page.manifest:find('VisibleValues='..barValue..'\nVisibleWhen='..selector.id,1,true))
+    local barDefinition=menu.definitions['player.quickslots'][barValue]
+    local single=barId:match('^Single')~=nil
+    assert(barDefinition.settings[barId..'R']==nil
+        and (barDefinition.settings[barId..'A']~=nil)==not single,barId)
+    local keys=rows[barDefinition.settings[barId..'K']]
+    assert((keys~=nil)==single,barId)
+    if single then
+        assert(keys.PresetLabels==(barId=='SingleUnderbar' and 'Above|Below|Left|Right'
+            or 'Left|Right|Above|Below'))
+    end
+    values[selector.id]=barValue
+    local barSettings=menu.decodeState(values)['player.quickslots'].selections[definition.id]
+    local position
+    if not single then position=barId=='DoubleSidebar' and 6 or 7 end
+    assert(barSettings[barId..'S']==100 and barSettings[barId..'M']==50
+        and barSettings[barId..'K']==(single and 0 or nil) and barSettings[barId..'A']==position)
 end
-local tolerant=menu.decodeState(values)['player.quickslots'].selections[template.id]
-assert(tolerant.WheelsA==6 and tolerant.WheelsS==100 and tolerant.WheelsSize==nil)
-local orientation=rows[barDefinition.settings.BarsA]
-assert(orientation and tonumber(orientation.Default)==7)
-local above=rows[barDefinition.settings.BarsKH]
-local side=rows[barDefinition.settings.BarsKV]
-assert(above and above.PresetLabels=='Above|Below')
-assert(side and side.PresetLabels=='Left|Right')
--- Each Key Indicators row shows only for its own orientation, on the slot page too.
-assert(above.VisibleWhen==orientation.Id and tostring(above.VisibleValues)=='7')
-assert(side.VisibleWhen==orientation.Id and tostring(side.VisibleValues)=='5')
-assert(page.manifest:find('VisibleValues=7\nVisibleWhen='..orientation.Id,1,true))
-assert(page.manifest:find('VisibleValues=5\nVisibleWhen='..orientation.Id,1,true))
-values[selector.id]=barValue
-local barSettings=menu.decodeState(values)['player.quickslots'].selections[bar.id]
-assert(barSettings.BarsA==7 and barSettings.BarsKH==0 and barSettings.BarsKV==0)
 print('AF Wheels registration and settings contract passed')
 
-assert(#definitions==2 and definitions[1].name=='Wheels Fangdango'
-    and definitions[2].name=='Bars Fangdango')
+assert(#definitions==5 and definitions[1].name=='Wheels')
+for index,name in ipairs(barNames) do assert(definitions[index+1].name==name) end
 print('Fangdango registered template list passed')
 
 local originalStartup=package.loaded['mc.lua_startup']

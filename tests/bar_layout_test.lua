@@ -1,13 +1,19 @@
 package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;'..package.path
-local bar=dofile('Fangdango/tests/load_templates.lua')()[2]
+local definitions=dofile('Fangdango/tests/load_templates.lua')()
+local barsById={}
+for index=2,#definitions do barsById[definitions[index].menu[1].id]=definitions[index] end
+local bar=barsById.SingleUnderbar
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
 local graph=require('mc.selectors').compile(category.objects)
 local State=require('mc.target_state')
 local Manager=require('mc.managed_template')
+-- UE4SS answers an unknown property with an invalid placeholder, not nil.
+local placeholder={IsValid=function() return false end}
+placeholder.RootWidget=placeholder
 local function widget(name)
     local w = {
         name=name, children={}, RenderTransform={Translation={X=0,Y=0},Scale={X=1,Y=1}},
-        opacity=1, active=0,
+        opacity=1, active=0, WidgetTree=placeholder,
     }
     function w:IsValid() return self.invalid ~= true end
     function w:GetFullName() return self.name end
@@ -201,16 +207,36 @@ local sharedTargets={}
 local sharedDefinition={attach=function(_,_,original) return original end}
 local sharedManager=Manager.new(sharedDefinition,
     State.specs(sharedGraph,category.sharedObjects),sharedGraph.order,sharedCreated)
-local barGraph=require('mc.selectors').project(graph,bar.objects)
-local manager=Manager.new(bar,State.specs(barGraph,bar.objects),barGraph.order)
--- Orientation 7 is Horizontal (bottom/center), 5 is Vertical (bottom/right).
--- ModCore Controls has reported abilities (group 1) as focused.
--- Key indicators default Above (BarsKH=0) and Left (BarsKV=0).
-local function params(size,margin,orientation,state,kh,kv)
-    return {settings={BarsS=size or 100,BarsM=margin or 0,BarsA=orientation or 7,
-            BarsKH=kh or 0,BarsKV=kv or 0,focus=bar.settings.focus},
+local function managerFor(template)
+    local projected=require('mc.selectors').project(graph,template.objects)
+    return Manager.new(template,State.specs(projected,template.objects),projected.order)
+end
+local managers={}
+for id,template in pairs(barsById) do managers[id]=managerFor(template) end
+local manager=managers.SingleUnderbar
+-- Orientation 7 is an Underbar (bottom/center), 5 a Sidebar (bottom/right);
+-- double picks the Double version. Each names its settings after its menu.
+-- ModCore Controls has reported abilities (group 1) as focused. Single key
+-- indicators default Above (Underbar) and Left (Sidebar).
+local function params(size,margin,orientation,state,kh,kv,double,position)
+    orientation=orientation or 7
+    local id=(double and 'Double' or 'Single')..(orientation==5 and 'Sidebar' or 'Underbar')
+    local settings={[id..'S']=size or 100,[id..'M']=margin or 0,focus=bar.settings.focus}
+    if not double then settings[id..'K']=(orientation==5 and kv or kh) or 0
+    else settings[id..'A']=position or (orientation==5 and 6 or 7) end
+    return {id=id,settings=settings,
         screen={width=1920,height=1080,scale=1,center=960,middle=540},
         state=state or {controls={group={from=1,to=1}}}}
+end
+-- Switching bars selects another template: the active one detaches before the
+-- other attaches, as when the user picks it.
+local active
+local function layout(p)
+    local wanted=managers[p.id]
+    if active==wanted then return wanted:update(switcher,objects,p) end
+    if active then assert(active:detach(switcher)) end
+    active=wanted
+    return wanted:attach(switcher,objects,p)
 end
 local function near(a,b) assert(math.abs(a-b)<0.00001,tostring(a)..' ~= '..tostring(b)) end
 local function bounds(button)
@@ -227,7 +253,7 @@ local abilityWheel,consumableWheel=objects.abilities,objects.consumables
 local actions=assert(sharedTargets.actions)
 assert(abilityWheel:GetParent()==actions and consumableWheel:GetParent()==actions,
     'MCT must place both wheels directly in its canvas without host buttons')
-assert(manager:attach(switcher,objects,params()))
+assert(layout(params()))
 assert(switcher.active==1,'Bar must not change the native switcher index')
 assert(objects.change_prompt.opacity==0,'Bar must hide the native swap prompt')
 assert(switcher:GetChildrenCount()==2)
@@ -261,11 +287,11 @@ end
 -- consumables start half a pitch after it. Horizontal runs right, vertical
 -- runs down. Each binding label sits centered on its key's top edge; an empty
 -- key's label is hidden. Ability L and B are empty, so only T and R show.
--- Vertical labels sit left or right of their keys (side -1 or 1), level with
--- them, past a gap of 7.5% of the key width; horizontal ones on the top or
--- bottom edge (side -1 or 1).
+-- Labels are centered on one edge of their key: by default the left or right
+-- edge in a vertical bar and the top or bottom edge in a horizontal one (side
+-- -1 or 1), or the other pair when across.
 local along={ability={nil,-1.5,-0.5,nil},consumable={0.5,1.5,2.5,3.5}}
-local function lined(W,H,vertical,dx,dy,side)
+local function lined(W,H,vertical,dx,dy,side,across)
     side=side or -1
     for _,kind in ipairs({'ability','consumable'}) do
         for index=1,4 do
@@ -277,8 +303,8 @@ local function lined(W,H,vertical,dx,dy,side)
                 if vertical then ex,ey=dx,dy+a*H*1.075 end
                 near(x,ex);near(y,ey)
                 local lx,ly=centerOf(label)
-                if vertical then
-                    near(lx,ex+side*(W/2+W*0.075+label.desired.X/2));near(ly,ey)
+                if (vertical==true)~=(across==true) then
+                    near(lx,ex+side*W/2);near(ly,ey)
                 else
                     near(lx,ex);near(ly,ey+side*H/2)
                 end
@@ -305,21 +331,26 @@ bar.events['controls.group.focus'](focusParams,{name='controls.group.focus',grou
     {wheels={abilities=objects.abilities,consumables=objects.consumables}})
 near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
 -- A rebuild applies the current focus from the state.
-assert(manager:update(switcher,objects,params(100,0,7,{controls={group={from=1,to=2}}})))
+assert(layout(params(100,0,7,{controls={group={from=1,to=2}}})))
 near(objects.abilities.opacity,bar.settings.focus.dim);near(objects.consumables.opacity,1)
 -- Margin 100% moves the shared box to 8+64=72 px from the screen edge.
-assert(manager:update(switcher,objects,params(100,100)))
+assert(layout(params(100,100)))
 near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
 wheelsAt(860,848)
 -- Horizontal labels can sit below their keys instead.
-assert(manager:update(switcher,objects,params(100,0,7,nil,1)))
+assert(layout(params(100,0,7,nil,1)))
 lined(100,80,false,nil,nil,1)
+-- Horizontal Key Indicators also offer Left (2) and Right (3).
+assert(layout(params(100,0,7,nil,2)))
+lined(100,80,false,nil,nil,-1,true)
+assert(layout(params(100,0,7,nil,3)))
+lined(100,80,false,nil,nil,1,true)
 -- Vertical: one column in the bottom-right corner. With labels on the left,
 -- the keys' right edge meets the box's right edge: 100-50=50. A full
 -- consumable run ends at the box's bottom: 80-(3.5*86+40)=-261. Abilities sit
 -- above the shared center, consumables below, the nearest of each half a
 -- pitch (43) from it.
-assert(manager:update(switcher,objects,params(100,0,5)))
+assert(layout(params(100,0,5)))
 wheelsAt(1712,912)
 lined(100,80,true,50,-261)
 local _,abilityNearest=offset('ability',3)
@@ -327,17 +358,89 @@ local _,consumableNearest=offset('consumable',1)
 near(abilityNearest,-261-43);near(consumableNearest,-261+43)
 -- With labels on the right, the widest shown label (30) reaches the box's
 -- right edge instead: 100-(50+7.5+30)=12.5.
-assert(manager:update(switcher,objects,params(100,0,5,nil,0,1)))
+assert(layout(params(100,0,5,nil,0,1)))
 lined(100,80,true,12.5,-261,1)
+-- Vertical Key Indicators also offer Above (2) and Below (3); the column keeps
+-- its labels-left place.
+assert(layout(params(100,0,5,nil,0,2)))
+lined(100,80,true,50,-261,-1,true)
+assert(layout(params(100,0,5,nil,0,3)))
+lined(100,80,true,50,-261,1,true)
+-- Double bars give each wheel its own full bar centered on the center, every
+-- slot in its own place even when empty, so a key and the one beside it in the
+-- other row share a binding: ability T and R sit at -0.5 and 0.5 pitches,
+-- consumables at all four. Consumables are one row (or column) further from
+-- the edge, by the key plus the largest shown label plus two spacings. Both
+-- rows' labels sit in the gap halfway between them, so each pair overlaps.
+local placed={ability={nil,-0.5,0.5,nil},consumable={-1.5,-0.5,0.5,1.5}}
+local function doubled(vertical,dx,dy,cross)
+    for _,kind in ipairs({'ability','consumable'}) do
+        local toward=kind=='ability' and -cross/2 or cross/2
+        for index=1,4 do
+            local label=objects.labels[kind..'Labels'][index]
+            local a=placed[kind][index]
+            if a then
+                local x,y=offset(kind,index)
+                local ex,ey=a*100*1.075,0
+                if vertical then ex,ey=0,a*80*1.075 end
+                ex,ey=ex+dx,ey+dy
+                if kind=='consumable' then
+                    if vertical then ex=ex-cross else ey=ey-cross end
+                end
+                near(x,ex);near(y,ey)
+                local lx,ly=centerOf(label)
+                if vertical then near(lx,ex+toward);near(ly,ey) else near(lx,ex);near(ly,ey+toward) end
+                assert(label.opacity==1)
+            else
+                assert(label.opacity==0,kind..' empty slot label must be hidden')
+            end
+        end
+    end
+    -- Labels of the same slot meet: ability T over consumable T.
+    local ax,ay=centerOf(objects.labels.abilityLabels[2])
+    local cx,cy=centerOf(objects.labels.consumableLabels[2])
+    near(ax,cx);near(ay,cy)
+end
+-- Double Underbar: labels are 20 high, so consumables sit 80+20+2*6=112 above.
+assert(layout(params(100,0,7,nil,nil,nil,true)))
+wheelsAt(860,912)
+doubled(false,0,0,112)
+assert(objects.change_prompt.opacity==0,'bars always hide the swap prompt')
+-- Focus dims the other wheel, as in every bar.
+near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+barsById.DoubleUnderbar.events['controls.group.focus'](params(100,0,7,nil,nil,nil,true),
+    {name='controls.group.focus',group={from=1,to=2}},
+    {wheels={abilities=objects.abilities,consumables=objects.consumables}})
+near(objects.abilities.opacity,bar.settings.focus.dim);near(objects.consumables.opacity,1)
+-- Double Sidebar: the ability column's right edge meets the box's (100-50=50),
+-- its full run ends at the box's bottom (80-(1.5*86+40)=-89), and labels are
+-- 30 wide, so consumables sit 100+30+2*7.5=145 further left.
+assert(layout(params(100,0,5,nil,nil,nil,true)))
+wheelsAt(1712,912)
+doubled(true,50,-89,145)
+-- Position Middle/Right (5) moves the box to the right edge's middle,
+-- (1080-160)/2=460, and centers the full column on it.
+assert(layout(params(100,0,5,nil,nil,nil,true,5)))
+wheelsAt(1712,460)
+doubled(true,50,0,145)
+-- Double Underbar at Bottom/Right (6): the box sits in the corner, and the full
+-- row ends at its right edge: 100-(1.5*107.5+50)=-111.25.
+assert(layout(params(100,0,7,nil,nil,nil,true,6)))
+wheelsAt(1712,912)
+doubled(false,-111.25,0,112)
+-- An unknown saved Position falls back to the bar's default edge.
+assert(layout(params(100,0,7,nil,nil,nil,true,5)))
+wheelsAt(860,912)
+doubled(false,0,0,112)
 -- Size scales each shown key in place, and the pitch with it.
-assert(manager:update(switcher,objects,params(80)))
+assert(layout(params(80)))
 lined(80,64)
 for index,button in ipairs(objects.buttons.abilitySlots) do
     near(button.RenderTransform.Scale.X,along.ability[index] and 0.8 or 1)
 end
-assert(manager:update(switcher,objects,params(120)))
+assert(layout(params(120)))
 lined(120,96)
-assert(manager:update(switcher,objects,params()))
+assert(layout(params()))
 local lastKey=objects.buttons.consumableSlots[4]
 local setScale=lastKey.SetRenderScale
 local fail=true
@@ -345,9 +448,9 @@ function lastKey:SetRenderScale(value)
     if fail then fail=false;error('injected Bar key failure') end
     return setScale(self,value)
 end
-assert(not manager:update(switcher,objects,params(110)))
+assert(not layout(params(110)))
 lastKey.SetRenderScale=setScale
-assert(manager:detach(switcher))
+assert(active==manager and manager:detach(switcher))
 assert(objects.change_prompt.opacity==1,'detach must restore the native swap prompt')
 near(objects.consumables.opacity,1)
 assert(switcher:GetChildAt(0)==panelA and switcher:GetChildAt(1)==panelB)

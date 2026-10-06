@@ -1,6 +1,38 @@
 local Widget=require('mc').load('widget')
+local Objects=require('mc').load('objects')
 
 local M={}
+
+-- Decorations are named children, not members, so MCT cannot target them.
+-- Find them by name and restore them through onCleanup.
+local function findChild(root,name)
+    if not Objects.valid(root) then return nil end
+    local full=Objects.call(root,'GetFullName')
+    if type(full)=='string' and full:sub(-#name-1)=='.'..name then return root end
+    -- A UserWidget is not a panel; its children hang off its WidgetTree's root.
+    -- Other widgets answer WidgetTree with an invalid placeholder, not nil.
+    local tree=Widget.property(Widget.property(root,'WidgetTree'),'RootWidget')
+    if Objects.valid(tree) then return findChild(tree,name) end
+    local count=Objects.call(root,'GetChildrenCount')
+    if type(count)~='number' then return nil end
+    for index=0,count-1 do
+        local found=findChild(Objects.call(root,'GetChildAt',index),name)
+        if found then return found end
+    end
+end
+
+function M.hideDecorations(wheel,names,onCleanup)
+    for _,name in ipairs(names) do
+        local decoration=findChild(wheel,name)
+        if decoration then
+            local opacity=Widget.opacity(decoration)
+            onCleanup(function()
+                if Objects.valid(decoration) then Widget.setOpacity(decoration,opacity) end
+            end)
+            Widget.setOpacity(decoration,0)
+        end
+    end
+end
 
 -- controls.group.focus: dim the wheel without focus to settings.focus.dim.
 function M.onGroupFocus(params,event,objects)
@@ -16,6 +48,9 @@ function M.onGroupFocus(params,event,objects)
         end
     end
 end
+
+-- Relative Placement, shared by Wheels and Bars.
+M.PLACEMENTS={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}
 
 -- Size and Margin to Screen Edge, shared by Wheels and Bars.
 M.SIZES={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}

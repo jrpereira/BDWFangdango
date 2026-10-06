@@ -3,7 +3,7 @@ local Widget = MC.load('widget')
 local Helpers=require('fangdango.helpers')
 
 local template = {
-    name='Wheels Fangdango',
+    name='Wheels',
     description='Position and size both quickslot wheels on the screen.',
 
     category='player.quickslots',
@@ -21,7 +21,7 @@ local template = {
     menu = {
         {id='Wheels', label='Visual Options', fields={
             {id='.A', label='Align to Screen Edge', values={[5]='Right/Center', [6]='Bottom/Right', [7]='Bottom/Center',}, default=6},
-            {id='.R', label='Relative Placement', values={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}, default=1},
+            {id='.R', label='Relative Placement', values=Helpers.PLACEMENTS, default=1},
 
             {id='.S', label='Overall Size', values=Helpers.SIZES, default=100},
             {id='.M', label='Margin to Screen Edge', values=Helpers.MARGINS, default=50},
