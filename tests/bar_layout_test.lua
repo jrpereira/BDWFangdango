@@ -1,4 +1,6 @@
 package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;'..package.path
+-- MCT keeps objects as UE4SSLuaEventBridge weak handles; use its test double.
+dofile('ModCoreTemplates/tests/support/lifetimes.lua').install()
 local definitions=dofile('Fangdango/tests/load_templates.lua')()
 local barsById={}
 for index=2,#definitions do barsById[definitions[index].menu[1].id]=definitions[index] end
