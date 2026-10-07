@@ -7,9 +7,9 @@ Arrange your ability and consumable slots as wheels or bars, with sizes and scre
 [b]What you can change[/b]
 [list]
 [*][b]Wheels:[/b] choose Side by Side, Stacked, Overlap or Perspective placement. Anchor them at Right/Center, Bottom/Right or Bottom/Center.
-[*][b]Bars:[/b] line up your slots horizontally at the bottom center (Underbar) or vertically at the bottom right (Sidebar). Single bars put both wheels in one row or column and omit empty slots; Double bars give each wheel its own and can also sit at the bottom right (Underbar) or the middle of the right edge (Sidebar).
+[*][b]Bars:[/b] line up your slots horizontally at the bottom center (Underbar) or vertically at the bottom right (Sidebar). Single bars put both wheels in one row or column and omit empty slots; Double bars give each wheel its own. Underbars can also sit at the bottom right, and a Double Sidebar at the middle of the right edge.
 [*][b]Key indicators:[/b] put them on any side of a Single bar's keys. A Double bar shows one per slot, between its two rows or columns.
-[*][b]Size and margin:[/b] choose from five sizes, from Smaller to Larger, and adjust the distance from the screen edge.
+[*][b]Size and margin:[/b] choose from five sizes, from Smaller to Larger, and adjust the distance from the screen edge. At 0% a bar lines up with the game's own HUD.
 [/list]
 Pair Fangdango with [b]ModCore Controls[/b] to change your bindings and keep the key indicators current. The inactive wheel dims to show which wheel has focus, except when you choose Overlap placement.
 
@@ -31,14 +31,14 @@ Install these before Fangdango:
 [*]Enable the mods in your UE4SS setup or mod manager, then restart the game.
 [*]Open [b]Mod Settings → Controls → Visuals[/b] if ModCore Controls is installed, or open the [b]Fangdango[/b] page. In [b]Quickslots[/b], choose [b]Wheels[/b], a [b]Single[/b] or [b]Double Underbar[/b], or a [b]Single[/b] or [b]Double Sidebar[/b], then select [b]Apply[/b].
 [/list]
-Start with [b]Standard[/b] size and [b]50%[/b] margin, then adjust to taste. Increasing the margin moves the layout farther from the screen edge; it does not move it across that percentage of the screen.
+Start with [b]Standard[/b] size and the default margin ([b]50%[/b] for Wheels, [b]0%[/b] for bars), then adjust to taste. Increasing the margin moves the layout farther from the screen edge; a bar's -100% brings it to the edge.
 
 Change your controls through ModCore Controls; let Fangdango handle the choreography.
 
 [b]Troubleshooting[/b]
 [list]
 [*][b]The layout has not changed:[/b] select a Fangdango layout in [b]Quickslots[/b] and choose [b]Apply[/b]. Check that the required mods are installed and enabled, then restart the game.
-[*][b]The layout is hard to see:[/b] try [b]Standard[/b] size and [b]50%[/b] margin.
+[*][b]The layout is hard to see:[/b] try [b]Standard[/b] size and the default margin.
 [*][b]Neither wheel dims:[/b] check that ModCore Controls is installed and enabled. Overlap placement does not dim either wheel.
 [*][b]Another mod changes the quickslot HUD:[/b] try disabling it to check for a conflict.
 [/list]

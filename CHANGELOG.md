@@ -22,14 +22,20 @@
     Indicators on any side of the keys.
   - **Double Underbar** and **Double Sidebar** give each wheel its own row or
     column, keep every slot's place and share one key indicator per slot in
-    the gap between them. Their Position is Bottom/Center or Bottom/Right for
-    the Underbar, Middle/Right or Bottom/Right for the Sidebar.
+    the gap between them.
+  - Underbars choose a Position of Bottom/Center or Bottom/Right, and the
+    Double Sidebar Middle/Right or Bottom/Right.
   - Each wheel's keys run Left, Top, Right, Bottom.
 - Size in Wheels and the bars is a picker: Smaller (80%), Small (90%), Standard
   (100%, default), Large (110%) or Larger (120%).
-- Margin to Screen Edge in Wheels and the bars runs from 0% to 100%, placing the
-  layout 8 + 64 × Margin/100 pixels from the edge: 8 at 0%, 40 at 50%
-  (default) and 72 at 100%.
+- Margin to Screen Edge in Wheels runs from 0% to 100%, placing the layout
+  8 + 64 × Margin/100 pixels from the edge: 8 at 0%, 40 at 50% (default) and
+  72 at 100%.
+- Margin to Screen Edge in the bars runs from -100% to 100% in 5% steps. At 0%
+  (default) a bar lines up with the game's own HUD; -100% brings its keys and
+  indicators to 8 pixels from the screen edge, and 100% moves it as far again
+  the other way. An Underbar at Bottom/Right keeps as far from the right edge
+  as from the bottom.
 - Dim the wheel without focus to 70% in Wheels (except Overlap) and the bars,
   following ModCore Controls' focus through ModCoreTemplates. The Default wheel
   set in ModCore Controls has focus at the start; without ModCore Controls

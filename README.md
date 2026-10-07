@@ -16,9 +16,10 @@ bindings, keep the key indicators current, and highlight the active wheel.
   vertical bar at the bottom right. A Single bar lines up both wheels in one
   row or column, omits empty slots and puts key indicators on any side of the
   keys. A Double bar gives each wheel its own row or column, with one key
-  indicator per slot between them; a Double Underbar can also sit at the
-  bottom right, and a Double Sidebar at the middle of the right edge.
+  indicator per slot between them. Underbars can also sit at the bottom right,
+  and a Double Sidebar at the middle of the right edge.
 - Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
+  At 0% a bar lines up with the game's own HUD.
   With ModCore Controls, the inactive wheel dims, except in Overlap placement.
 
 ## Requirements
@@ -48,15 +49,15 @@ Fangdango still changes the layout, but neither wheel dims to show focus.
    Sidebar**, adjust to taste and select **Apply**.
 
 Change your controls through ModCore Controls; let Fangdango handle the choreography.
-Start with **Standard** size and **50%** margin. A larger margin moves the layout
-farther from the screen edge; the percentage adjusts the margin, not the layout's
-position across the whole screen.
+Start with **Standard** size and the default margin: **50%** for Wheels, **0%**
+for bars. A larger margin moves the layout farther from the screen edge; a bar's
+-100% brings it to the edge.
 
 ## If the layout does not appear
 
 - Check that a Fangdango layout is selected in **Quickslots**, then select **Apply**.
 - Confirm the required mods are installed and enabled, then restart the game.
-- If the layout is hard to see, try **Standard** size and **50%** margin.
+- If the layout is hard to see, try **Standard** size and the default margin.
 - If another mod rearranges the quickslot HUD, try disabling it to check for a conflict.
 
 ## Updating or removing

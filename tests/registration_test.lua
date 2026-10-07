@@ -59,26 +59,33 @@ end
 assert(template.render==nil)
 -- No bar has Relative Placement. Single bars choose their Key Indicators,
 -- listing their own bar's sides first; Double bars share them between rows.
+-- All bars but the Single Sidebar choose their Position first.
 local wheelFields=template.menu[1].fields
 local sizes={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}
-local sizeFields,marginFields={wheelFields[3]},{wheelFields[4]}
+local sizeFields,marginFields={wheelFields[3]},{}
+local wheelMargin=wheelFields[4]
+assert(wheelMargin.id=='.M' and wheelMargin.default==50 and wheelMargin.values.min==0
+    and wheelMargin.values.max==100 and wheelMargin.values.step==10)
 for id,definition in pairs(bars) do
     local fields=definition.menu[1].fields
     local single=id:match('^Single')~=nil
-    assert(#fields==3,id)
+    local positioned=id~='SingleSidebar'
+    assert(#fields==(single and positioned and 4 or 3),id)
     for _,field in ipairs(fields) do
         assert(field.conditions==nil and field.id~='.R',id)
     end
     if single then
-        assert(fields[1].id=='.K' and fields[1].default==0)
+        local keys=fields[positioned and 2 or 1]
+        assert(keys.id=='.K' and keys.default==0)
         local labels=id=='SingleUnderbar' and {'Above','Below','Left','Right'}
             or {'Left','Right','Above','Below'}
-        for value=0,3 do assert(fields[1].values[value]==labels[value+1],id) end
-    else
-        -- Double bars choose their Position, numbered as MCT's alignments.
+        for value=0,3 do assert(keys.values[value]==labels[value+1],id) end
+    end
+    if positioned then
+        -- Positions are numbered as MCT's alignments.
         local position=fields[1]
         assert(position.id=='.A' and position.label=='Position')
-        if id=='DoubleSidebar' then
+        if id:match('Sidebar$') then
             assert(position.values[5]=='Middle/Right' and position.values[6]=='Bottom/Right'
                 and position.values[7]==nil and position.default==6)
         else
@@ -88,7 +95,7 @@ for id,definition in pairs(bars) do
     end
     sizeFields[#sizeFields+1],marginFields[#marginFields+1]=fields[#fields-1],fields[#fields]
 end
--- Size and Margin match Wheels.
+-- Size matches Wheels; bars' Margin runs either side of the native HUD.
 for _,field in ipairs(sizeFields) do
     assert(field.id=='.S' and field.default==100)
     local count=0
@@ -98,8 +105,8 @@ for _,field in ipairs(sizeFields) do
     assert(count==5)
 end
 for _,field in ipairs(marginFields) do
-    assert(field.id=='.M' and field.default==50 and field.values.min==0
-        and field.values.max==100 and field.values.step==10 and field.values.suffix=='%')
+    assert(field.id=='.M' and field.default==0 and field.values.min==-100
+        and field.values.max==100 and field.values.step==5 and field.values.suffix=='%')
 end
 assert(bar.objects.labels.abilityLabels[1]=='ability_left'
     and bar.objects.labels.consumableLabels[4]=='consumable_bottom')
@@ -175,7 +182,7 @@ for barId,definition in pairs(bars) do
     local barDefinition=menu.definitions['player.quickslots'][barValue]
     local single=barId:match('^Single')~=nil
     assert(barDefinition.settings[barId..'R']==nil
-        and (barDefinition.settings[barId..'A']~=nil)==not single,barId)
+        and (barDefinition.settings[barId..'A']~=nil)==(barId~='SingleSidebar'),barId)
     local keys=rows[barDefinition.settings[barId..'K']]
     assert((keys~=nil)==single,barId)
     if single then
@@ -185,8 +192,8 @@ for barId,definition in pairs(bars) do
     values[selector.id]=barValue
     local barSettings=menu.decodeState(values)['player.quickslots'].selections[definition.id]
     local position
-    if not single then position=barId=='DoubleSidebar' and 6 or 7 end
-    assert(barSettings[barId..'S']==100 and barSettings[barId..'M']==50
+    if barId=='DoubleSidebar' then position=6 elseif barId~='SingleSidebar' then position=7 end
+    assert(barSettings[barId..'S']==100 and barSettings[barId..'M']==0
         and barSettings[barId..'K']==(single and 0 or nil) and barSettings[barId..'A']==position)
 end
 print('AF Wheels registration and settings contract passed')
