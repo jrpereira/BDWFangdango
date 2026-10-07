@@ -2,6 +2,7 @@ local MC = require('mc')
 local Widget = MC.load('widget')
 local Objects = MC.load('objects')
 local Helpers=require('fangdango.helpers')
+local log=Helpers.log
 
 -- Spacing between neighbouring keys, as a fraction of the key size.
 local SPC=0.075
@@ -64,6 +65,7 @@ end
 local function labelBox(label)
     local ok,box=pcall(Widget.measure,label)
     if ok then return box end
+    log.trace('label unmeasured, treated as empty: ',box)
     local pivot=Widget.property(label,'RenderTransformPivot')
     return {width=0,height=0,pivotX=tonumber(Widget.property(pivot,'X')) or 0.5,
         pivotY=tonumber(Widget.property(pivot,'Y')) or 0.5}
@@ -104,6 +106,9 @@ local function onAttach(id,vertical,double,objects,params,original)
             end
         end
     end
+    log.debug(id,': align ',align,', size ',settings[id..'S'],'%, keys shown ',
+        counts[1],' ability, ',counts[2],' consumable')
+    if not first then log.debug(id,': no key shown; nothing to lay out') end
     local W,H=first and first.width*factor or 0,first and first.height*factor or 0
     local pitchX,pitchY=W*(1+SPC),H*(1+SPC)
 

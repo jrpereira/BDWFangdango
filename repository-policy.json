@@ -1,4 +1,6 @@
 {
   "allowed_paths": [],
-  "vendored": {}
+  "vendored": {
+    "Scripts/vendor/mc_log.lua": "ModCoreSettings"
+  }
 }

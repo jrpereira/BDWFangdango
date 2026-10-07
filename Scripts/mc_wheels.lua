@@ -33,7 +33,10 @@ template.attach = function(objects, params, original)
     local abilityBox=original.wheels.abilities.box
     local consumableBox=original.wheels.consumables.box
 
-    local positions,scale=Helpers.pair(params.settings,params.screen, abilityBox ,consumableBox)
+    local settings=params.settings
+    local positions,scale=Helpers.pair(settings,params.screen, abilityBox ,consumableBox)
+    Helpers.log.debug('Wheels: align ',settings.WheelsA,', placement ',settings.WheelsR,
+        ', size ',settings.WheelsS,'%, margin ',settings.WheelsM,'%')
     local wheels={objects.wheels.abilities,objects.wheels.consumables}
     for w=1,2 do
         local position=positions[w]

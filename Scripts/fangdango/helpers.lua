@@ -1,7 +1,18 @@
 local Widget=require('mc').load('widget')
 local Objects=require('mc').load('objects')
 
+-- Loaded by path: MCT's Scripts come first on package.path, so a require finds MCT's copy.
+local source=assert(debug.getinfo(1,'S').source:match('^@(.+)$'))
+local scripts=assert(source:match('^(.*)[/\\][^/\\]+[/\\][^/\\]+$'))
+local root=scripts:match('^(.*)[/\\][^/\\]+$') or '.'
+local Log=assert(loadfile(scripts..'/vendor/mc_log.lua'))()
+
 local M={}
+
+-- Shared by every Fangdango template. The level comes from log_level.txt in the mod
+-- folder; WARN without it.
+M.log=Log.new({name='Fangdango',path=root..'/log_level.txt'})
+local log=M.log
 
 -- Decorations are named children, not members, so MCT cannot target them.
 -- Find them by name and restore them through onCleanup.
@@ -30,6 +41,8 @@ function M.hideDecorations(wheel,names,onCleanup)
                 if Objects.valid(decoration) then Widget.setOpacity(decoration,opacity) end
             end)
             Widget.setOpacity(decoration,0)
+        else
+            log.debug('decoration ',name,' not found; left as is')
         end
     end
 end
@@ -41,6 +54,7 @@ function M.onGroupFocus(params,event,objects)
     local wheels=objects.wheels
     -- Overlapping Wheels keep the native look.
     local overlap=params.settings.WheelsR==0
+    log.trace('focus wheel ',focused,overlap and ' (overlap, no dimming)' or '')
     for index,name in ipairs({'abilities','consumables'}) do
         if wheels and wheels[name] then
             Widget.setOpacity(wheels[name],

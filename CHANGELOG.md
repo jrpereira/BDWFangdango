@@ -41,6 +41,9 @@
 - Register each template individually through `mc.registerTemplate`.
 - Dawnwalker Mod Menu is no longer a direct requirement; ModCoreSettings brings
   it in.
+- Log through the shared ModCore leveled logger, quiet below warnings by
+  default. Put `DEBUG` or `TRACE` in a `log_level.txt` in the mod folder to see
+  layout details in the UE4SS log.
 
 ## 0.2.1 — Wheels update
 

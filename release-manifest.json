@@ -9,6 +9,7 @@
     "Scripts/main.lua": "Scripts/main.lua",
     "Scripts/mc_bars.lua": "Scripts/mc_bars.lua",
     "Scripts/mc_wheels.lua": "Scripts/mc_wheels.lua",
+    "Scripts/vendor/mc_log.lua": "Scripts/vendor/mc_log.lua",
     "README.md": "README.md",
     "CHANGELOG.md": "CHANGELOG.md"
   }
