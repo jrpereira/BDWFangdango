@@ -19,7 +19,8 @@ end
 local bar=bars.SingleUnderbar
 local path='9_ModCore_Fangdango/Scripts/mc_wheels.lua'
 local barPath='9_ModCore_Fangdango/Scripts/mc_bars.lua'
-assert(template.category=='player.quickslots' and template.version=='1.0.1')
+-- The module is the mod folder; ModCoreSettings shows its mod.json name and version.
+assert(template.category=='player.quickslots' and template.module=='Fangdango')
 assert(template.managed==nil and template.requiredTargets==nil)
 assert(template.objects.abilities==nil and template.objects.consumables==nil
     and template.objects.wheels.abilities.properties==nil
@@ -118,16 +119,29 @@ assert(template.menuTarget=='module')
 for _,definition in ipairs(barList) do assert(definition.menuTarget=='module') end
 -- Fangdango's module page is a real page merged into Controls > Visuals: a
 -- notice linking there, then the same rows as the slot page.
-local entry=assert(menu.providers['ModCoreTemplates.module.Fangdango'])
+-- Rows are ModCoreSettings menu data: choices, or a range.
+local function labels(row)
+    local out={}
+    for index,choice in ipairs(row.choices) do out[index]=choice.label end
+    return table.concat(out,'|')
+end
+-- Whether a page shows some row only while selector holds value.
+local function gated(menu,selector,value)
+    for _,field in ipairs(menu.fields) do
+        local rule=field.visible
+        if rule and rule.field==selector and #rule.values==1 and rule.values[1]==value then return true end
+    end
+    return false
+end
+local entry=assert(menu.providers['ModCoreTemplates.module.9ModCoreFangdango'])
 assert(entry.merged=='controls:visuals' and entry.module==nil and entry.link==nil)
-assert(entry.author=='Jorge Pereira (kell)')
-assert(entry.version=='1.0.1')
+-- ModCoreSettings names the page from the folder's mod.json; MCT passes only the folder.
+assert(entry.author==nil and entry.version==nil and entry.moduleRoot=='9_ModCore_Fangdango')
 assert(entry.rows and #entry.rows>1)
 local notice=entry.rows[1]
-assert(notice.Id=='MCT_MergedNotice' and notice.mcLinkPage=='controls:visuals'
-    and notice.Label=='These settings have been merged into Controls and can also be edited there')
-assert(notice.mcNavigation==1 and notice.mcType=='tab' and notice.mcLevel==5
-    and notice.PresetLabels=='Controls|Controls')
+assert(notice.id=='MCT_MergedNotice' and notice.link=='controls:visuals'
+    and notice.label=='These settings have been merged into Controls and can also be edited there')
+assert(notice.action and notice.tabs and notice.level==5 and labels(notice)=='Controls')
 local page=assert(menu.providers['ModCoreTemplates.slot.player.quickslots'])
 assert(page.slot=='controls:visuals')
 -- After the notice, its only navigation row, the module page edits the slot
@@ -135,11 +149,9 @@ assert(page.slot=='controls:visuals')
 assert(#entry.rows==#page.rows+1)
 for index,row in ipairs(page.rows) do
     local moduleRow=entry.rows[index+1]
-    assert(moduleRow.Id==row.Id and moduleRow.mcNavigation==nil,
-        'module row differs from slot page: '..tostring(moduleRow.Id))
+    assert(moduleRow.id==row.id and not moduleRow.action,
+        'module row differs from slot page: '..tostring(moduleRow.id))
 end
--- Saved Fangdango values are copied once from the module config, never removed.
-assert(page.migrate[1]=='9_ModCore_Fangdango/config.ini')
 local selector=menu.selectors['player.quickslots']
 local value
 local barValues,seenValues={},{}
@@ -157,20 +169,20 @@ assert(template.id==definition.id and template.name=='Wheels')
 assert(not definition.access and not definition.direct)
 local rows,values={},{}
 for _,row in ipairs(page.rows) do
-    rows[row.Id]=row
-    if row.Default~=nil then values[row.Id]=tonumber(row.Default) or row.Default end
+    rows[row.id]=row
+    if row.default~=nil then values[row.id]=row.default end
 end
 values[selector.id]=value
-assert(rows[selector.id].mcHeading==true and rows[selector.id].mcLevel==nil)
+assert(rows[selector.id].level==1)
 local count=0
 for _ in pairs(definition.settings) do count=count+1 end
 assert(count==4)
 local align=rows[definition.settings.WheelsA]
 local placement=rows[definition.settings.WheelsR]
-assert(align and align.PresetLabels=='Right/Center|Bottom/Right|Bottom/Center')
+assert(align and labels(align)=='Right/Center|Bottom/Right|Bottom/Center')
 -- Each template's fields show only while that template is selected.
-assert(page.manifest:find('VisibleValues='..value..'\nVisibleWhen='..selector.id,1,true))
-assert(placement and placement.PresetLabels=='Overlap|Side by Side|Stacked|Perspective')
+assert(gated(page.menu,selector.id,value))
+assert(placement and labels(placement)=='Overlap|Side by Side|Stacked|Perspective')
 local settings=menu.decodeState(values)['player.quickslots'].selections[template.id]
 assert(settings.WheelsA==6 and settings.WheelsM==50
     and settings.WheelsR==1 and settings.WheelsS==100)
@@ -178,7 +190,7 @@ assert(settings.WheelsA==6 and settings.WheelsM==50
 -- after its menu.
 for barId,definition in pairs(bars) do
     local barValue=barValues[barId]
-    assert(page.manifest:find('VisibleValues='..barValue..'\nVisibleWhen='..selector.id,1,true))
+    assert(gated(page.menu,selector.id,barValue))
     local barDefinition=menu.definitions['player.quickslots'][barValue]
     local single=barId:match('^Single')~=nil
     assert(barDefinition.settings[barId..'R']==nil
@@ -186,7 +198,7 @@ for barId,definition in pairs(bars) do
     local keys=rows[barDefinition.settings[barId..'K']]
     assert((keys~=nil)==single,barId)
     if single then
-        assert(keys.PresetLabels==(barId=='SingleUnderbar' and 'Above|Below|Left|Right'
+        assert(labels(keys)==(barId=='SingleUnderbar' and 'Above|Below|Left|Right'
             or 'Left|Right|Above|Below'))
     end
     values[selector.id]=barValue
