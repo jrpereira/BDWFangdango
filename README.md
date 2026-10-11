@@ -30,7 +30,9 @@ Install all of these:
   [Dawnwalker Mod Menu](https://www.nexusmods.com/thebloodofdawnwalker/mods/271).
 - [ModCore Settings](https://www.nexusmods.com/thebloodofdawnwalker/mods/590).
 - [ModCore Templates](https://www.nexusmods.com/thebloodofdawnwalker/mods/641)
-  **1.0.1 or later**.
+  **1.1.0 or later**.
+- [UE4SS Lua Event Bridge](https://www.nexusmods.com/thebloodofdawnwalker/mods/526)
+  **1.0.12 or later**, which ModCore Templates also requires.
 
 Also install [ModCore Controls](https://www.nexusmods.com/thebloodofdawnwalker/mods/640)
 for rebinding, updated key indicators and active-wheel dimming. Without it,
@@ -44,7 +46,7 @@ Fangdango still changes the layout, but neither wheel dims to show focus.
    `9_ModCore_Fangdango/9_ModCore_Fangdango` folder. Enable the mods in your
    UE4SS setup or mod manager and restart the game.
 3. Open **Mod Settings › Controls › Visuals** (with ModCore Controls installed)
-   or the **Fangdango** page. In the **Quickslots** picker, choose
+   or the **Quickslot Fangdango** page. In the **Quickslots** picker, choose
    **Wheels**, a **Single** or **Double Underbar**, or a **Single** or **Double
    Sidebar**, adjust to taste and select **Apply**.
 
@@ -56,7 +58,8 @@ for bars. A larger margin moves the layout farther from the screen edge; a bar's
 ## If the layout does not appear
 
 - Check that a Fangdango layout is selected in **Quickslots**, then select **Apply**.
-- Confirm the required mods are installed and enabled, then restart the game.
+- Confirm the required mods, including UE4SS Lua Event Bridge, are installed and
+  enabled, then restart the game.
 - If the layout is hard to see, try **Standard** size and the default margin.
 - If another mod rearranges the quickslot HUD, try disabling it to check for a conflict.
 

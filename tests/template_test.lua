@@ -146,6 +146,9 @@ assert(ability.opacity==1 and consumable.opacity==1,'no focus reported: both whe
 state.events={['controls.group.focus']={revision=1}}
 state.revision=1;state.controls.group.from=1;state.controls.group.to=2
 runtime:stateChanged({name='controls.group.focus',revision=1,group={from=1,to=2}})
+assert(ability.opacity==1,'quickslot templates receive no events until the player is ready')
+runtime:signal('MCTPlayerReady')
+runtime:stateChanged({name='controls.group.focus',revision=1,group={from=1,to=2}})
 assert(ability.opacity==dim and consumable.opacity==1,'focus event must dim the unfocused wheel')
 ability.Slot.failPosition=nil
 select(0)

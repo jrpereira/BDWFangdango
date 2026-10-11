@@ -7,7 +7,7 @@ local template = {
     description='Position and size both quickslot wheels on the screen.',
 
     category='player.quickslots',
-    settings={focus={dim=0.7}},
+    settings=Helpers.SETTINGS,
     events={
         ['controls.group.focus']=Helpers.onGroupFocus,
     },
@@ -47,8 +47,7 @@ template.attach = function(objects, params, original)
     -- meaningful only when both wheel layouts deliberately overlap.
     Widget.setOpacity(objects.change_prompt,params.settings.WheelsR==0 and 1 or 0)
     -- A rebuild restores native opacity; apply the current focus.
-    template.events['controls.group.focus'](params,
-        {name='controls.group.focus',group=params.state.controls.group},objects)
+    Helpers.onGroupFocus(params,{name='controls.group.focus',group=params.state.controls.group},objects)
     return original
 end
 

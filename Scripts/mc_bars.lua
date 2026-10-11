@@ -283,7 +283,7 @@ local function bar(name,id,vertical,double,indicators)
         description=('Arrange quickslot keys in %s %s.'):format(double and 'two' or 'one',
             vertical and (double and 'columns' or 'column') or (double and 'rows' or 'row')),
         category='player.quickslots',
-        settings={focus={dim=0.7}},
+        settings=Helpers.SETTINGS,
         -- Both wheels overlap at the chosen edge, as in Wheels' Overlap placement.
         -- Bars then lines every key and its binding label up from that shared
         -- center; nothing is reparented.

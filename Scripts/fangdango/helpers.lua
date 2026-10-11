@@ -14,35 +14,44 @@ local M={}
 M.log=Log.new({name='Fangdango',path=root..'/log_level.txt'})
 local log=M.log
 
--- Decorations are named children, not members, so MCT cannot target them.
--- Find them by name and restore them through onCleanup.
-local function findChild(root,name)
-    if not Objects.valid(root) then return nil end
+-- Wheel decorations a layout hides, found by name in one walk of the wheel's widget tree;
+-- the Dpad sits in a nested Bindings widget that no MCT target reaches. Each one found is
+-- kept as a weak handle and its opacity restored through onCleanup: a wrapper kept past
+-- the attach reads freed memory once a save-load has torn the HUD down.
+local function findChildren(root,wanted,found)
+    if not Objects.valid(root) then return end
     local full=Objects.call(root,'GetFullName')
-    if type(full)=='string' and full:sub(-#name-1)=='.'..name then return root end
+    if type(full)=='string' then
+        local name=full:match('%.([^%.:]+)$')
+        if name and wanted[name] and not found[name] then found[name]=root end
+    end
     -- A UserWidget is not a panel; its children hang off its WidgetTree's root.
     -- Other widgets answer WidgetTree with an invalid placeholder, not nil.
     local tree=Widget.property(Widget.property(root,'WidgetTree'),'RootWidget')
-    if Objects.valid(tree) then return findChild(tree,name) end
+    if Objects.valid(tree) then return findChildren(tree,wanted,found) end
     local count=Objects.call(root,'GetChildrenCount')
-    if type(count)~='number' then return nil end
-    for index=0,count-1 do
-        local found=findChild(Objects.call(root,'GetChildAt',index),name)
-        if found then return found end
-    end
+    if type(count)~='number' then return end
+    for index=0,count-1 do findChildren(Objects.call(root,'GetChildAt',index),wanted,found) end
 end
 
 function M.hideDecorations(wheel,names,onCleanup)
+    local wanted,found={},{}
+    for _,name in ipairs(names) do wanted[name]=true end
+    findChildren(wheel,wanted,found)
     for _,name in ipairs(names) do
-        local decoration=findChild(wheel,name)
-        if decoration then
+        local decoration=found[name]
+        local handle,why
+        if decoration then handle,why=Objects.hold(decoration) end
+        if handle then
             local opacity=Widget.opacity(decoration)
             onCleanup(function()
-                if Objects.valid(decoration) then Widget.setOpacity(decoration,opacity) end
+                local current=Objects.get(handle)
+                if current then Widget.setOpacity(current,opacity) end
+                Objects.release(handle)
             end)
             Widget.setOpacity(decoration,0)
         else
-            log.debug('decoration ',name,' not found; left as is')
+            log.debug('decoration ',name,decoration and ' not kept ('..tostring(why)..')' or ' not found','; left as is')
         end
     end
 end
@@ -62,6 +71,9 @@ function M.onGroupFocus(params,event,objects)
         end
     end
 end
+
+-- Template settings shared by Wheels and Bars: the unfocused wheel dims to 70%.
+M.SETTINGS={focus={dim=0.7}}
 
 -- Relative Placement, shared by Wheels and Bars.
 M.PLACEMENTS={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}
@@ -101,22 +113,6 @@ function M.pair(settings,screen,ability,consumable)
     local height=math.max(first.height,y2+second.height)
     local left,top=M.edge(screen,settings.WheelsA,settings.WheelsM,width,height)
     return {{x=left,y=top,box=ability},{x=left+x2,y=top+y2,box=consumable}},scale
-end
-
-function M.anchorGroups(groups,screen,align)
-    local minX,minY,maxX,maxY
-    for _,group in pairs(groups) do
-        minX=math.min(minX or group.x,group.x)
-        minY=math.min(minY or group.y,group.y)
-        maxX=math.max(maxX or group.x+group.width,group.x+group.width)
-        maxY=math.max(maxY or group.y+group.height,group.y+group.height)
-    end
-    local left,top=M.edge(screen,align,nil,maxX-minX,maxY-minY)
-    for _,group in pairs(groups) do
-        group.x=left+group.x-minX
-        group.y=top+group.y-minY
-    end
-    return groups
 end
 
 return M

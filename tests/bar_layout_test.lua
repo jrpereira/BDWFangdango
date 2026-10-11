@@ -7,7 +7,7 @@ for index=2,#definitions do barsById[definitions[index].menu[1].id]=definitions[
 local bar=barsById.SingleUnderbar
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
 local graph=require('mc.selectors').compile(category.objects)
-local State=require('mc.target_state')
+local TemplateTargets=require('mc.template_targets')
 local Manager=require('mc.managed_template')
 -- UE4SS answers an unknown property with an invalid placeholder, not nil.
 local placeholder={IsValid=function() return false end}
@@ -208,10 +208,10 @@ end
 local sharedTargets={}
 local sharedDefinition={attach=function(_,_,original) return original end}
 local sharedManager=Manager.new(sharedDefinition,
-    State.specs(sharedGraph,category.sharedObjects),sharedGraph.order,sharedCreated)
+    TemplateTargets.compile(sharedGraph,category.sharedObjects),sharedGraph.order,sharedCreated)
 local function managerFor(template)
     local projected=require('mc.selectors').project(graph,template.objects)
-    return Manager.new(template,State.specs(projected,template.objects),projected.order)
+    return Manager.new(template,TemplateTargets.compile(projected,template.objects),projected.order)
 end
 local managers={}
 for id,template in pairs(barsById) do managers[id]=managerFor(template) end

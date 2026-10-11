@@ -20,7 +20,8 @@ Install these before Fangdango:
 [*][b]UE4SS compatible with your game version.[/b] See the loader links in the [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu requirements[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.0.1 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.1.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Event Bridge[/url], [b]1.0.12 or later[/b], which ModCore Templates also requires.
 [/list]
 [b]Recommended:[/b] [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url] for rebinding, updated key indicators and active-wheel dimming. Fangdango can change the layout without it, but neither wheel dims to show focus.
 
@@ -29,7 +30,7 @@ Install these before Fangdango:
 [*]Close the game and install the requirements using their instructions. UE4SS itself does not install inside the Mods folder.
 [*]Extract this download so [font=Courier New]9_ModCore_Fangdango[/font] sits directly inside the game's [font=Courier New]ue4ss/Mods[/font] folder. Avoid an extra nested [font=Courier New]9_ModCore_Fangdango/9_ModCore_Fangdango[/font] folder.
 [*]Enable the mods in your UE4SS setup or mod manager, then restart the game.
-[*]Open [b]Mod Settings → Controls → Visuals[/b] if ModCore Controls is installed, or open the [b]Fangdango[/b] page. In [b]Quickslots[/b], choose [b]Wheels[/b], a [b]Single[/b] or [b]Double Underbar[/b], or a [b]Single[/b] or [b]Double Sidebar[/b], then select [b]Apply[/b].
+[*]Open [b]Mod Settings → Controls → Visuals[/b] if ModCore Controls is installed, or open the [b]Quickslot Fangdango[/b] page. In [b]Quickslots[/b], choose [b]Wheels[/b], a [b]Single[/b] or [b]Double Underbar[/b], or a [b]Single[/b] or [b]Double Sidebar[/b], then select [b]Apply[/b].
 [/list]
 Start with [b]Standard[/b] size and the default margin ([b]50%[/b] for Wheels, [b]0%[/b] for bars), then adjust to taste. Increasing the margin moves the layout farther from the screen edge; a bar's -100% brings it to the edge.
 
