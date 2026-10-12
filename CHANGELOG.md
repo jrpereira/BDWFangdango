@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.3
+
+- Requires ModCore Settings 1.2.0 or later, which ModCore Templates 1.2.0 needs for
+  its Templates tab. ModCore Templates 1.1.0 or later still works.
+- No change to bars, wheels or settings; the release follows ModCore's category
+  ids and heading rows in its checks.
+
 ## v1.0.2
 
 - Bars line up with the game's own HUD. Margin to Screen Edge in the bars now runs
