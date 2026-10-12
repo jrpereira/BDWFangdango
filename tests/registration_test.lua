@@ -173,7 +173,7 @@ for _,row in ipairs(page.rows) do
     if row.default~=nil then values[row.id]=row.default end
 end
 values[selector.id]=value
-assert(rows[selector.id].level==1)
+assert(rows[selector.id].heading==true)
 local count=0
 for _ in pairs(definition.settings) do count=count+1 end
 assert(count==4)

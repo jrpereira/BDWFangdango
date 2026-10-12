@@ -114,7 +114,7 @@ template=model.templates[1]
 local state={revision=0,controls={group={}}}
 local runtime=Runtime.new(host,model.categories,model.templates,state)
 local function select(margin)
-    runtime:select(category.name,{[template.id]={WheelsA=7,WheelsM=margin,WheelsR=1,WheelsS=100}})
+    runtime:select(category.id,{[template.id]={WheelsA=7,WheelsM=margin,WheelsR=1,WheelsS=100}})
 end
 runtime:start()
 assert(made==0,'unselected category must leave the native hierarchy intact')
@@ -156,7 +156,7 @@ assert(ability.opacity==dim and consumable.opacity==1,'a rebuild must keep the c
 state.revision=2;state.controls.group.from=2;state.controls.group.to=1
 runtime:stateChanged({name='controls.group.focus',revision=2,group={from=2,to=1}})
 assert(ability.opacity==1 and consumable.opacity==dim,'focus must follow each event')
-runtime:select(category.name,{})
+runtime:select(category.id,{})
 assert(ability.opacity==1 and consumable.opacity==1,'leaving the layout restores wheel opacity')
 assert(ability:GetParent()==switcher and consumable:GetParent()==switcher)
 assert(switcher:GetChildAt(0)==consumable and switcher:GetChildAt(1)==ability)
