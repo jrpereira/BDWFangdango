@@ -1,4 +1,4 @@
-package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;'..package.path
+package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;ModCoreTemplates/Scripts/vendor/?.lua;'..package.path
 local Objects=require('mc.objects')
 local Widget=require('mc.widget')
 package.loaded.mc={valid=Objects.valid,same=Objects.same,parent=Objects.parent,

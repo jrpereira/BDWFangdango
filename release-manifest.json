@@ -1,9 +1,10 @@
 {
   "module": "9_ModCore_Fangdango",
-  "version_file": "mod.json",
-  "version_pattern": "\"version\"\\s*:\\s*\"([^\"]+)\"",
+  "version_file": "VERSION",
+  "version_pattern": "^\\s*([^\\s]+)",
   "files": {
     "mod.json": "mod.json",
+    "VERSION": "VERSION",
     "enabled.txt": "enabled.txt",
     "Scripts/fangdango/helpers.lua": "Scripts/fangdango/helpers.lua",
     "Scripts/main.lua": "Scripts/main.lua",

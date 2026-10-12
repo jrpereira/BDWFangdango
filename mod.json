@@ -7,7 +7,7 @@
     "combat"
   ],
   "author": "Jorge Pereira (kell)",
-  "version": "1.0.2",
+  "version_source": "VERSION",
   "icon": "⟴",
   "description": "Arrange your ability and consumable wheels to suit your playstyle. Show both at once or switch between them, with adjustable position, size, and opacity. A little choreography for your combat HUD.",
   "dependencies": [
@@ -19,6 +19,7 @@
     {
       "id": "ModCoreSettings",
       "name": "ModCoreSettings",
+      "version": "1.2.0+",
       "url": "https://www.nexusmods.com/thebloodofdawnwalker/mods/590"
     },
     {

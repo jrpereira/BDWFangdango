@@ -1,4 +1,4 @@
-package.path = 'ModCoreTemplates/Scripts/?.lua;' .. package.path
+package.path = 'ModCoreTemplates/Scripts/?.lua;ModCoreTemplates/Scripts/vendor/?.lua;' .. package.path
 local definitions=dofile('Fangdango/tests/load_templates.lua')()
 local template=definitions[1]
 -- Single and Double Underbar and Sidebar, by menu id.

@@ -1,4 +1,4 @@
-package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;'..package.path
+package.path='Fangdango/Scripts/?.lua;ModCoreTemplates/Scripts/?.lua;ModCoreTemplates/Scripts/vendor/?.lua;'..package.path
 -- MCT keeps objects as UE4SSLuaEventBridge weak handles; use its test double.
 local service=dofile('ModCoreTemplates/tests/support/lifetimes.lua').install(function(object) return object.alive end)
 local Helpers=require('fangdango.helpers')
