@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.5
+
+- Requires ModCore Settings 1.3.0 or later, which reads the `conditions` rules in its
+  menu data. No change to bars, wheels or settings.
+
 ## v1.0.4
 
 - Fixed distances in the bars and wheels, including Margin to Screen Edge, are measured
