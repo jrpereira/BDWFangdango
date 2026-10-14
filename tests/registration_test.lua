@@ -128,7 +128,7 @@ end
 -- Whether a page shows some row only while selector holds value.
 local function gated(menu,selector,value)
     for _,field in ipairs(menu.fields) do
-        local rule=field.visible
+        local rule=field.conditions and field.conditions.visible
         if rule and rule.field==selector and #rule.values==1 and rule.values[1]==value then return true end
     end
     return false
