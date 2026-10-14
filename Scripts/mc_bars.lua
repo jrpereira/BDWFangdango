@@ -19,10 +19,12 @@ local sides={horizontal={[0]='above','below','left','right'},
 
 -- Screen edges, numbered as MCT's alignments, that a bar's Position offers.
 local MIDDLE_RIGHT,BOTTOM_RIGHT,BOTTOM_CENTER=5,6,7
--- At Margin 0% a bar's anchors sit REFERENCE screen pixels above the bottom
--- and, at a right edge, in from the right, lining it up with the native HUD.
--- -100% brings the bar's outer edges to CORNER pixels from the screen's edges,
--- and each percent moves it as far again the other way up to 100%.
+-- Distances here are pixels of a 1080-high screen, scaled to the screen's own
+-- units by Helpers.unit. At Margin 0% a bar's anchors sit REFERENCE pixels
+-- above the bottom and, at a right edge, in from the right, lining it up with
+-- the native HUD. -100% brings the bar's outer edges to CORNER pixels from the
+-- screen's edges, and each percent moves it as far again the other way up to
+-- 100%.
 local REFERENCE,CORNER=160,8
 -- A Single Underbar's line sits this many screen pixels lower for each side
 -- of its labels.
@@ -200,16 +202,17 @@ local function onAttach(id,vertical,double,objects,params,original)
     -- Place the lines for 0%, then step them so -100% leaves CORNER pixels
     -- between the outer edges and the screen's.
     local margin=settings[id..'M'] or 0
-    local lineX=params.screen.width-REFERENCE/screenScale
-    local lineY=params.screen.height-(REFERENCE-shift)/screenScale
+    local unit=Helpers.unit(params.screen)
+    local lineX=params.screen.width-REFERENCE*unit
+    local lineY=params.screen.height-(REFERENCE-shift)*unit
     -- A row in the corner keeps as far from the right edge as from the bottom.
     if not vertical and align==BOTTOM_RIGHT then
         lineX=lineX+(lineY-anchorY+bottom)-params.screen.height+params.screen.width
             -(lineX-anchorX+right)
     end
     local function steps()
-        return (params.screen.width-(lineX-anchorX+right)-CORNER/screenScale)/100,
-            (params.screen.height-(lineY-anchorY+bottom)-CORNER/screenScale)/100
+        return (params.screen.width-(lineX-anchorX+right)-CORNER*unit)/100,
+            (params.screen.height-(lineY-anchorY+bottom)-CORNER*unit)/100
     end
     local stepX,stepY=steps()
     if calibration then

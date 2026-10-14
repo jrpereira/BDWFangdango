@@ -86,9 +86,9 @@ local objects={actions=actions,
     wheels={abilities=abilities,consumables=consumables},change_prompt=prompt}
 local dim=template.settings.focus.dim
 -- ModCore Controls has reported abilities (group 1) as focused.
-local function attach(align,placement,to,margin)
+local function attach(align,placement,to,margin,size)
     return template.attach(objects,
-        {settings={WheelsA=align,WheelsM=margin or 0,WheelsR=placement or 1,WheelsS=100,focus={dim=dim}},
+        {settings={WheelsA=align,WheelsM=margin or 0,WheelsR=placement or 1,WheelsS=size or 100,focus={dim=dim}},
             screen={width=1920,height=1080,scale=1},
             state={controls={group={from=1,to=to or 1}}}},original)
 end
@@ -109,6 +109,16 @@ check(5,1712,380,1712,540) -- Right/Center: vertical edge
 check(6,1712,752,1712,912) -- Bottom/Right: includes vertical edge
 check(7,760,912,960,912) -- Bottom/Center: horizontal edge
 check(6,1648,688,1648,848,100)
+-- The margin is in 1080p pixels, scaled to the screen: on a 3840x2160 screen at
+-- scale 1 the 100% margin is 144 px, and at scale 2 (1920x1080 units) 72.
+for _,case in ipairs({{3840,2160,1,144},{1920,1080,2,72}}) do
+    local width,height,scale,margin=table.unpack(case)
+    template.attach(objects,{settings={WheelsA=6,WheelsM=100,WheelsR=1,WheelsS=100,focus={dim=dim}},
+        screen={width=width,height=height,scale=scale},
+        state={controls={group={from=1,to=1}}}},original)
+    assert(math.abs(abilitySlot.position.X-(width-200-margin))<1e-6
+        and math.abs(abilitySlot.position.Y-(height-320-margin))<1e-6,'the margin keeps its share of the screen')
+end
 attach(6,0)
 assert(prompt.opacity==1,'overlap must retain the native swap prompt')
 assert(abilities.opacity==1 and consumables.opacity==1,'overlapping wheels keep the native look')

@@ -489,6 +489,14 @@ for index,button in ipairs(objects.buttons.abilitySlots) do
 end
 assert(layout(params(120)))
 lined(120,96,false,nil,-80+48+12+16)
+-- The reference line's distances are 1080p pixels scaled to the screen: on a
+-- 3840x2160 screen they double. The wheels' box sits flush at 2160-160=2000;
+-- the line, 16 px lower doubled, is at 2160-288=1872, 128 above the box's top,
+-- less the labels' offset of -30.
+local big=params()
+big.screen={width=3840,height=2160,scale=1,center=1920,middle=1080}
+assert(layout(big))
+lined(100,80,false,nil,-128-30)
 assert(layout(params()))
 local lastKey=objects.buttons.consumableSlots[4]
 local setScale=lastKey.SetRenderScale

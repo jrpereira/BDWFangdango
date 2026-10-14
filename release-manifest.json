@@ -12,6 +12,8 @@
     "Scripts/mc_wheels.lua": "Scripts/mc_wheels.lua",
     "Scripts/vendor/mc_log.lua": "Scripts/vendor/mc_log.lua",
     "README.md": "README.md",
-    "CHANGELOG.md": "CHANGELOG.md"
+    "CHANGELOG.md": "CHANGELOG.md",
+    "MOD_SETTINGS.txt": "MOD_SETTINGS.txt",
+    "SETTINGS.md": "docs/SETTINGS.md"
   }
 }

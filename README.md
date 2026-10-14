@@ -50,6 +50,9 @@ Fangdango still changes the layout, but neither wheel dims to show focus.
    **Wheels**, a **Single** or **Double Underbar**, or a **Single** or **Double
    Sidebar**, adjust to taste and select **Apply**.
 
+Every setting, its options and the `config.ini` key it is saved under are listed
+in `SETTINGS.md`, next to this file in the installed mod.
+
 Change your controls through ModCore Controls; let Fangdango handle the choreography.
 Start with **Standard** size and the default margin: **50%** for Wheels, **0%**
 for bars. A larger margin moves the layout farther from the screen edge; a bar's

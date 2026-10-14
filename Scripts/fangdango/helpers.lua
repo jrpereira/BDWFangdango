@@ -82,7 +82,15 @@ M.PLACEMENTS={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}
 M.SIZES={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}
 M.MARGINS={min=0,max=100,step=10,suffix='%'}
 
--- Margin to Screen Edge, in screen pixels: 8+64*Margin/100, so 0% is 8 and
+-- Fixed distances are given in pixels of a 1080-high screen. This is the
+-- number of the screen's own (slate) units each one is worth, so a distance
+-- keeps its share of the screen at any resolution and UI scale.
+local REFERENCE_HEIGHT=1080
+function M.unit(screen)
+    return screen.height/REFERENCE_HEIGHT
+end
+
+-- Margin to Screen Edge, in 1080p pixels: 8+64*Margin/100, so 0% is 8 and
 -- 100% is 72. Without a setting the layout is flush with the edge.
 local function marginPixels(percent)
     if percent==nil then return 0 end
@@ -91,7 +99,7 @@ end
 
 function M.edge(screen,align,marginPercent,width,height)
     local direction=Widget.relative(align)
-    local margin=marginPixels(marginPercent)/(screen.scale or 1)
+    local margin=marginPixels(marginPercent)*M.unit(screen)
     return (direction.X+1)*(screen.width-width)/2-direction.X*margin,
         (1-direction.Y)*(screen.height-height)/2+direction.Y*margin
 end
