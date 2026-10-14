@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.4
+
+- Fixed distances in the bars and wheels, including Margin to Screen Edge, are measured
+  in pixels of a 1080-high screen and scaled to the screen's own units, so the layout
+  keeps its place at any resolution and UI scale.
+- `SETTINGS.md` lists every setting, its options and the `config.ini` key it is saved
+  under; it installs beside the README, with a `MOD_SETTINGS.txt` that points to it.
+
 ## v1.0.3
 
 - Requires ModCore Settings 1.2.0 or later, which ModCore Templates 1.2.0 needs for
