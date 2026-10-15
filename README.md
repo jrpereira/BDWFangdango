@@ -28,11 +28,12 @@ Install all of these:
 
 - **UE4SS compatible with your game version** and
   [Dawnwalker Mod Menu](https://www.nexusmods.com/thebloodofdawnwalker/mods/271).
-- [ModCore Settings](https://www.nexusmods.com/thebloodofdawnwalker/mods/590).
+- [ModCore Settings](https://www.nexusmods.com/thebloodofdawnwalker/mods/590)
+  **1.3.0 or later**.
 - [ModCore Templates](https://www.nexusmods.com/thebloodofdawnwalker/mods/641)
-  **1.1.0 or later**.
+  **1.4.0 or later**.
 - [UE4SS Lua Event Bridge](https://www.nexusmods.com/thebloodofdawnwalker/mods/526)
-  **1.0.12 or later**, which ModCore Templates also requires.
+  **1.1.0 or later**, which ModCore Templates also requires.
 
 Also install [ModCore Controls](https://www.nexusmods.com/thebloodofdawnwalker/mods/640)
 for rebinding, updated key indicators and active-wheel dimming. Without it,
