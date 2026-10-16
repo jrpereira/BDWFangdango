@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.7
+
+- Requires ModCore Settings 1.3.1 or later and ModCore Templates 1.4.1 or later. No change to bars, wheels or settings.
+
 ## v1.0.6
 
 - Requires ModCore Templates 1.4.0 or later and UE4SSLuaEventBridge 1.1.0 or later.
