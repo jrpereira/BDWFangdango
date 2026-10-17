@@ -269,7 +269,7 @@ end
 -- Key Indicators sit, listing the bar's own sides first; Double bars share them
 -- between the rows. All but the Single Sidebar, always at Bottom/Right, choose
 -- their Position.
-local function bar(name,id,vertical,double,indicators)
+local function bar(id,label,vertical,double,indicators)
     local fields={
         {id='.S', label='Size', values=Helpers.SIZES, default=100},
         {id='.M', label='Margin to Screen Edge', values=MARGINS, default=0},
@@ -282,10 +282,12 @@ local function bar(name,id,vertical,double,indicators)
             default=vertical and BOTTOM_RIGHT or BOTTOM_CENTER})
     end
     return {
-        name=name,
+        id=id,
+        label=label,
         description=('Arrange quickslot keys in %s %s.'):format(double and 'two' or 'one',
             vertical and (double and 'columns' or 'column') or (double and 'rows' or 'row')),
         category='player.quickslots',
+        uniqueBy='category',
         settings=Helpers.SETTINGS,
         -- Both wheels overlap at the chosen edge, as in Wheels' Overlap placement.
         -- Bars then lines every key and its binding label up from that shared
@@ -305,7 +307,7 @@ local function bar(name,id,vertical,double,indicators)
                 properties={'slot','position','size','opacity'},
             },
         },
-        menu={{id=id, label=name, fields=fields}},
+        menu={{id=id, label=label, fields=fields}},
         events={['controls.group.focus']=Helpers.onGroupFocus},
         attach=function(objects,params,original)
             return onAttach(id,vertical,double,objects,params,original)
@@ -316,8 +318,8 @@ end
 local horizontal={[0]='Above',[1]='Below',[2]='Left',[3]='Right'}
 local vertical={[0]='Left',[1]='Right',[2]='Above',[3]='Below'}
 return {
-    bar('Single Underbar','SingleUnderbar',false,false,horizontal),
-    bar('Double Underbar','DoubleUnderbar',false,true),
-    bar('Single Sidebar','SingleSidebar',true,false,vertical),
-    bar('Double Sidebar','DoubleSidebar',true,true),
+    bar('SingleUnderbar','Single Underbar',false,false,horizontal),
+    bar('DoubleUnderbar','Double Underbar',false,true),
+    bar('SingleSidebar','Single Sidebar',true,false,vertical),
+    bar('DoubleSidebar','Double Sidebar',true,true),
 }

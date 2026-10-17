@@ -7,7 +7,7 @@ local barIds={'SingleUnderbar','DoubleUnderbar','SingleSidebar','DoubleSidebar'}
 local barNames={'Single Underbar','Double Underbar','Single Sidebar','Double Sidebar'}
 for index,id in ipairs(barIds) do
     local definition=definitions[index+1]
-    assert(definition.category=='player.quickslots' and definition.name==barNames[index]
+    assert(definition.category=='player.quickslots' and definition.id==id and definition.label==barNames[index]
         and definition.menu[1].id==id and definition.menu[1].label==barNames[index])
     assert(definition.managed==nil and definition.requiredTargets==nil
         and type(definition.attach)=='function')
@@ -165,7 +165,7 @@ end
 assert(value)
 for _,barId in ipairs(barIds) do assert(barValues[barId],barId) end
 local definition=menu.definitions['player.quickslots'][value]
-assert(template.id==definition.id and template.name=='Wheels')
+assert(template.id==definition.id and template.id=='Wheels' and template.label=='Wheels Plenty')
 assert(not definition.access and not definition.direct)
 local rows,values={},{}
 for _,row in ipairs(page.rows) do
@@ -210,8 +210,8 @@ for barId,definition in pairs(bars) do
 end
 print('AF Wheels registration and settings contract passed')
 
-assert(#definitions==5 and definitions[1].name=='Wheels')
-for index,name in ipairs(barNames) do assert(definitions[index+1].name==name) end
+assert(#definitions==5 and definitions[1].id=='Wheels')
+for index,id in ipairs(barIds) do assert(definitions[index+1].id==id) end
 print('Fangdango registered template list passed')
 
 local originalStartup=package.loaded['mc.lua_startup']

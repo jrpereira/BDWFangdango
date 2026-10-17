@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.9
+
+- Requires ModCore Settings 1.4.0 or later and ModCore Templates 1.5.0 or later, for `uniqueBy`.
+- Wheels and every bar set `uniqueBy='category'`, which replaces ModCore Templates'
+  category `single`, so only one of them is active at a time as before. No change to
+  bars, wheels or settings.
+
 ## v1.0.8
 
 - Requires UE4SSLuaEventBridge 1.2.0 or later. Requirements follow minor versions

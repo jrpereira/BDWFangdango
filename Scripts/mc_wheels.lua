@@ -3,10 +3,11 @@ local Widget = MC.load('widget')
 local Helpers=require('fangdango.helpers')
 
 local template = {
-    name='Wheels',
+    id='Wheels',
+    label='Wheels Plenty',
     description='Position and size both quickslot wheels on the screen.',
-
     category='player.quickslots',
+    uniqueBy='category',
     settings=Helpers.SETTINGS,
     events={
         ['controls.group.focus']=Helpers.onGroupFocus,
