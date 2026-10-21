@@ -119,10 +119,10 @@ assert(template.menuTarget=='module')
 for _,definition in ipairs(barList) do assert(definition.menuTarget=='module') end
 -- Fangdango's module page is a real page merged into Controls > Visuals: a
 -- notice linking there, then the same rows as the slot page.
--- Rows are ModCoreSettings menu data: choices, or a range.
+-- Rows are ModCoreSettings menu data: an enum's values, or an integer's.
 local function labels(row)
     local out={}
-    for index,choice in ipairs(row.choices) do out[index]=choice.label end
+    for index,choice in ipairs(row.values) do out[index]=choice.label end
     return table.concat(out,'|')
 end
 -- Whether a page shows some row only while selector holds value.
@@ -141,7 +141,7 @@ assert(entry.rows and #entry.rows>1)
 local notice=entry.rows[1]
 assert(notice.id=='MCT_MergedNotice' and notice.link=='controls:visuals'
     and notice.label=='These settings have been merged into Controls and can also be edited there')
-assert(notice.action and notice.tabs and notice.level==5 and labels(notice)=='Controls')
+assert(notice.action and notice.widget=='tabs' and notice.style=='notice' and labels(notice)=='Controls')
 local page=assert(menu.providers['ModCoreTemplates.slot.player.quickslots'])
 assert(page.slot=='controls:visuals')
 -- After the notice, its only navigation row, the module page edits the slot
@@ -173,7 +173,7 @@ for _,row in ipairs(page.rows) do
     if row.default~=nil then values[row.id]=row.default end
 end
 values[selector.id]=value
-assert(rows[selector.id].heading==true)
+assert(rows[selector.id].style=='title')
 local count=0
 for _ in pairs(definition.settings) do count=count+1 end
 assert(count==4)

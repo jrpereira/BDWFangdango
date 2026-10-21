@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.10
+
+- Requires ModCore Settings 1.5.0 or later and ModCore Templates 1.6.0 or later. No change to
+  bars, wheels or settings.
+
 ## v1.0.9
 
 - Requires ModCore Settings 1.4.0 or later and ModCore Templates 1.5.0 or later, for `uniqueBy`.

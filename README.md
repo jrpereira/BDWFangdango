@@ -29,9 +29,9 @@ Install all of these:
 - **UE4SS compatible with your game version** and
   [Dawnwalker Mod Menu](https://www.nexusmods.com/thebloodofdawnwalker/mods/271).
 - [ModCore Settings](https://www.nexusmods.com/thebloodofdawnwalker/mods/590)
-  **1.3.0 or later**.
+  **1.5.0 or later**.
 - [ModCore Templates](https://www.nexusmods.com/thebloodofdawnwalker/mods/641)
-  **1.4.0 or later**.
+  **1.6.0 or later**.
 - [UE4SS Lua Event Bridge](https://www.nexusmods.com/thebloodofdawnwalker/mods/526)
   **1.2.0 or later**, which ModCore Templates also requires.
 

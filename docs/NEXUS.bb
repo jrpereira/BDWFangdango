@@ -19,8 +19,8 @@ Install these before Fangdango:
 [list]
 [*][b]UE4SS compatible with your game version.[/b] See the loader links in the [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu requirements[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu[/url].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.4.0 or later[/b].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.5.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.5.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.6.0 or later[/b].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Event Bridge[/url], [b]1.2.0 or later[/b], which ModCore Templates also requires.
 [/list]
 [b]Recommended:[/b] [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url] for rebinding, updated key indicators and active-wheel dimming. Fangdango can change the layout without it, but neither wheel dims to show focus.
