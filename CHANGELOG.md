@@ -8,8 +8,10 @@
 - Keys with a ModCore Controls Global key stay lit on the inactive wheel, since they
   fire whichever wheel has focus. ModCore Controls reports them through
   `controls.slots.global`.
-- Requires ModCore Settings 1.7.0 or later and ModCore Controls 1.2.0 or later, which
-  drives the inactive-wheel tint and was only recommended before.
+- Requires ModCore Controls 1.3.0 or later, which reports Global keys and drives the
+  inactive-wheel tint and was only recommended before, and ModCore Templates 1.8.0 or
+  later, which passes `controls.slots.global` to templates. ModCore Settings 1.7.0 or
+  later is still enough.
 
 ## v1.0.11
 

@@ -20,9 +20,9 @@ Install these before Fangdango:
 [*][b]UE4SS compatible with your game version.[/b] See the loader links in the [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu requirements[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.7.0 or later[/b].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.7.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.8.0 or later[/b].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Event Bridge[/url], [b]1.2.0 or later[/b], which ModCore Templates also requires.
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url], [b]1.2.0 or later[/b], for rebinding, updated key indicators and active-wheel dimming.
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url], [b]1.3.0 or later[/b], for rebinding, updated key indicators and active-wheel dimming.
 [/list]
 
 [b]Install and dance[/b]
