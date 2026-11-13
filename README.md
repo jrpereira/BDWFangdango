@@ -20,7 +20,8 @@ bindings, keep the key indicators current, and highlight the active wheel.
   and a Double Sidebar at the middle of the right edge.
 - Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
   At 0% a bar lines up with the game's own HUD.
-  With ModCore Controls, the inactive wheel dims, except in Overlap placement.
+  With ModCore Controls, the inactive wheel dims with a blue tint, except in
+  Overlap placement.
 
 ## Requirements
 
@@ -31,7 +32,7 @@ Install all of these:
 - [ModCore Settings](https://www.nexusmods.com/thebloodofdawnwalker/mods/590)
   **1.5.0 or later**.
 - [ModCore Templates](https://www.nexusmods.com/thebloodofdawnwalker/mods/641)
-  **1.6.0 or later**.
+  **1.7.0 or later**.
 - [UE4SS Lua Event Bridge](https://www.nexusmods.com/thebloodofdawnwalker/mods/526)
   **1.2.0 or later**, which ModCore Templates also requires.
 

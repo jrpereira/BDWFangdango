@@ -11,7 +11,7 @@ Arrange your ability and consumable slots as wheels or bars, with sizes and scre
 [*][b]Key indicators:[/b] put them on any side of a Single bar's keys. A Double bar shows one per slot, between its two rows or columns.
 [*][b]Size and margin:[/b] choose from five sizes, from Smaller to Larger, and adjust the distance from the screen edge. At 0% a bar lines up with the game's own HUD.
 [/list]
-Pair Fangdango with [b]ModCore Controls[/b] to change your bindings and keep the key indicators current. The inactive wheel dims to show which wheel has focus, except when you choose Overlap placement.
+Pair Fangdango with [b]ModCore Controls[/b] to change your bindings and keep the key indicators current. The inactive wheel dims with a blue tint to show which wheel has focus, except when you choose Overlap placement.
 
 [b]Requirements[/b]
 
@@ -20,7 +20,7 @@ Install these before Fangdango:
 [*][b]UE4SS compatible with your game version.[/b] See the loader links in the [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu requirements[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.5.0 or later[/b].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.6.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.7.0 or later[/b].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Event Bridge[/url], [b]1.2.0 or later[/b], which ModCore Templates also requires.
 [/list]
 [b]Recommended:[/b] [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url] for rebinding, updated key indicators and active-wheel dimming. Fangdango can change the layout without it, but neither wheel dims to show focus.
