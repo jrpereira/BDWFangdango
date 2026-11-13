@@ -29,12 +29,11 @@ assert(template.objects.abilities==nil and template.objects.consumables==nil
     and template.objects.change_prompt.properties[1]=='opacity')
 assert(type(template.attach)=='function' and type(bar.attach)=='function')
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
-assert(table.concat(category.sharedObjects,',')=='actions,bait1,bait2')
+assert(table.concat(category.sharedObjects,',')=='actions')
 assert(category.objects.ability_host==nil and category.objects.consumable_host==nil)
-assert(category.objects.bait1.reparent=='abilities'
-    and category.objects.bait1.destination=='actions'
-    and category.objects.bait2.reparent=='consumables'
-    and category.objects.bait2.destination=='actions')
+assert(category.objects.bait1==nil and category.objects.bait2==nil)
+assert(table.concat(category.objects.actions.adopt,',')=='abilities,consumables'
+    and category.objects.actions.adoptLayout=='canvas')
 assert(category.objects.switcher.properties==nil)
 assert(category.objects.abilities.properties==nil)
 assert(category.objects.actions.source=='create'

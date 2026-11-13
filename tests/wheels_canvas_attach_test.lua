@@ -17,6 +17,8 @@ local function widget(name)
     function w:ForceLayoutPrepass() end
     function w:GetRenderOpacity() return self.opacity end
     function w:SetRenderOpacity(value) self.opacity=value end
+    w.ColorAndOpacity={R=1,G=1,B=1,A=1}
+    function w:SetColorAndOpacity(value) self.ColorAndOpacity=value end
     function w:SetRenderTranslation(value) self.RenderTransform.Translation=value end
     function w:SetRenderScale(value) self.RenderTransform.Scale=value end
     function w:SetActiveWidgetIndex(index) self.active=index end
@@ -55,8 +57,6 @@ local tree=widget('WidgetTree')
 local hud=widget('HUD root')
 local switcher=widget('Switcher');switcher.outer=tree
 local actions=widget('Actions')
-local bait1=widget('Bait 1')
-local bait2=widget('Bait 2')
 local abilities=widget('Abilities')
 local consumables=widget('Consumables')
 local prompt=widget('Change prompt')
@@ -67,8 +67,6 @@ hud:AddChild(switcher)
 hud:AddChild(actions)
 switcher:AddChild(abilities)
 switcher:AddChild(consumables)
-switcher:AddChild(bait1)
-switcher:AddChild(bait2)
 switcher:RemoveChild(abilities)
 switcher:RemoveChild(consumables)
 local abilitySlot=actions:AddChild(abilities)
@@ -84,11 +82,13 @@ local original={wheels={abilities={box=assert(Widget.box(abilities))},
     consumables={box=assert(Widget.box(consumables))}}}
 local objects={actions=actions,
     wheels={abilities=abilities,consumables=consumables},change_prompt=prompt}
-local dim=template.settings.focus.dim
+local tint=template.settings.focus.tint
+local dim=tint.A
+local function alpha(w) return w.ColorAndOpacity.A end
 -- ModCore Controls has reported abilities (group 1) as focused.
 local function attach(align,placement,to,margin,size)
     return template.attach(objects,
-        {settings={WheelsA=align,WheelsM=margin or 0,WheelsR=placement or 1,WheelsS=size or 100,focus={dim=dim}},
+        {settings={WheelsA=align,WheelsM=margin or 0,WheelsR=placement or 1,WheelsS=size or 100,focus={tint=tint}},
             screen={width=1920,height=1080,scale=1},
             state={controls={group={from=1,to=to or 1}}}},original)
 end
@@ -101,7 +101,7 @@ local function check(align,x,y,x2,y2,margin)
         and abilities.RenderTransform.Translation.Y==0)
     assert(consumables.RenderTransform.Translation.X==0
         and consumables.RenderTransform.Translation.Y==0)
-    assert(abilities.opacity==1 and consumables.opacity==dim and prompt.opacity==0,
+    assert(alpha(abilities)==1 and alpha(consumables)==dim and prompt.opacity==0,
         'attach must apply the initial focus')
 end
 -- The margin is 8+64*Margin/100 px: 0% is 8 px and 100% is 72 px.
@@ -113,7 +113,7 @@ check(6,1648,688,1648,848,100)
 -- scale 1 the 100% margin is 144 px, and at scale 2 (1920x1080 units) 72.
 for _,case in ipairs({{3840,2160,1,144},{1920,1080,2,72}}) do
     local width,height,scale,margin=table.unpack(case)
-    template.attach(objects,{settings={WheelsA=6,WheelsM=100,WheelsR=1,WheelsS=100,focus={dim=dim}},
+    template.attach(objects,{settings={WheelsA=6,WheelsM=100,WheelsR=1,WheelsS=100,focus={tint=tint}},
         screen={width=width,height=height,scale=scale},
         state={controls={group={from=1,to=1}}}},original)
     assert(math.abs(abilitySlot.position.X-(width-200-margin))<1e-6
@@ -121,19 +121,20 @@ for _,case in ipairs({{3840,2160,1,144},{1920,1080,2,72}}) do
 end
 attach(6,0)
 assert(prompt.opacity==1,'overlap must retain the native swap prompt')
-assert(abilities.opacity==1 and consumables.opacity==1,'overlapping wheels keep the native look')
+assert(alpha(abilities)==1 and alpha(consumables)==1,'overlapping wheels keep the native look')
 local function focus(placement)
     template.events['controls.group.focus'](
-        {settings={WheelsA=6,WheelsM=20,WheelsR=placement,WheelsS=100,focus={dim=dim}},
+        {settings={WheelsA=6,WheelsM=20,WheelsR=placement,WheelsS=100,focus={tint=tint}},
             screen={width=1920,height=1080,scale=1},state={}},
         {name='controls.group.focus',group={from=1,to=2}},
         {wheels={abilities=abilities,consumables=consumables}})
 end
 attach(6,1)
 focus(1)
-assert(abilities.opacity==dim and consumables.opacity==1,'the unfocused wheel must dim')
+assert(alpha(abilities)==dim and alpha(consumables)==1,'the unfocused wheel must dim')
 focus(0)
-assert(abilities.opacity==1 and consumables.opacity==1,'overlapping wheels keep the native look')
+assert(alpha(abilities)==1 and alpha(consumables)==1,'overlapping wheels keep the native look')
 attach(6,1,2)
-assert(abilities.opacity==dim and consumables.opacity==1,'attach must apply the current focus')
+assert(alpha(abilities)==dim and alpha(consumables)==1,'attach must apply the current focus')
+assert(abilities.ColorAndOpacity.B>abilities.ColorAndOpacity.R,'the tint leans blue')
 print('PASS: Wheels positions prepared output-canvas children at supported edges')

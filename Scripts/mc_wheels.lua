@@ -16,7 +16,7 @@ local template = {
     -- switcher into its canvas. This template only owns their layout and the
     -- swap prompt.
     objects={
-        wheels={abilities={},consumables={}, properties={'box','slot','position','size','opacity'}},
+        wheels={abilities={},consumables={}, properties={'box','slot','position','size','opacity','color'}},
         change_prompt={properties={'opacity'}}
     },
     menu = {

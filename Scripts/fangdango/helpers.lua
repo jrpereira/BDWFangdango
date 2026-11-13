@@ -56,24 +56,27 @@ function M.hideDecorations(wheel,names,onCleanup)
     end
 end
 
--- controls.group.focus: dim the wheel without focus to settings.focus.dim.
+-- controls.group.focus: tint the wheel without focus with settings.focus.tint.
+-- A tint scales the wheel's own colours, so it looks the same over any background.
+local UNTINTED={R=1,G=1,B=1,A=1}
 function M.onGroupFocus(params,event,objects)
     local focused=event.group and event.group.to
     if focused~=1 and focused~=2 then return end
     local wheels=objects.wheels
     -- Overlapping Wheels keep the native look.
     local overlap=params.settings.WheelsR==0
-    log.trace('focus wheel ',focused,overlap and ' (overlap, no dimming)' or '')
+    log.trace('focus wheel ',focused,overlap and ' (overlap, no tint)' or '')
     for index,name in ipairs({'abilities','consumables'}) do
         if wheels and wheels[name] then
-            Widget.setOpacity(wheels[name],
-                (overlap or focused==index) and 1 or params.settings.focus.dim)
+            Widget.setColor(wheels[name],
+                (overlap or focused==index) and UNTINTED or params.settings.focus.tint)
         end
     end
 end
 
--- Template settings shared by Wheels and Bars: the unfocused wheel dims to 70%.
-M.SETTINGS={focus={dim=0.7}}
+-- Template settings shared by Wheels and Bars: the unfocused wheel takes a blue tint
+-- at 50% opacity.
+M.SETTINGS={focus={tint={R=0.6,G=0.65,B=0.9,A=0.5}}}
 
 -- Relative Placement, shared by Wheels and Bars.
 M.PLACEMENTS={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}

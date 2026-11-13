@@ -294,7 +294,7 @@ local function bar(id,label,vertical,double,indicators)
         -- center; nothing is reparented.
         objects={
             wheels={abilities={},consumables={},
-                properties={'box','slot','position','size','opacity'}},
+                properties={'box','slot','position','size','opacity','color'}},
             change_prompt={properties={'opacity'}},
             buttons={
                 abilitySlots={'ability_button_left','ability_button_top','ability_button_right','ability_button_bottom'},

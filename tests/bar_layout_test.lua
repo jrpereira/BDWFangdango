@@ -58,6 +58,8 @@ local function widget(name)
     function w:SetRenderScale(value) self.RenderTransform.Scale=value end
     function w:GetRenderOpacity() return self.opacity end
     function w:SetRenderOpacity(value) self.opacity=value end
+    w.ColorAndOpacity={R=1,G=1,B=1,A=1}
+    function w:SetColorAndOpacity(value) self.ColorAndOpacity=value end
     return w
 end
 
@@ -200,8 +202,8 @@ for _,name in ipairs(sharedGraph.order) do
     local selector=sharedGraph.byName[name]
     if selector.create then
         sharedCreated[#sharedCreated+1]={name=name,class=selector.class,from=selector.from,
-            parent=selector.parent,reparent=selector.reparent,destination=selector.destination,
-            reparentLayout=selector.reparentLayout,opacity=selector.opacity,
+            parent=selector.parent,adopt=selector.adopt,
+            adoptLayout=selector.adoptLayout,opacity=selector.opacity,
             layout=selector.layout,prepass=selector.prepass}
     end
 end
@@ -258,9 +260,7 @@ assert(abilityWheel:GetParent()==actions and consumableWheel:GetParent()==action
 assert(layout(params()))
 assert(switcher.active==1,'Bar must not change the native switcher index')
 assert(objects.change_prompt.opacity==0,'Bar must hide the native swap prompt')
-assert(switcher:GetChildrenCount()==2)
-local panelA,panelB=switcher:GetChildAt(0),switcher:GetChildAt(1)
-assert(panelA~=actions and panelB~=actions)
+assert(switcher:GetChildrenCount()==0,'MCT leaves nothing in the native switcher')
 assert(actions:GetParent()==hudRoot and actions:GetChildrenCount()==2)
 assert(actions:GetChildAt(0)==abilityWheel and actions:GetChildAt(1)==consumableWheel)
 -- Both wheels share one box at the chosen edge, as in Wheels' Overlap placement.
@@ -332,20 +332,20 @@ for _,kind in ipairs({'ability','consumable'}) do
 end
 assert(objects.abilities.Darken.opacity==0 and objects.abilities.Glow.opacity==0)
 -- Attach applies the initial focus: abilities stay opaque, consumables dim.
-near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
 assert(switcher.active==1,'Bar update must not change the native switcher index')
 local focusParams=params()
 bar.events['controls.group.focus'](focusParams,{name='controls.group.focus',group={from=2,to=1}},
     {wheels={abilities=objects.abilities,consumables=objects.consumables}})
-near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
 -- A rebuild applies the current focus from the state.
 assert(layout(params(100,0,7,{controls={group={from=1,to=2}}})))
-near(objects.abilities.opacity,bar.settings.focus.dim);near(objects.consumables.opacity,1)
+near(objects.abilities.ColorAndOpacity.A,bar.settings.focus.tint.A);near(objects.consumables.ColorAndOpacity.A,1)
 -- Margin steps so -100% leaves 8 px below the bar: at 0% the keys' bottom is
 -- at 1000-14+40=1026, so each percent moves (1080-1026-8)/100=0.46 px. 50%
 -- raises the keys 23 px; the box stays flush.
 assert(layout(params(100,50)))
-near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
 wheelsAt(860,920)
 lined(100,80,false,nil,-14-23)
 -- -50% lowers them as far, and -100% puts their bottom at 1080-8=1072.
@@ -449,11 +449,11 @@ wheelsAt(860,920)
 doubled(false,0,-24,92)
 assert(objects.change_prompt.opacity==0,'bars always hide the swap prompt')
 -- Focus dims the other wheel, as in every bar.
-near(objects.abilities.opacity,1);near(objects.consumables.opacity,bar.settings.focus.dim)
+near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
 barsById.DoubleUnderbar.events['controls.group.focus'](params(100,0,7,nil,nil,nil,true),
     {name='controls.group.focus',group={from=1,to=2}},
     {wheels={abilities=objects.abilities,consumables=objects.consumables}})
-near(objects.abilities.opacity,bar.settings.focus.dim);near(objects.consumables.opacity,1)
+near(objects.abilities.ColorAndOpacity.A,bar.settings.focus.tint.A);near(objects.consumables.ColorAndOpacity.A,1)
 -- Double Sidebar: labels are 30 wide, so consumables sit 100+2*7.5=115 further
 -- left; the labels between the columns center on the X line (-60+115/2=-2.5),
 -- and the bottom one on the Y line (-80-1.5*86=-209).
@@ -509,8 +509,8 @@ assert(not layout(params(110)))
 lastKey.SetRenderScale=setScale
 assert(active==manager and manager:detach(switcher))
 assert(objects.change_prompt.opacity==1,'detach must restore the native swap prompt')
-near(objects.consumables.opacity,1)
-assert(switcher:GetChildAt(0)==panelA and switcher:GetChildAt(1)==panelB)
+near(objects.consumables.ColorAndOpacity.A,1)
+assert(switcher:GetChildrenCount()==0)
 assert(actions:GetParent()==hudRoot and actions:GetChildrenCount()==2)
 assert(objects.abilities.cross.opacity==1 and objects.consumables.cross.opacity==1)
 assert(objects.abilities.Darken.opacity==1 and objects.abilities.Glow.opacity==1)
@@ -534,9 +534,8 @@ end
 -- A shown key without a size must not partially move either group.
 objects.buttons.abilitySlots[2].desired.X=0
 assert(not manager:attach(switcher,objects,params()))
-assert(switcher:GetChildrenCount()==2)
+assert(switcher:GetChildrenCount()==0)
 assert(sharedManager:detach(switcher))
 assert(switcher:GetChildAt(0)==objects.abilities and switcher:GetChildAt(1)==objects.consumables)
-assert(panelA:GetParent()==nil and panelB:GetParent()==nil)
 assert(actions:GetParent()==nil and actions:GetChildrenCount()==0)
 print('PASS Bar: shared wheel canvas, layout, rollback and restoration')

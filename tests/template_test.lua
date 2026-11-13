@@ -22,6 +22,8 @@ local function widget(name,class)
     function w:ForceLayoutPrepass() end
     function w:GetRenderOpacity() return self.opacity end
     function w:SetRenderOpacity(value) self.opacity=value end
+    w.ColorAndOpacity={R=1,G=1,B=1,A=1}
+    function w:SetColorAndOpacity(value) self.ColorAndOpacity=value end
     function w:SetRenderTranslation(value) self.RenderTransform.Translation=value end
     function w:SetRenderScale(value) self.RenderTransform.Scale=value end
     function w:AddChild(child)
@@ -122,16 +124,16 @@ select(0)
 assert(next(runtime:attachments(template.id)),'current Wheels must attach through the runtime')
 local actions=ability:GetParent()
 assert(actions.class=='CanvasPanel' and actions:GetParent()==root
-    and consumable:GetParent()==actions and made==3,
+    and consumable:GetParent()==actions and made==1,
     'MCT must place both wheels directly in its canvas without host buttons')
-assert(switcher:GetChildrenCount()==2 and prompt.opacity==0)
+assert(switcher:GetChildrenCount()==0 and prompt.opacity==0)
 local firstY=ability.Slot.LayoutData.Offsets.Top
 select(20)
 local updatedY=ability.Slot.LayoutData.Offsets.Top
-assert(updatedY~=firstY and made==3 and ability:GetParent()==actions,
+assert(updatedY~=firstY and made==1 and ability:GetParent()==actions,
     'settings update must reposition the existing wheels')
 runtime:event({kind='changed',object=switcher,epoch=runtime.epoch})
-assert(made==3 and ability.Slot.LayoutData.Offsets.Top==updatedY,
+assert(made==1 and ability.Slot.LayoutData.Offsets.Top==updatedY,
     'reconciliation must retain the current wheel layout')
 ability.Slot.failPosition=true
 select(40)
@@ -140,24 +142,25 @@ assert(#errors==1 and errors[1].stage=='update'
 assert(ability.Slot.LayoutData.Offsets.Top==updatedY
     and next(runtime:attachments(template.id)),
     'failed settings update must recover the previous successful layout')
-local dim=template.settings.focus.dim
-assert(ability.opacity==1 and consumable.opacity==1,'no focus reported: both wheels stay opaque')
+local dim=template.settings.focus.tint.A
+local function alpha(w) return w.ColorAndOpacity.A end
+assert(alpha(ability)==1 and alpha(consumable)==1,'no focus reported: both wheels stay opaque')
 -- The MCT event hub records ModCore Controls' focus, then notifies the runtime.
 state.events={['controls.group.focus']={revision=1}}
 state.revision=1;state.controls.group.from=1;state.controls.group.to=2
 runtime:stateChanged({name='controls.group.focus',revision=1,group={from=1,to=2}})
-assert(ability.opacity==1,'quickslot templates receive no events until the player is ready')
+assert(alpha(ability)==1,'quickslot templates receive no events until the player is ready')
 runtime:signal('MC_PlayerReady')
 runtime:stateChanged({name='controls.group.focus',revision=1,group={from=1,to=2}})
-assert(ability.opacity==dim and consumable.opacity==1,'focus event must dim the unfocused wheel')
+assert(alpha(ability)==dim and alpha(consumable)==1,'focus event must dim the unfocused wheel')
 ability.Slot.failPosition=nil
 select(0)
-assert(ability.opacity==dim and consumable.opacity==1,'a rebuild must keep the current focus')
+assert(alpha(ability)==dim and alpha(consumable)==1,'a rebuild must keep the current focus')
 state.revision=2;state.controls.group.from=2;state.controls.group.to=1
 runtime:stateChanged({name='controls.group.focus',revision=2,group={from=2,to=1}})
-assert(ability.opacity==1 and consumable.opacity==dim,'focus must follow each event')
+assert(alpha(ability)==1 and alpha(consumable)==dim,'focus must follow each event')
 runtime:select(category.id,{})
-assert(ability.opacity==1 and consumable.opacity==1,'leaving the layout restores wheel opacity')
+assert(alpha(ability)==1 and alpha(consumable)==1,'leaving the layout restores wheel opacity')
 assert(ability:GetParent()==switcher and consumable:GetParent()==switcher)
 assert(switcher:GetChildAt(0)==consumable and switcher:GetChildAt(1)==ability)
 assert(ability.Slot.Padding.Left==17 and ability.Slot.Padding.Bottom==20)
