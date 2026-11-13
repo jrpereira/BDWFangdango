@@ -77,6 +77,18 @@ local prompt=widget('Prompt','Widget')
 hud.WidgetTree={RootWidget=root}
 hud.WBP_AA_Quickslots,hud.WBP_HUD_Quickslots=ability,consumable
 hud.WBP_HUD_Quickslots_ChangePrompt=prompt
+-- Each wheel's keys and, in its Bindings widget, their labels.
+local keys,keyLabels={},{}
+for w,wheel in ipairs({ability,consumable}) do
+    local bindings=widget(wheel.name..' bindings','UserWidget')
+    wheel[w==1 and 'WBP_AA_Quickslots_Bindings' or 'WBP_HUD_Quickslots_Bindings']=bindings
+    keys[w],keyLabels[w]={},{}
+    for index,side in ipairs({'Left','Top','Right','Bottom'}) do
+        wheel[side]=widget(wheel.name..' '..side,'Button')
+        bindings[side]=widget(wheel.name..' label '..side,'Widget')
+        keys[w][index],keyLabels[w][index]=wheel[side],bindings[side]
+    end
+end
 switcher.owner,switcher.outer=hud,tree
 root:AddChild(switcher)
 switcher:AddChild(consumable)
@@ -143,7 +155,17 @@ assert(ability.Slot.LayoutData.Offsets.Top==updatedY
     and next(runtime:attachments(template.id)),
     'failed settings update must recover the previous successful layout')
 local dim=template.settings.focus.tint.A
-local function alpha(w) return w.ColorAndOpacity.A end
+-- A wheel's dimming is that of its keys; the wheel and every key dim alike.
+local function alpha(w)
+    assert(w.ColorAndOpacity.A==1,'the wheel itself stays untinted')
+    local keysOf=w==ability and keys[1] or keys[2]
+    local labelsOf=w==ability and keyLabels[1] or keyLabels[2]
+    for index=1,4 do
+        assert(keysOf[index].ColorAndOpacity.A==keysOf[1].ColorAndOpacity.A,'every key dims alike')
+        assert(labelsOf[index].opacity==keysOf[1].ColorAndOpacity.A,'a label follows its key')
+    end
+    return keysOf[1].ColorAndOpacity.A
+end
 assert(alpha(ability)==1 and alpha(consumable)==1,'no focus reported: both wheels stay opaque')
 -- The MCT event hub records ModCore Controls' focus, then notifies the runtime.
 state.events={['controls.group.focus']={revision=1}}
@@ -159,6 +181,16 @@ assert(alpha(ability)==dim and alpha(consumable)==1,'a rebuild must keep the cur
 state.revision=2;state.controls.group.from=2;state.controls.group.to=1
 runtime:stateChanged({name='controls.group.focus',revision=2,group={from=2,to=1}})
 assert(alpha(ability)==1 and alpha(consumable)==dim,'focus must follow each event')
+-- ModCore Controls reports Global keys; their keys keep the native look.
+state.controls.global={{false,false,false,false},{false,true,false,false}}
+state.events['controls.slots.global']={revision=1}
+runtime:stateChanged({name='controls.slots.global',revision=1,global=state.controls.global})
+assert(keys[1][1].ColorAndOpacity.A==1 and keys[2][1].ColorAndOpacity.A==dim
+    and keys[2][2].ColorAndOpacity.A==1 and keyLabels[2][2].opacity==1,
+    'a Global key must keep its key undimmed')
+state.controls.global={{false,false,false,false},{false,false,false,false}}
+runtime:stateChanged({name='controls.slots.global',revision=2,global=state.controls.global})
+assert(alpha(consumable)==dim,'a key dims again once its Global key is gone')
 runtime:select(category.id,{})
 assert(alpha(ability)==1 and alpha(consumable)==1,'leaving the layout restores wheel opacity')
 assert(ability:GetParent()==switcher and consumable:GetParent()==switcher)

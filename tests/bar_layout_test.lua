@@ -243,6 +243,20 @@ local function layout(p)
     return wanted:attach(switcher,objects,p)
 end
 local function near(a,b) assert(math.abs(a-b)<0.00001,tostring(a)..' ~= '..tostring(b)) end
+-- Focus tints each key of the other wheel and fades its shown label; the wheels
+-- themselves stay untinted. lit[kind][index] marks a key with a Global key.
+local dim=bar.settings.focus.tint.A
+local function focusIs(group,lit)
+    near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,1)
+    for w,kind in ipairs({'ability','consumable'}) do
+        for index=1,4 do
+            local on=w==group or (lit and lit[kind] and lit[kind][index])
+            near(objects.buttons[kind..'Slots'][index].ColorAndOpacity.A,on and 1 or dim)
+            local label=objects.labels[kind..'Labels'][index]
+            if label.opacity>0 then near(label.opacity,on and 1 or dim) end
+        end
+    end
+end
 local function bounds(button)
     local size,pivot,transform=button.desired,button.RenderTransformPivot,button.RenderTransform
     local scale=transform.Scale.X
@@ -314,7 +328,7 @@ local function lined(W,H,vertical,dx,dy,side,across)
                     near(lx,ex);near(ly,ey+side*H/2)
                 end
                 assert(label.RenderTransform.Scale.X>=0,'labels must not mirror')
-                assert(label.opacity==1)
+                assert(label.opacity>0,kind..' shown label must stay visible')
             else
                 assert(label.opacity==0,kind..' empty slot label must be hidden')
             end
@@ -332,20 +346,27 @@ for _,kind in ipairs({'ability','consumable'}) do
 end
 assert(objects.abilities.Darken.opacity==0 and objects.abilities.Glow.opacity==0)
 -- Attach applies the initial focus: abilities stay opaque, consumables dim.
-near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
+focusIs(1)
+assert(objects.labels.abilityLabels[1].opacity==0,'focus must keep an empty key\'s label hidden')
 assert(switcher.active==1,'Bar update must not change the native switcher index')
 local focusParams=params()
-bar.events['controls.group.focus'](focusParams,{name='controls.group.focus',group={from=2,to=1}},
-    {wheels={abilities=objects.abilities,consumables=objects.consumables}})
-near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
+bar.events['controls.group.focus'](focusParams,{name='controls.group.focus',group={from=2,to=1}},objects)
+focusIs(1)
+-- A key with a ModCore Controls Global key fires whatever the focus, so it keeps
+-- the native look.
+local global={controls={group={from=2,to=1},
+    global={[1]={false,false,false,false},[2]={true,false,false,true}}}}
+bar.events['controls.group.focus'](params(100,0,7,global),
+    {name='controls.group.focus',group={from=2,to=1}},objects)
+focusIs(1,{consumable={true,false,false,true}})
 -- A rebuild applies the current focus from the state.
 assert(layout(params(100,0,7,{controls={group={from=1,to=2}}})))
-near(objects.abilities.ColorAndOpacity.A,bar.settings.focus.tint.A);near(objects.consumables.ColorAndOpacity.A,1)
+focusIs(2)
 -- Margin steps so -100% leaves 8 px below the bar: at 0% the keys' bottom is
 -- at 1000-14+40=1026, so each percent moves (1080-1026-8)/100=0.46 px. 50%
 -- raises the keys 23 px; the box stays flush.
 assert(layout(params(100,50)))
-near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
+focusIs(1)
 wheelsAt(860,920)
 lined(100,80,false,nil,-14-23)
 -- -50% lowers them as far, and -100% puts their bottom at 1080-8=1072.
@@ -430,7 +451,7 @@ local function doubled(vertical,dx,dy,cross)
                 near(x,ex);near(y,ey)
                 local lx,ly=centerOf(label)
                 if vertical then near(lx,ex+toward);near(ly,ey) else near(lx,ex);near(ly,ey+toward) end
-                assert(label.opacity==1)
+                assert(label.opacity>0,kind..' shown label must stay visible')
             else
                 assert(label.opacity==0,kind..' empty slot label must be hidden')
             end
@@ -448,12 +469,11 @@ assert(layout(params(100,0,7,nil,nil,nil,true)))
 wheelsAt(860,920)
 doubled(false,0,-24,92)
 assert(objects.change_prompt.opacity==0,'bars always hide the swap prompt')
--- Focus dims the other wheel, as in every bar.
-near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,bar.settings.focus.tint.A)
+-- Focus dims the other wheel's keys, as in every bar.
+focusIs(1)
 barsById.DoubleUnderbar.events['controls.group.focus'](params(100,0,7,nil,nil,nil,true),
-    {name='controls.group.focus',group={from=1,to=2}},
-    {wheels={abilities=objects.abilities,consumables=objects.consumables}})
-near(objects.abilities.ColorAndOpacity.A,bar.settings.focus.tint.A);near(objects.consumables.ColorAndOpacity.A,1)
+    {name='controls.group.focus',group={from=1,to=2}},objects)
+focusIs(2)
 -- Double Sidebar: labels are 30 wide, so consumables sit 100+2*7.5=115 further
 -- left; the labels between the columns center on the X line (-60+115/2=-2.5),
 -- and the bottom one on the Y line (-80-1.5*86=-209).
@@ -510,6 +530,12 @@ lastKey.SetRenderScale=setScale
 assert(active==manager and manager:detach(switcher))
 assert(objects.change_prompt.opacity==1,'detach must restore the native swap prompt')
 near(objects.consumables.ColorAndOpacity.A,1)
+for _,kind in ipairs({'ability','consumable'}) do
+    for index=1,4 do
+        near(objects.buttons[kind..'Slots'][index].ColorAndOpacity.A,1)
+        assert(objects.labels[kind..'Labels'][index].opacity==1,'detach must restore label opacity')
+    end
+end
 assert(switcher:GetChildrenCount()==0)
 assert(actions:GetParent()==hudRoot and actions:GetChildrenCount()==2)
 assert(objects.abilities.cross.opacity==1 and objects.consumables.cross.opacity==1)

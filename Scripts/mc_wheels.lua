@@ -11,13 +11,18 @@ local template = {
     settings=Helpers.SETTINGS,
     events={
         ['controls.group.focus']=Helpers.onGroupFocus,
+        ['controls.slots.global']=Helpers.onGlobalKeys,
     },
     -- MCT's category lifecycle has already moved both wheels out of the native
-    -- switcher into its canvas. This template only owns their layout and the
-    -- swap prompt.
+    -- switcher into its canvas. This template only owns their layout, the swap
+    -- prompt and the focus tint of each key and its label.
     objects={
         wheels={abilities={},consumables={}, properties={'box','slot','position','size','opacity','color'}},
-        change_prompt={properties={'opacity'}}
+        change_prompt={properties={'opacity'}},
+        buttons={abilitySlots=Helpers.BUTTONS.abilitySlots,consumableSlots=Helpers.BUTTONS.consumableSlots,
+            properties={'color'}},
+        labels={abilityLabels=Helpers.LABELS.abilityLabels,consumableLabels=Helpers.LABELS.consumableLabels,
+            properties={'opacity'}},
     },
     menu = {
         {id='Wheels', label='Visual Options', fields={

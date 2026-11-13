@@ -80,11 +80,38 @@ assert(template.loaded==nil and definitions[2].loaded==nil,
     'quickslot layouts must not install a click-transition runtime')
 local original={wheels={abilities={box=assert(Widget.box(abilities))},
     consumables={box=assert(Widget.box(consumables))}}}
+local buttons,labels={abilitySlots={},consumableSlots={}},{abilityLabels={},consumableLabels={}}
+for index=1,4 do
+    buttons.abilitySlots[index]=widget('Ability key '..index)
+    buttons.consumableSlots[index]=widget('Consumable key '..index)
+    labels.abilityLabels[index]=widget('Ability label '..index)
+    labels.consumableLabels[index]=widget('Consumable label '..index)
+end
 local objects={actions=actions,
-    wheels={abilities=abilities,consumables=consumables},change_prompt=prompt}
+    wheels={abilities=abilities,consumables=consumables},change_prompt=prompt,
+    buttons=buttons,labels=labels}
 local tint=template.settings.focus.tint
 local dim=tint.A
 local function alpha(w) return w.ColorAndOpacity.A end
+-- A wheel reads as dimmed when each of its keys is tinted and each label faded;
+-- the wheel itself is never tinted. lit[index] marks a key with a Global key.
+local function wheelAlpha(w,lit)
+    assert(alpha(w==1 and abilities or consumables)==1,'the wheel itself stays untinted')
+    local keys=w==1 and buttons.abilitySlots or buttons.consumableSlots
+    local names=w==1 and labels.abilityLabels or labels.consumableLabels
+    local value
+    for index=1,4 do
+        local expected=alpha(keys[index])
+        assert(names[index].opacity==expected,'a label follows its key')
+        if not (lit and lit[index]) then
+            assert(value==nil or value==expected,'every key of a wheel dims alike')
+            value=expected
+        else
+            assert(expected==1,'a key with a Global key keeps the native look')
+        end
+    end
+    return value
+end
 -- ModCore Controls has reported abilities (group 1) as focused.
 local function attach(align,placement,to,margin,size)
     return template.attach(objects,
@@ -101,7 +128,7 @@ local function check(align,x,y,x2,y2,margin)
         and abilities.RenderTransform.Translation.Y==0)
     assert(consumables.RenderTransform.Translation.X==0
         and consumables.RenderTransform.Translation.Y==0)
-    assert(alpha(abilities)==1 and alpha(consumables)==dim and prompt.opacity==0,
+    assert(wheelAlpha(1)==1 and wheelAlpha(2)==dim and prompt.opacity==0,
         'attach must apply the initial focus')
 end
 -- The margin is 8+64*Margin/100 px: 0% is 8 px and 100% is 72 px.
@@ -121,20 +148,31 @@ for _,case in ipairs({{3840,2160,1,144},{1920,1080,2,72}}) do
 end
 attach(6,0)
 assert(prompt.opacity==1,'overlap must retain the native swap prompt')
-assert(alpha(abilities)==1 and alpha(consumables)==1,'overlapping wheels keep the native look')
-local function focus(placement)
+assert(wheelAlpha(1)==1 and wheelAlpha(2)==1,'overlapping wheels keep the native look')
+local function focus(placement,global)
     template.events['controls.group.focus'](
         {settings={WheelsA=6,WheelsM=20,WheelsR=placement,WheelsS=100,focus={tint=tint}},
-            screen={width=1920,height=1080,scale=1},state={}},
-        {name='controls.group.focus',group={from=1,to=2}},
-        {wheels={abilities=abilities,consumables=consumables}})
+            screen={width=1920,height=1080,scale=1},state={controls={global=global}}},
+        {name='controls.group.focus',group={from=1,to=2}},objects)
 end
 attach(6,1)
 focus(1)
-assert(alpha(abilities)==dim and alpha(consumables)==1,'the unfocused wheel must dim')
+assert(wheelAlpha(1)==dim and wheelAlpha(2)==1,'the unfocused wheel\'s keys must dim')
+-- Keys with a ModCore Controls Global key fire whatever the focus.
+focus(1,{[1]={false,true,false,false},[2]={true,true,true,true}})
+assert(wheelAlpha(1,{false,true})==dim and wheelAlpha(2)==1,'a Global key keeps its key undimmed')
+focus(1)
+assert(wheelAlpha(1)==dim,'a key dims again once its Global key is gone')
+-- The Global keys event reapplies the current focus from the state.
+template.events['controls.slots.global'](
+    {settings={WheelsA=6,WheelsM=20,WheelsR=1,WheelsS=100,focus={tint=tint}},
+        state={controls={group={from=2,to=1}}}},
+    {name='controls.slots.global',global={[1]={false,false,false,false},[2]={false,false,true,false}}},objects)
+assert(wheelAlpha(1)==1 and wheelAlpha(2,{false,false,true})==dim,'the Global keys event must reapply focus')
 focus(0)
-assert(alpha(abilities)==1 and alpha(consumables)==1,'overlapping wheels keep the native look')
+assert(wheelAlpha(1)==1 and wheelAlpha(2)==1,'overlapping wheels keep the native look')
 attach(6,1,2)
-assert(alpha(abilities)==dim and alpha(consumables)==1,'attach must apply the current focus')
-assert(abilities.ColorAndOpacity.B>abilities.ColorAndOpacity.R,'the tint leans blue')
+assert(wheelAlpha(1)==dim and wheelAlpha(2)==1,'attach must apply the current focus')
+local key=buttons.abilitySlots[1]
+assert(key.ColorAndOpacity.B>key.ColorAndOpacity.R,'the tint leans blue')
 print('PASS: Wheels positions prepared output-canvas children at supported edges')

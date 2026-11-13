@@ -297,18 +297,19 @@ local function bar(id,label,vertical,double,indicators)
                 properties={'box','slot','position','size','opacity','color'}},
             change_prompt={properties={'opacity'}},
             buttons={
-                abilitySlots={'ability_button_left','ability_button_top','ability_button_right','ability_button_bottom'},
-                consumableSlots={'consumable_button_left','consumable_button_top','consumable_button_right','consumable_button_bottom'},
-                properties={'slot','position','size'},
+                abilitySlots=Helpers.BUTTONS.abilitySlots,
+                consumableSlots=Helpers.BUTTONS.consumableSlots,
+                properties={'slot','position','size','color'},
             },
             labels={
-                abilityLabels={'ability_left','ability_top','ability_right','ability_bottom'},
-                consumableLabels={'consumable_left','consumable_top','consumable_right','consumable_bottom'},
+                abilityLabels=Helpers.LABELS.abilityLabels,
+                consumableLabels=Helpers.LABELS.consumableLabels,
                 properties={'slot','position','size','opacity'},
             },
         },
         menu={{id=id, label=label, fields=fields}},
-        events={['controls.group.focus']=Helpers.onGroupFocus},
+        events={['controls.group.focus']=Helpers.onGroupFocus,
+            ['controls.slots.global']=Helpers.onGlobalKeys},
         attach=function(objects,params,original)
             return onAttach(id,vertical,double,objects,params,original)
         end,

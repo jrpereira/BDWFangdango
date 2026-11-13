@@ -56,22 +56,62 @@ function M.hideDecorations(wheel,names,onCleanup)
     end
 end
 
--- controls.group.focus: tint the wheel without focus with settings.focus.tint.
--- A tint scales the wheel's own colours, so it looks the same over any background.
+-- Quickslot keys and their binding labels, as MCT names them, per wheel in slot order
+-- Left, Top, Right, Bottom. Templates that dim by focus declare both groups.
+M.BUTTONS={
+    abilitySlots={'ability_button_left','ability_button_top','ability_button_right','ability_button_bottom'},
+    consumableSlots={'consumable_button_left','consumable_button_top','consumable_button_right','consumable_button_bottom'},
+}
+M.LABELS={
+    abilityLabels={'ability_left','ability_top','ability_right','ability_bottom'},
+    consumableLabels={'consumable_left','consumable_top','consumable_right','consumable_bottom'},
+}
+local slotGroups={{buttons='abilitySlots',labels='abilityLabels'},
+    {buttons='consumableSlots',labels='consumableLabels'}}
+
+-- Slots whose ModCore Controls Global key fires them whatever the focus, as
+-- global[wheel][slot]; ModCore Templates keeps the latest in state.controls.global.
+local function globalKey(global,wheel,slot)
+    return type(global)=='table' and type(global[wheel])=='table' and global[wheel][slot]==true
+end
+
+-- controls.group.focus: tint each key of the wheel without focus with
+-- settings.focus.tint, and fade its binding label to the tint's opacity. A key
+-- with a Global key keeps the native look; the wheel itself is never tinted.
+-- A tint scales the key's own colours, so it looks the same over any background.
+-- A label a layout hid (opacity 0) stays hidden.
 local UNTINTED={R=1,G=1,B=1,A=1}
 function M.onGroupFocus(params,event,objects)
     local focused=event.group and event.group.to
     if focused~=1 and focused~=2 then return end
+    local controls=params.state and params.state.controls
+    local global=event.global or controls and controls.global
     local wheels=objects.wheels
     -- Overlapping Wheels keep the native look.
     local overlap=params.settings.WheelsR==0
+    local tint=params.settings.focus.tint
     log.trace('focus wheel ',focused,overlap and ' (overlap, no tint)' or '')
     for index,name in ipairs({'abilities','consumables'}) do
-        if wheels and wheels[name] then
-            Widget.setColor(wheels[name],
-                (overlap or focused==index) and UNTINTED or params.settings.focus.tint)
+        if wheels and wheels[name] then Widget.setColor(wheels[name],UNTINTED) end
+        local group=slotGroups[index]
+        local buttons=objects.buttons and objects.buttons[group.buttons] or {}
+        local labels=objects.labels and objects.labels[group.labels] or {}
+        for slot=1,4 do
+            local lit=overlap or focused==index or globalKey(global,index,slot)
+            if buttons[slot] then Widget.setColor(buttons[slot],lit and UNTINTED or tint) end
+            local label=labels[slot]
+            if label and Widget.opacity(label)>0 then
+                Widget.setOpacity(label,lit and 1 or tint.A)
+            end
         end
     end
+end
+
+-- controls.slots.global: ModCore Controls reports which slots have a Global key,
+-- on every attach and Apply, often unchanged; reapply the current focus with them.
+function M.onGlobalKeys(params,event,objects)
+    local controls=params.state and params.state.controls
+    M.onGroupFocus(params,{group=controls and controls.group,global=event.global},objects)
 end
 
 -- Template settings shared by Wheels and Bars: the unfocused wheel takes a blue tint
