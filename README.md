@@ -20,7 +20,8 @@ bindings and keeps the key indicators current, it highlights the active wheel.
   and a Double Sidebar at the middle of the right edge.
 - Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
   At 0% a bar lines up with the game's own HUD.
-  The inactive wheel dims with a blue tint, except in Overlap placement.
+  The inactive wheel's keys dim with a blue tint and their binding labels fade,
+  except in Overlap placement. Keys with a ModCore Controls Global key stay lit.
 
 ## Requirements
 

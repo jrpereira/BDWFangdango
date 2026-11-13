@@ -1,10 +1,15 @@
 # Changelog
 
-## v1.0.12
+## v1.1.0
 
+- The inactive wheel dims key by key: each of its keys takes the blue tint and its
+  binding label fades to the tint's 50% opacity. The wheel itself is no longer tinted.
+  A binding label a layout hides stays hidden.
+- Keys with a ModCore Controls Global key stay lit on the inactive wheel, since they
+  fire whichever wheel has focus. ModCore Controls reports them through
+  `controls.slots.global`.
 - Requires ModCore Settings 1.7.0 or later and ModCore Controls 1.2.0 or later, which
-  drives the inactive-wheel tint and was only recommended before. No change to bars,
-  wheels or settings.
+  drives the inactive-wheel tint and was only recommended before.
 
 ## v1.0.11
 

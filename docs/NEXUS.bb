@@ -11,7 +11,7 @@ Arrange your ability and consumable slots as wheels or bars, with sizes and scre
 [*][b]Key indicators:[/b] put them on any side of a Single bar's keys. A Double bar shows one per slot, between its two rows or columns.
 [*][b]Size and margin:[/b] choose from five sizes, from Smaller to Larger, and adjust the distance from the screen edge. At 0% a bar lines up with the game's own HUD.
 [/list]
-Change your bindings and keep the key indicators current with [b]ModCore Controls[/b]. The inactive wheel dims with a blue tint to show which wheel has focus, except when you choose Overlap placement.
+Change your bindings and keep the key indicators current with [b]ModCore Controls[/b]. The inactive wheel's keys dim with a blue tint and their binding labels fade to show which wheel has focus, except when you choose Overlap placement. Keys with a ModCore Controls Global key stay lit, since they work whichever wheel has focus.
 
 [b]Requirements[/b]
 
@@ -40,7 +40,7 @@ Change your controls through ModCore Controls; let Fangdango handle the choreogr
 [list]
 [*][b]The layout has not changed:[/b] select a Fangdango layout in [b]Quickslots[/b] and choose [b]Apply[/b]. Check that the required mods are installed and enabled, then restart the game.
 [*][b]The layout is hard to see:[/b] try [b]Standard[/b] size and the default margin.
-[*][b]Neither wheel dims:[/b] check that ModCore Controls is installed and enabled. Overlap placement does not dim either wheel.
+[*][b]Neither wheel dims:[/b] check that ModCore Controls is installed and enabled. Overlap placement does not dim either wheel, and keys with a Global key never dim.
 [*][b]Another mod changes the quickslot HUD:[/b] try disabling it to check for a conflict.
 [/list]
 [b]Updating or removing[/b]
