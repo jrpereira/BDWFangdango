@@ -11,7 +11,7 @@ Arrange your ability and consumable slots as wheels or bars, with sizes and scre
 [*][b]Key indicators:[/b] put them on any side of a Single bar's keys. A Double bar shows one per slot, between its two rows or columns.
 [*][b]Size and margin:[/b] choose from five sizes, from Smaller to Larger, and adjust the distance from the screen edge. At 0% a bar lines up with the game's own HUD.
 [/list]
-Pair Fangdango with [b]ModCore Controls[/b] to change your bindings and keep the key indicators current. The inactive wheel dims with a blue tint to show which wheel has focus, except when you choose Overlap placement.
+Change your bindings and keep the key indicators current with [b]ModCore Controls[/b]. The inactive wheel dims with a blue tint to show which wheel has focus, except when you choose Overlap placement.
 
 [b]Requirements[/b]
 
@@ -19,18 +19,18 @@ Install these before Fangdango:
 [list]
 [*][b]UE4SS compatible with your game version.[/b] See the loader links in the [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu requirements[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu[/url].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.6.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.7.0 or later[/b].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.7.0 or later[/b].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Event Bridge[/url], [b]1.2.0 or later[/b], which ModCore Templates also requires.
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url], [b]1.2.0 or later[/b], for rebinding, updated key indicators and active-wheel dimming.
 [/list]
-[b]Recommended:[/b] [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url] for rebinding, updated key indicators and active-wheel dimming. Fangdango can change the layout without it, but neither wheel dims to show focus.
 
 [b]Install and dance[/b]
 [list=1]
 [*]Close the game and install the requirements using their instructions. UE4SS itself does not install inside the Mods folder.
 [*]Extract this download so [font=Courier New]9_ModCore_Fangdango[/font] sits directly inside the game's [font=Courier New]ue4ss/Mods[/font] folder. Avoid an extra nested [font=Courier New]9_ModCore_Fangdango/9_ModCore_Fangdango[/font] folder.
 [*]Enable the mods in your UE4SS setup or mod manager, then restart the game.
-[*]Open [b]Mod Settings → Controls → Visuals[/b] if ModCore Controls is installed, or open the [b]Quickslot Fangdango[/b] page. In [b]Quickslots[/b], choose [b]Wheels[/b], a [b]Single[/b] or [b]Double Underbar[/b], or a [b]Single[/b] or [b]Double Sidebar[/b], then select [b]Apply[/b].
+[*]Open [b]Mod Settings → Controls → Visuals[/b] or the [b]Quickslot Fangdango[/b] page. In [b]Quickslots[/b], choose [b]Wheels[/b], a [b]Single[/b] or [b]Double Underbar[/b], or a [b]Single[/b] or [b]Double Sidebar[/b], then select [b]Apply[/b].
 [/list]
 Start with [b]Standard[/b] size and the default margin ([b]50%[/b] for Wheels, [b]0%[/b] for bars), then adjust to taste. Increasing the margin moves the layout farther from the screen edge; a bar's -100% brings it to the edge.
 

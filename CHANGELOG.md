@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.12
+
+- Requires ModCore Settings 1.7.0 or later and ModCore Controls 1.2.0 or later, which
+  drives the inactive-wheel tint and was only recommended before. No change to bars,
+  wheels or settings.
+
 ## v1.0.11
 
 - The inactive wheel now also takes a blue tint as it fades to 50% opacity, so it

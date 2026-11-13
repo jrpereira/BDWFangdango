@@ -7,8 +7,8 @@ Your abilities, consumables and key indicators should follow your setup—and si
 where you want them. Combat has enough surprises without your HUD joining in.
 
 Fangdango arranges your four ability slots and four consumable slots in
-**The Blood of Dawnwalker**. Pair it with **ModCore Controls** to change their
-bindings, keep the key indicators current, and highlight the active wheel.
+**The Blood of Dawnwalker**. Together with **ModCore Controls**, which changes their
+bindings and keeps the key indicators current, it highlights the active wheel.
 
 - **Wheels:** choose Side by Side, Stacked, Overlap or Perspective placement,
   anchored at Right/Center, Bottom/Right or Bottom/Center.
@@ -20,8 +20,7 @@ bindings, keep the key indicators current, and highlight the active wheel.
   and a Double Sidebar at the middle of the right edge.
 - Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
   At 0% a bar lines up with the game's own HUD.
-  With ModCore Controls, the inactive wheel dims with a blue tint, except in
-  Overlap placement.
+  The inactive wheel dims with a blue tint, except in Overlap placement.
 
 ## Requirements
 
@@ -30,15 +29,13 @@ Install all of these:
 - **UE4SS compatible with your game version** and
   [Dawnwalker Mod Menu](https://www.nexusmods.com/thebloodofdawnwalker/mods/271).
 - [ModCore Settings](https://www.nexusmods.com/thebloodofdawnwalker/mods/590)
-  **1.6.0 or later**.
+  **1.7.0 or later**.
 - [ModCore Templates](https://www.nexusmods.com/thebloodofdawnwalker/mods/641)
   **1.7.0 or later**.
 - [UE4SS Lua Event Bridge](https://www.nexusmods.com/thebloodofdawnwalker/mods/526)
   **1.2.0 or later**, which ModCore Templates also requires.
-
-Also install [ModCore Controls](https://www.nexusmods.com/thebloodofdawnwalker/mods/640)
-for rebinding, updated key indicators and active-wheel dimming. Without it,
-Fangdango still changes the layout, but neither wheel dims to show focus.
+- [ModCore Controls](https://www.nexusmods.com/thebloodofdawnwalker/mods/640)
+  **1.2.0 or later**, for rebinding, updated key indicators and active-wheel dimming.
 
 ## Install and dance
 
@@ -47,8 +44,8 @@ Fangdango still changes the layout, but neither wheel dims to show focus.
    the game's `ue4ss/Mods` folder. Avoid an extra nested
    `9_ModCore_Fangdango/9_ModCore_Fangdango` folder. Enable the mods in your
    UE4SS setup or mod manager and restart the game.
-3. Open **Mod Settings › Controls › Visuals** (with ModCore Controls installed)
-   or the **Quickslot Fangdango** page. In the **Quickslots** picker, choose
+3. Open **Mod Settings › Controls › Visuals** or the **Quickslot Fangdango**
+   page. In the **Quickslots** picker, choose
    **Wheels**, a **Single** or **Double Underbar**, or a **Single** or **Double
    Sidebar**, adjust to taste and select **Apply**.
 

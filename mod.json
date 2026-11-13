@@ -17,13 +17,18 @@
     },
     {
       "id": "ModCoreSettings",
-      "version": "1.6.?+",
+      "version": "1.7.?+",
       "url": "https://www.nexusmods.com/thebloodofdawnwalker/mods/590"
     },
     {
       "id": "ModCoreTemplates",
       "version": "1.7.?+",
       "url": "https://www.nexusmods.com/thebloodofdawnwalker/mods/641"
+    },
+    {
+      "id": "ModCoreControls",
+      "version": "1.2.?+",
+      "url": "https://www.nexusmods.com/thebloodofdawnwalker/mods/640"
     },
     {
       "id": "UE4SSLuaEventBridge",
