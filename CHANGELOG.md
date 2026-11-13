@@ -5,8 +5,9 @@
 - The inactive wheel now also takes a blue tint as it fades to 50% opacity, so it
   reads as inactive over any background. ModCore Templates restores the wheel's
   colour when the layout is removed.
-- Requires ModCore Templates 1.7.0 or later, for its colour property and for moving
-  the wheels without leaving placeholders in the game's quickslot switcher.
+- Requires ModCore Settings 1.6.0 or later and ModCore Templates 1.7.0 or later, which
+  provides the colour property and moves the wheels without leaving placeholders in the
+  game's quickslot switcher.
 
 ## v1.0.10
 
