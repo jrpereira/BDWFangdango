@@ -9,7 +9,7 @@
   "author": "Jorge Pereira (kell)",
   "version_source": "VERSION",
   "icon": "⟴",
-  "description": "Arrange your ability and consumable wheels to suit your playstyle. Show both at once or switch between them, with adjustable position, size, and opacity. A little choreography for your combat HUD.",
+  "description": "Arrange your ability and consumable wheels to suit your playstyle, as wheels or as bars. Show both at once or switch between them, with adjustable placement, size, and margin. A little choreography for your combat HUD.",
   "dependencies": [
     {
       "id": "UE4SS",
