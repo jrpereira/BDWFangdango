@@ -391,6 +391,12 @@ assert(layout(params(100,0,7,nil,2)))
 lined(100,80,false,nil,-80+48,-1,true)
 assert(layout(params(100,0,7,nil,3)))
 lined(100,80,false,nil,-80+48,1,true)
+-- The gap is in 1080p pixels like every other distance: at UI scale 2 a
+-- 1920x1080-unit screen keeps it at 4.
+local scaled=params(100,0,7,nil,2)
+scaled.screen.scale=2
+assert(layout(scaled))
+lined(100,80,false,nil,-80+48,-1,true)
 -- Vertical: one column in the bottom-right corner, its box flush with it:
 -- 1920-200=1720. The X reference line is also 160 px in, at 1760. With labels
 -- on the left, their right edge meets it: 1760-1820=-60, less the labels'

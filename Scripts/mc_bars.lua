@@ -9,7 +9,7 @@ local SPC=0.075
 -- A label's measured box runs past its drawn text, leaving a visible gap; a
 -- Double bar's keys overlap it by this fraction of its reach on each side.
 local LABEL_OVERLAP=0.5
--- Screen pixels between a key and its label beside it.
+-- Pixels between a key and its label beside it, scaled like the distances below.
 local LABEL_GAP=4
 -- Slots are listed Left, Top, Right, Bottom; the bar runs L, T, R, B per wheel.
 local sequence={1,2,3,4}
@@ -26,8 +26,8 @@ local MIDDLE_RIGHT,BOTTOM_RIGHT,BOTTOM_CENTER=5,6,7
 -- screen's edges, and each percent moves it as far again the other way up to
 -- 100%.
 local REFERENCE,CORNER=160,8
--- A Single Underbar's line sits this many screen pixels lower for each side
--- of its labels.
+-- A Single Underbar's line sits this many pixels lower for each side of its
+-- labels.
 local shiftPixels={above=16,below=41.6,left=48,right=48}
 -- A Single Sidebar's 0% sits where these X and Y Margins would otherwise put
 -- it, for each side of its labels.
@@ -144,7 +144,7 @@ local function onAttach(id,vertical,double,objects,params,original,store)
     end
     -- The wheels' shared box sits flush with the edge; the keys then move onto
     -- the reference lines.
-    local screenScale=params.screen.scale or 1
+    local unit=Helpers.unit(params.screen)
     local positions=Helpers.pair({WheelsA=align,WheelsR=0,WheelsS=100},
         params.screen,abilityBox,consumableBox)
     local wheels={objects.wheels.abilities,objects.wheels.consumables}
@@ -233,7 +233,7 @@ local function onAttach(id,vertical,double,objects,params,original,store)
         end
         -- Labels beside their keys keep clear of them; the keys stay put.
         if side=='left' or side=='right' then
-            labelX=labelX+(side=='left' and -1 or 1)*LABEL_GAP/screenScale
+            labelX=labelX+(side=='left' and -1 or 1)*LABEL_GAP*unit
         end
         right=math.max(W/2,labelX+labelW/2)
         bottom=math.max(H/2,labelY+labelH/2)
@@ -242,7 +242,6 @@ local function onAttach(id,vertical,double,objects,params,original,store)
     -- Place the lines for 0%, then step them so -100% leaves CORNER pixels
     -- between the outer edges and the screen's.
     local margin=settings[id..'M'] or 0
-    local unit=Helpers.unit(params.screen)
     local lineX=params.screen.width-REFERENCE*unit
     local lineY=params.screen.height-(REFERENCE-shift)*unit
     -- A row in the corner keeps as far from the right edge as from the bottom.
