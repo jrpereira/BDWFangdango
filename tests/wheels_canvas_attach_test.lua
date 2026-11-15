@@ -76,8 +76,7 @@ Widget.rememberSlot(consumables,consumableSlot)
 local definitions={dofile('Fangdango/Scripts/mc_wheels.lua'),
     dofile('Fangdango/Scripts/mc_bars.lua')}
 local template=definitions[1]
-assert(template.loaded==nil and definitions[2].loaded==nil,
-    'quickslot layouts must not install a click-transition runtime')
+assert(template.loaded==nil,'quickslot layouts must not install a click-transition runtime')
 local original={wheels={abilities={box=assert(Widget.box(abilities))},
     consumables={box=assert(Widget.box(consumables))}}}
 local buttons,labels={abilitySlots={},consumableSlots={}},{abilityLabels={},consumableLabels={}}

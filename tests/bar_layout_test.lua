@@ -64,8 +64,8 @@ local function widget(name)
 end
 
 local owner,switcher=widget('Owner'),widget('Switcher')
-local layoutPasses=0
-function switcher:ForceLayoutPrepass() layoutPasses=layoutPasses+1 end
+-- MCT's widget layer forces a layout prepass on panels it measures.
+function switcher:ForceLayoutPrepass() end
 owner:AddChild(switcher)
 local tree={name='WidgetTree'}
 function tree:IsValid() return true end
@@ -111,25 +111,20 @@ StaticFindObject=function(path)
     end
     error('unexpected class lookup: '..path)
 end
-FName=function(value) return value end
 local createdCount=0
 StaticConstructObject=function(class,outer)
     assert(outer==tree)
     createdCount=createdCount+1
     local created=widget(class.path..createdCount)
-    function created:SetText(value) self.text=value end
-    function created:SetWidthOverride(value) self.WidthOverride=value end
-    function created:SetHeightOverride(value) self.HeightOverride=value end
-    function created:SetBrushColor(value) self.BrushColor=value end
     if class.path=='/Script/UMG.CanvasPanel' then
         created.AddChild=canvasAddChild
-        function created:ForceLayoutPrepass() layoutPasses=layoutPasses+1 end
+        function created:ForceLayoutPrepass() end
     end
     return created
 end
 local objects={switcher=switcher,hud_root=hudRoot,change_prompt=widget('Change prompt'),
-    wheels={},panels={},boxes={},buttons={abilitySlots={},consumableSlots={}},
-    labels={abilityLabels={},consumableLabels={}},decorations={ability={},consumable={}}}
+    wheels={},panels={},buttons={abilitySlots={},consumableSlots={}},
+    labels={abilityLabels={},consumableLabels={}}}
 local nativeBoxes={}
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel,box,panel=widget(kind),widget(kind..'Box'),widget(kind..'Panel')
@@ -138,7 +133,6 @@ for _,kind in ipairs({'ability','consumable'}) do
     function wheel:GetDesiredSize() return {X=200,Y=160} end
     objects.panels[kind..'_panel']=panel
     nativeBoxes[kind]=box
-    objects.boxes[kind..'_box']=box
     switcher:AddChild(wheel);wheel:AddChild(box);box:AddChild(panel)
     -- Like the native UserWidget, the wheel reaches its tree only through
     -- WidgetTree.RootWidget, not as panel children.
@@ -146,12 +140,9 @@ for _,kind in ipairs({'ability','consumable'}) do
     function wheel:GetChildrenCount() error('UserWidget is not a panel') end
     wheel.inner=widget(kind..'.Inner');panel:AddChild(wheel.inner)
     wheel.cross=widget(kind..'.cross');wheel.inner:AddChild(wheel.cross)
-    objects.decorations[kind][1]=wheel.cross
     if kind=='ability' then
         wheel.Darken=widget(kind..'.Darken');wheel.Glow=widget(kind..'.Glow')
         panel:AddChild(wheel.Darken);panel:AddChild(wheel.Glow)
-        objects.decorations.ability[2]=wheel.Darken
-        objects.decorations.ability[3]=wheel.Glow
     end
     box.WidthOverride,box.HeightOverride=321,234
     box.bOverride_WidthOverride,box.bOverride_HeightOverride=false,true

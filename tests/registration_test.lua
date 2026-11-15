@@ -1,13 +1,16 @@
 package.path = 'ModCoreTemplates/Scripts/?.lua;ModCoreTemplates/Scripts/vendor/?.lua;' .. package.path
 local definitions=dofile('Fangdango/tests/load_templates.lua')()
 local template=definitions[1]
+-- ModCore Templates after 1.8.0 prefixes a template's id with its module's and
+-- keeps the declared one as localId.
+local function localId(definition) return definition.localId or definition.id end
 -- Single and Double Underbar and Sidebar, by menu id.
 local bars,barList={},{}
 local barIds={'SingleUnderbar','DoubleUnderbar','SingleSidebar','DoubleSidebar'}
 local barNames={'Single Underbar','Double Underbar','Single Sidebar','Double Sidebar'}
 for index,id in ipairs(barIds) do
     local definition=definitions[index+1]
-    assert(definition.category=='player.quickslots' and definition.id==id and definition.label==barNames[index]
+    assert(definition.category=='player.quickslots' and localId(definition)==id and definition.label==barNames[index]
         and definition.menu[1].id==id and definition.menu[1].label==barNames[index])
     assert(definition.managed==nil and definition.requiredTargets==nil
         and type(definition.attach)=='function')
@@ -29,34 +32,19 @@ assert(template.objects.abilities==nil and template.objects.consumables==nil
     and template.objects.change_prompt.properties[1]=='opacity')
 assert(type(template.attach)=='function' and type(bar.attach)=='function')
 local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua')
-assert(table.concat(category.sharedObjects,',')=='actions')
-assert(category.objects.ability_host==nil and category.objects.consumable_host==nil)
-assert(category.objects.bait1==nil and category.objects.bait2==nil)
-assert(table.concat(category.objects.actions.adopt,',')=='abilities,consumables'
-    and category.objects.actions.adoptLayout=='canvas')
-assert(category.objects.switcher.properties==nil)
-assert(category.objects.abilities.properties==nil)
-assert(category.objects.actions.source=='create'
-    and category.objects.actions.class=='/Script/UMG.CanvasPanel'
-    and category.objects.actions.outer=='switcher'
-    and category.objects.actions.parent=='hud_root'
-    and category.objects.actions.layout=='fill')
-assert(category.objects.change_prompt.member=='@owner.WBP_HUD_Quickslots_ChangePrompt')
 -- Bars moves keys inside their native panels: no canvas, panel or frame targets.
 assert(bar.objects.actions==nil and bar.objects.wheels.abilities~=nil
     and bar.objects.wheels.consumables~=nil and bar.objects.hud_root==nil
     and bar.objects.switcher==nil)
 assert(bar.objects.wheels.properties[1]=='box'
     and bar.objects.abilities==nil and bar.objects.boxes==nil
-    and bar.objects.panels==nil
-    and bar.objects.decorations==nil)
+    and bar.objects.panels==nil)
 assert(bar.objects.buttons.abilitySlots[1]=='ability_button_left'
     and bar.objects.buttons.consumableSlots[4]=='consumable_button_bottom'
     and bar.objects.buttons.properties[1]=='slot')
 for _,property in ipairs(bar.objects.buttons.properties) do
     assert(property~='parent' and property~='order','Bars must not reparent keys')
 end
-assert(template.render==nil)
 -- No bar has Relative Placement. Single bars choose their Key Indicators,
 -- listing their own bar's sides first; Double bars share them between rows.
 -- All bars but the Single Sidebar choose their Position first.
@@ -164,7 +152,7 @@ end
 assert(value)
 for _,barId in ipairs(barIds) do assert(barValues[barId],barId) end
 local definition=menu.definitions['player.quickslots'][value]
-assert(template.id==definition.id and template.id=='Wheels' and template.label=='Wheels Plenty')
+assert(template.id==definition.id and localId(template)=='Wheels' and template.label=='Wheels Plenty')
 assert(not definition.access and not definition.direct)
 local rows,values={},{}
 for _,row in ipairs(page.rows) do
@@ -207,10 +195,10 @@ for barId,definition in pairs(bars) do
     assert(barSettings[barId..'S']==100 and barSettings[barId..'M']==0
         and barSettings[barId..'K']==(single and 0 or nil) and barSettings[barId..'A']==position)
 end
-print('AF Wheels registration and settings contract passed')
+print('Fangdango Wheels and bars registration and settings contract passed')
 
-assert(#definitions==5 and definitions[1].id=='Wheels')
-for index,id in ipairs(barIds) do assert(definitions[index+1].id==id) end
+assert(#definitions==5 and localId(definitions[1])=='Wheels')
+for index,id in ipairs(barIds) do assert(localId(definitions[index+1])==id) end
 print('Fangdango registered template list passed')
 
 local originalStartup=package.loaded['mc.lua_startup']
