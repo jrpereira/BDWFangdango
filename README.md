@@ -68,6 +68,8 @@ for bars. A larger margin moves the layout farther from the screen edge; a bar's
   enabled, then restart the game.
 - If the layout is hard to see, try **Standard** size and the default margin.
 - If another mod rearranges the quickslot HUD, try disabling it to check for a conflict.
+- To see what the layout decided, put `DEBUG` in a `log_level.txt` file in the
+  `9_ModCore_Fangdango` folder, restart the game and check `UE4SS.log`.
 
 ## Updating or removing
 
