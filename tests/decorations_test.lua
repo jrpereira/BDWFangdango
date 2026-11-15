@@ -32,4 +32,12 @@ for _,fn in ipairs(cleanups) do fn() end
 assert(cross.opacity==1,'a live decoration gets its opacity back')
 assert(freedReads==0,'a freed decoration is never read')
 assert(service.held==0,'every handle is released')
+
+-- The walk stops once every wanted name is found: a later sibling is never read.
+local later=widget('/Game/HUD.WBP_AA_Quickslots_C_0:WidgetTree.Later')
+function later:GetFullName() self.read=true;return 'Image '..self.path end
+local found=widget('/Game/HUD.WBP_AA_Quickslots_C_0:WidgetTree.Overlay_0',
+    {widget('/Game/HUD.WBP_AA_Quickslots_C_0:WidgetTree.cross'),later})
+Helpers.hideDecorations(found,{'cross'},function() end)
+assert(found.children[1].opacity==0 and not later.read,'walk must stop once every decoration is found')
 print('PASS decorations hide in one walk and restore through weak handles, skipping freed ones')

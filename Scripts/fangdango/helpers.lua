@@ -17,13 +17,17 @@ local log=M.log
 -- Wheel decorations a layout hides, found by name in one walk of the wheel's widget tree;
 -- the Dpad sits in a nested Bindings widget that no MCT target reaches. Each one found is
 -- kept as a weak handle and its opacity restored through onCleanup: a wrapper kept past
--- the attach reads freed memory once a save-load has torn the HUD down.
+-- the attach reads freed memory once a save-load has torn the HUD down. The walk
+-- stops once every wanted name is found; the first match in depth-first order wins.
 local function findChildren(root,wanted,found)
-    if not Objects.valid(root) then return end
+    if wanted.left==0 or not Objects.valid(root) then return end
     local full=Objects.call(root,'GetFullName')
     if type(full)=='string' then
         local name=full:match('%.([^%.:]+)$')
-        if name and wanted[name] and not found[name] then found[name]=root end
+        if name and wanted[name] and not found[name] then
+            found[name]=root
+            wanted.left=wanted.left-1
+        end
     end
     -- A UserWidget is not a panel; its children hang off its WidgetTree's root.
     -- Other widgets answer WidgetTree with an invalid placeholder, not nil.
@@ -31,12 +35,17 @@ local function findChildren(root,wanted,found)
     if Objects.valid(tree) then return findChildren(tree,wanted,found) end
     local count=Objects.call(root,'GetChildrenCount')
     if type(count)~='number' then return end
-    for index=0,count-1 do findChildren(Objects.call(root,'GetChildAt',index),wanted,found) end
+    for index=0,count-1 do
+        if wanted.left==0 then return end
+        findChildren(Objects.call(root,'GetChildAt',index),wanted,found)
+    end
 end
 
 function M.hideDecorations(wheel,names,onCleanup)
-    local wanted,found={},{}
-    for _,name in ipairs(names) do wanted[name]=true end
+    local wanted,found={left=0},{}
+    for _,name in ipairs(names) do
+        if not wanted[name] then wanted[name]=true;wanted.left=wanted.left+1 end
+    end
     findChildren(wheel,wanted,found)
     for _,name in ipairs(names) do
         local decoration=found[name]
