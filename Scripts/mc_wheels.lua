@@ -26,7 +26,7 @@ local template = {
     },
     menu = {
         {id='Wheels', label='Visual Options', fields={
-            {id='.A', label='Align to Screen Edge', values={[5]='Right/Center', [6]='Bottom/Right', [7]='Bottom/Center',}, default=6},
+            {id='.A', label='Align to Screen Edge', values={[5]='Middle/Right', [6]='Bottom/Right', [7]='Bottom/Center',}, default=6},
             {id='.R', label='Relative Placement', values=Helpers.PLACEMENTS, default=1},
 
             {id='.S', label='Overall Size', values=Helpers.SIZES, default=100},

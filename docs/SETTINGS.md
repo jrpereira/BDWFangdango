@@ -20,7 +20,7 @@ Position and size both quickslot wheels on the screen.
 
 | Setting | Options | Default | Key |
 |---|---|---|---|
-| Align to Screen Edge | Right/Center (`5`), Bottom/Right (`6`), Bottom/Center (`7`) | Bottom/Right | `MCT_Fangdango_Wheels_WheelsA` |
+| Align to Screen Edge | Middle/Right (`5`), Bottom/Right (`6`), Bottom/Center (`7`) | Bottom/Right | `MCT_Fangdango_Wheels_WheelsA` |
 | Relative Placement | Overlap (`0`), Side by Side (`1`), Stacked (`2`), Perspective (`3`) | Side by Side | `MCT_Fangdango_Wheels_WheelsR` |
 | Overall Size | Smaller (`80`), Small (`90`), Standard (`100`), Large (`110`), Larger (`120`) | Standard | `MCT_Fangdango_Wheels_WheelsS` |
 | Margin to Screen Edge | 0% to 100%, in steps of 10 | 50% | `MCT_Fangdango_Wheels_WheelsM` |

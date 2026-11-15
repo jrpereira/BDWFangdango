@@ -109,7 +109,7 @@ local function check(align,x,y,x2,y2,margin)
         'attach must apply the initial focus')
 end
 -- The margin is 8+64*Margin/100 px: 0% is 8 px and 100% is 72 px.
-check(5,1712,380,1712,540) -- Right/Center: vertical edge
+check(5,1712,380,1712,540) -- Middle/Right: vertical edge
 check(6,1712,752,1712,912) -- Bottom/Right: includes vertical edge
 check(7,760,912,960,912) -- Bottom/Center: horizontal edge
 check(6,1648,688,1648,848,100)

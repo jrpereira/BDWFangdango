@@ -166,7 +166,7 @@ for _ in pairs(definition.settings) do count=count+1 end
 assert(count==4)
 local align=rows[definition.settings.WheelsA]
 local placement=rows[definition.settings.WheelsR]
-assert(align and labels(align)=='Right/Center|Bottom/Right|Bottom/Center')
+assert(align and labels(align)=='Middle/Right|Bottom/Right|Bottom/Center')
 -- Each template's fields show only while that template is selected.
 assert(gated(page.menu,selector.id,value))
 assert(placement and labels(placement)=='Overlap|Side by Side|Stacked|Perspective')

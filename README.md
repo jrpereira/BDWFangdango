@@ -11,7 +11,7 @@ Fangdango arranges your four ability slots and four consumable slots in
 bindings and keeps the key indicators current, it highlights the active wheel.
 
 - **Wheels:** choose Side by Side, Stacked, Overlap or Perspective placement,
-  anchored at Right/Center, Bottom/Right or Bottom/Center. Side by Side runs
+  anchored at Middle/Right, Bottom/Right or Bottom/Center. Side by Side runs
   along the screen edge and Stacked away from it.
 - **Bars:** Underbar, a horizontal bar at the bottom center, or Sidebar, a
   vertical bar at the bottom right. A Single bar lines up both wheels in one
