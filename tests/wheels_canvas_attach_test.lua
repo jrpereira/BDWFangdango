@@ -3,53 +3,32 @@ local Objects=require('mc.objects')
 local Widget=require('mc.widget')
 package.loaded.mc={valid=Objects.valid,same=Objects.same,parent=Objects.parent,
     call=Objects.call,load=function(name) return require('mc.'..name) end}
+-- The slot kind follows the parent's name; a canvas slot answers no class, and
+-- each kind refuses the other's setters.
+local function slotFor(parent)
+    local kind=(parent.name=='HUD root' or parent.name=='Actions')
+        and 'CanvasPanelSlot' or 'WidgetSwitcherSlot'
+    local slot={kind=kind}
+    function slot:IsValid() return true end
+    function slot:GetClass()
+        if self.kind=='CanvasPanelSlot' then return nil end
+        return {GetName=function() return self.kind end}
+    end
+    function slot:SetLayout(value) assert(self.kind=='CanvasPanelSlot');self.layout=value end
+    function slot:SetAutoSize(value) assert(self.kind=='CanvasPanelSlot');self.autoSize=value end
+    function slot:SetPosition(value) assert(self.kind=='CanvasPanelSlot');self.position=value end
+    function slot:SetSize(value) assert(self.kind=='CanvasPanelSlot');self.size=value end
+    function slot:SetPadding(value) assert(self.kind~='CanvasPanelSlot');self.padding=value end
+    function slot:SetHorizontalAlignment(value) assert(self.kind~='CanvasPanelSlot');self.horizontal=value end
+    function slot:SetVerticalAlignment(value) assert(self.kind~='CanvasPanelSlot');self.vertical=value end
+    return slot
+end
+local baseWidget=dofile('Fangdango/tests/support/widget.lua')
 local function widget(name)
-    local w={name=name,children={},RenderTransform={Translation={X=0,Y=0},Scale={X=1,Y=1}},
-        RenderTransformPivot={X=0.5,Y=0.5},opacity=1}
-    function w:IsValid() return true end
-    function w:GetFullName() return self.name end
-    function w:GetAddress() return self.name..'-address' end
-    function w:GetParent() return self.parent end
-    function w:GetChildrenCount() return #self.children end
-    function w:GetChildAt(index) return self.children[index+1] end
-    function w:GetOuter() return self.outer end
+    local w=baseWidget(name,slotFor,{RenderTransformPivot={X=0.5,Y=0.5}})
     function w:GetDesiredSize() return {X=200,Y=160} end
     function w:ForceLayoutPrepass() end
-    function w:GetRenderOpacity() return self.opacity end
-    function w:SetRenderOpacity(value) self.opacity=value end
-    w.ColorAndOpacity={R=1,G=1,B=1,A=1}
-    function w:SetColorAndOpacity(value) self.ColorAndOpacity=value end
-    function w:SetRenderTranslation(value) self.RenderTransform.Translation=value end
-    function w:SetRenderScale(value) self.RenderTransform.Scale=value end
     function w:SetActiveWidgetIndex(index) self.active=index end
-    function w:AddChild(child)
-        assert(not child.parent)
-        self.children[#self.children+1]=child
-        child.parent=self
-        local kind=(self.name=='HUD root' or self.name=='Actions')
-            and 'CanvasPanelSlot' or 'WidgetSwitcherSlot'
-        local slot={kind=kind}
-        function slot:IsValid() return true end
-        function slot:GetClass()
-            if self.kind=='CanvasPanelSlot' then return nil end
-            return {GetName=function() return self.kind end}
-        end
-        function slot:SetLayout(value) assert(self.kind=='CanvasPanelSlot');self.layout=value end
-        function slot:SetAutoSize(value) assert(self.kind=='CanvasPanelSlot');self.autoSize=value end
-        function slot:SetPosition(value) assert(self.kind=='CanvasPanelSlot');self.position=value end
-        function slot:SetSize(value) assert(self.kind=='CanvasPanelSlot');self.size=value end
-        function slot:SetPadding(value) assert(self.kind~='CanvasPanelSlot');self.padding=value end
-        function slot:SetHorizontalAlignment(value) assert(self.kind~='CanvasPanelSlot');self.horizontal=value end
-        function slot:SetVerticalAlignment(value) assert(self.kind~='CanvasPanelSlot');self.vertical=value end
-        child.Slot=slot
-        return slot
-    end
-    function w:RemoveChild(child)
-        for index,item in ipairs(self.children) do
-            if item==child then table.remove(self.children,index);child.parent=nil;return true end
-        end
-        return false
-    end
     return w
 end
 

@@ -12,40 +12,19 @@ local Manager=require('mc.managed_template')
 -- UE4SS answers an unknown property with an invalid placeholder, not nil.
 local placeholder={IsValid=function() return false end}
 placeholder.RootWidget=placeholder
+local baseWidget=dofile('Fangdango/tests/support/widget.lua')
+-- Keys and labels sit in switcher or overlay slots.
+local function panelSlot()
+    local slot={Padding={Left=0,Top=0,Right=0,Bottom=0},HorizontalAlignment=0,VerticalAlignment=0}
+    function slot:IsValid() return true end
+    function slot:GetClass() return {GetName=function() return 'WidgetSwitcherSlot' end} end
+    function slot:SetPadding(value) self.Padding=value end
+    function slot:SetHorizontalAlignment(value) self.HorizontalAlignment=value end
+    function slot:SetVerticalAlignment(value) self.VerticalAlignment=value end
+    return slot
+end
 local function widget(name)
-    local w = {
-        name=name, children={}, RenderTransform={Translation={X=0,Y=0},Scale={X=1,Y=1}},
-        opacity=1, active=0, WidgetTree=placeholder,
-    }
-    function w:IsValid() return self.invalid ~= true end
-    function w:GetFullName() return self.name end
-    function w:GetAddress() return self.name..'-address' end
-    function w:GetParent() return self.parent end
-    function w:GetChildrenCount() return #self.children end
-    function w:GetChildAt(index) return self.children[index+1] end
-    function w:AddChild(child)
-        assert(child.parent==nil)
-        self.children[#self.children+1]=child
-        self.maxChildren=math.max(self.maxChildren or 0,#self.children)
-        child.parent=self
-        child.Slot={Padding={Left=0,Top=0,Right=0,Bottom=0},HorizontalAlignment=0,VerticalAlignment=0}
-        function child.Slot:IsValid() return true end
-        function child.Slot:GetClass() return {GetName=function() return 'WidgetSwitcherSlot' end} end
-        function child.Slot:SetPadding(value) self.Padding=value end
-        function child.Slot:SetHorizontalAlignment(value) self.HorizontalAlignment=value end
-        function child.Slot:SetVerticalAlignment(value) self.VerticalAlignment=value end
-        return child.Slot
-    end
-    function w:RemoveChild(child)
-        for index,item in ipairs(self.children) do
-            if item==child then
-                table.remove(self.children,index)
-                child.parent=nil
-                return true
-            end
-        end
-        return false
-    end
+    local w=baseWidget(name,panelSlot,{active=0,WidgetTree=placeholder})
     function w:GetActiveWidgetIndex() return self.active end
     function w:SetActiveWidgetIndex(index) self.active=index end
     function w:SetActiveWidget(child)
@@ -54,12 +33,6 @@ local function widget(name)
         end
         error('active widget is not a child')
     end
-    function w:SetRenderTranslation(value) self.RenderTransform.Translation=value end
-    function w:SetRenderScale(value) self.RenderTransform.Scale=value end
-    function w:GetRenderOpacity() return self.opacity end
-    function w:SetRenderOpacity(value) self.opacity=value end
-    w.ColorAndOpacity={R=1,G=1,B=1,A=1}
-    function w:SetColorAndOpacity(value) self.ColorAndOpacity=value end
     return w
 end
 
@@ -78,32 +51,29 @@ function hudRoot:AddChild(child)
     function slot:GetClass() return {GetName=function() return 'OverlaySlot' end} end
     return slot
 end
-local function canvasAddChild(self,child)
-    assert(child.parent==nil)
-    self.children[#self.children+1]=child
-    child.parent=self
-    child.Slot={LayoutData={Offsets={Left=0,Top=0,Right=0,Bottom=0},
+local function canvasSlot()
+    local slot={LayoutData={Offsets={Left=0,Top=0,Right=0,Bottom=0},
         Anchors={Minimum={X=0,Y=0},Maximum={X=0,Y=0}},Alignment={X=0,Y=0}},
         ZOrder=0,bAutoSize=false}
-    function child.Slot:IsValid() return true end
-    function child.Slot:GetClass() return {GetName=function() return 'CanvasPanelSlot' end} end
-    function child.Slot:SetLayout(value)
+    function slot:IsValid() return true end
+    function slot:GetClass() return {GetName=function() return 'CanvasPanelSlot' end} end
+    function slot:SetLayout(value)
         self.LayoutData=value
         self.position={X=value.Offsets.Left,Y=value.Offsets.Top}
     end
-    function child.Slot:SetAutoSize(value) self.bAutoSize=value end
-    function child.Slot:SetPosition(value)
+    function slot:SetAutoSize(value) self.bAutoSize=value end
+    function slot:SetPosition(value)
         self.position=value
         self.LayoutData.Offsets.Left=value.X
         self.LayoutData.Offsets.Top=value.Y
     end
-    function child.Slot:SetSize(value)
+    function slot:SetSize(value)
         self.size=value
         self.LayoutData.Offsets.Right=value.X
         self.LayoutData.Offsets.Bottom=value.Y
     end
-    function child.Slot:SetZOrder(value) self.ZOrder=value end
-    return child.Slot
+    function slot:SetZOrder(value) self.ZOrder=value end
+    return slot
 end
 StaticFindObject=function(path)
     if path=='/Script/UMG.Overlay' or path=='/Script/UMG.CanvasPanel' then
@@ -117,7 +87,7 @@ StaticConstructObject=function(class,outer)
     createdCount=createdCount+1
     local created=widget(class.path..createdCount)
     if class.path=='/Script/UMG.CanvasPanel' then
-        created.AddChild=canvasAddChild
+        created.slotFor=canvasSlot
         function created:ForceLayoutPrepass() end
     end
     return created

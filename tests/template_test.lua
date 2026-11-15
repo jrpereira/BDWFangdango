@@ -7,63 +7,40 @@ local category=dofile('ModCoreTemplates/Scripts/categories/player_quickslots.lua
 local Objects=require('mc.objects')
 local Runtime=require('mc.runtime')
 
+-- The slot kind follows the parent's class; SetPosition can inject a failure.
+local function slotFor(parent)
+    local canvas=parent.class=='CanvasPanel'
+    local slot={Padding={Left=0,Top=0,Right=0,Bottom=0},
+        HorizontalAlignment=0,VerticalAlignment=0,
+        LayoutData={Offsets={Left=0,Top=0,Right=0,Bottom=0},
+            Anchors={Minimum={X=0,Y=0},Maximum={X=0,Y=0}},Alignment={X=0,Y=0}},
+        ZOrder=0,bAutoSize=false}
+    function slot:IsValid() return true end
+    function slot:GetClass() return {GetName=function()
+        return canvas and 'CanvasPanelSlot' or 'WidgetSwitcherSlot'
+    end} end
+    function slot:SetLayout(value) assert(canvas);self.LayoutData=value end
+    function slot:SetAutoSize(value) assert(canvas);self.bAutoSize=value end
+    function slot:SetZOrder(value) self.ZOrder=value end
+    function slot:SetPosition(value)
+        assert(canvas)
+        if self.failPosition then self.failPosition=false;error('injected position failure') end
+        self.LayoutData.Offsets.Left,self.LayoutData.Offsets.Top=value.X,value.Y
+    end
+    function slot:SetSize(value)
+        assert(canvas)
+        self.LayoutData.Offsets.Right,self.LayoutData.Offsets.Bottom=value.X,value.Y
+    end
+    function slot:SetPadding(value) self.Padding=value end
+    function slot:SetHorizontalAlignment(value) self.HorizontalAlignment=value end
+    function slot:SetVerticalAlignment(value) self.VerticalAlignment=value end
+    return slot
+end
+local baseWidget=dofile('Fangdango/tests/support/widget.lua')
 local function widget(name,class)
-    local w={name=name,class=class,children={},opacity=1,
-        RenderTransform={Translation={X=0,Y=0},Scale={X=1,Y=1}},
-        RenderTransformPivot={X=0,Y=0}}
-    function w:IsValid() return true end
-    function w:GetFullName() return self.name end
-    function w:GetAddress() return self.name end
-    function w:GetOuter() return self.outer end
-    function w:GetParent() return self.parent end
-    function w:GetChildrenCount() return #self.children end
-    function w:GetChildAt(index) return self.children[index+1] end
+    local w=baseWidget(name,slotFor,{class=class,RenderTransformPivot={X=0,Y=0}})
     function w:GetDesiredSize() return {X=200,Y=160} end
     function w:ForceLayoutPrepass() end
-    function w:GetRenderOpacity() return self.opacity end
-    function w:SetRenderOpacity(value) self.opacity=value end
-    w.ColorAndOpacity={R=1,G=1,B=1,A=1}
-    function w:SetColorAndOpacity(value) self.ColorAndOpacity=value end
-    function w:SetRenderTranslation(value) self.RenderTransform.Translation=value end
-    function w:SetRenderScale(value) self.RenderTransform.Scale=value end
-    function w:AddChild(child)
-        assert(not child.parent)
-        self.children[#self.children+1]=child
-        child.parent=self
-        local canvas=self.class=='CanvasPanel'
-        local slot={Padding={Left=0,Top=0,Right=0,Bottom=0},
-            HorizontalAlignment=0,VerticalAlignment=0,
-            LayoutData={Offsets={Left=0,Top=0,Right=0,Bottom=0},
-                Anchors={Minimum={X=0,Y=0},Maximum={X=0,Y=0}},Alignment={X=0,Y=0}},
-            ZOrder=0,bAutoSize=false}
-        function slot:IsValid() return true end
-        function slot:GetClass() return {GetName=function()
-            return canvas and 'CanvasPanelSlot' or 'WidgetSwitcherSlot'
-        end} end
-        function slot:SetLayout(value) assert(canvas);self.LayoutData=value end
-        function slot:SetAutoSize(value) assert(canvas);self.bAutoSize=value end
-        function slot:SetZOrder(value) self.ZOrder=value end
-        function slot:SetPosition(value)
-            assert(canvas)
-            if self.failPosition then self.failPosition=false;error('injected position failure') end
-            self.LayoutData.Offsets.Left,self.LayoutData.Offsets.Top=value.X,value.Y
-        end
-        function slot:SetSize(value)
-            assert(canvas)
-            self.LayoutData.Offsets.Right,self.LayoutData.Offsets.Bottom=value.X,value.Y
-        end
-        function slot:SetPadding(value) self.Padding=value end
-        function slot:SetHorizontalAlignment(value) self.HorizontalAlignment=value end
-        function slot:SetVerticalAlignment(value) self.VerticalAlignment=value end
-        child.Slot=slot
-        return slot
-    end
-    function w:RemoveChild(child)
-        for index,value in ipairs(self.children) do
-            if value==child then table.remove(self.children,index);child.parent=nil;return true end
-        end
-        return false
-    end
     return w
 end
 
