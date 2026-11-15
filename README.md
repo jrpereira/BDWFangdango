@@ -16,7 +16,9 @@ bindings and keeps the key indicators current, it highlights the active wheel.
   vertical bar at the bottom right. A Single bar lines up both wheels in one
   row or column, omits empty slots and puts key indicators on any side of the
   keys. A Double bar gives each wheel its own row or column, with one key
-  indicator per slot between them. Underbars can also sit at the bottom right,
+  indicator per slot between them; a slot with a ModCore Controls Global key
+  shows its consumable key indicator on the far side of its key instead.
+  Underbars can also sit at the bottom right,
   and a Double Sidebar at the middle of the right edge.
 - Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
   At 0% a bar lines up with the game's own HUD.

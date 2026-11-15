@@ -90,8 +90,47 @@ local function labelBox(label)
         pivotY=tonumber(Widget.property(pivot,'Y')) or 0.5}
 end
 
+-- A Double bar gives both labels of a slot one place between the rows: they
+-- name the same grouped key, so only the focused wheel's is shown. A ModCore
+-- Controls Global key gives one of them a key of its own; the consumable label
+-- then moves to the far side of its key, away from the screen edge, and both
+-- show, dimmed by focus as elsewhere. Placed again on every focus and Global
+-- keys event, after Helpers has applied the focus.
+local function pairLabels(layout,params,group,global,objects)
+    if not layout then return end
+    local focused=group and group.to
+    local tint=params.settings.focus.tint
+    local labels={objects.labels.abilityLabels,objects.labels.consumableLabels}
+    for index=1,4 do
+        local key=layout.points[2][index]
+        if layout.points[1][index] and key then
+            local own=Helpers.globalKey(global,1,index) or Helpers.globalKey(global,2,index)
+            local label=labels[2][index]
+            local offset=own and -layout.toward or layout.toward
+            local x,y=key.x,key.y
+            if layout.vertical then x=x+offset else y=y+offset end
+            center(label,labelBox(label),x,y,layout.factor)
+            if own then
+                for w=1,2 do
+                    local lit=focused==w or Helpers.globalKey(global,w,index)
+                    Widget.setOpacity(labels[w][index],lit and 1 or tint.A)
+                end
+            else
+                local keep=focused==2 and 2 or 1
+                Widget.setOpacity(labels[keep][index],1)
+                Widget.setOpacity(labels[3-keep][index],0)
+            end
+        end
+    end
+end
+
+local function globalOf(params,event)
+    local controls=params.state and params.state.controls
+    return event.global or controls and controls.global
+end
+
 -- Settings are named after the template's menu, e.g. SingleUnderbarK.
-local function onAttach(id,vertical,double,objects,params,original)
+local function onAttach(id,vertical,double,objects,params,original,store)
     local settings=params.settings
     local abilityBox=original.wheels.abilities.box
     local consumableBox=original.wheels.consumables.box
@@ -117,7 +156,8 @@ local function onAttach(id,vertical,double,objects,params,original)
 
     -- Lay out the shown keys in bar order: L, T, R, B of each wheel. A Single
     -- bar packs them; a Double bar keeps each slot's place, so a key and the one
-    -- beside it in the other row share a binding. An empty key may have no size,
+    -- beside it in the other row share a binding unless one of them has a
+    -- Global key (see pairLabels). An empty key may have no size,
     -- so the pitch comes from the first shown key.
     local shown,counts,first={},{},nil
     for w=1,2 do
@@ -222,6 +262,7 @@ local function onAttach(id,vertical,double,objects,params,original)
     lineX,lineY=lineX-stepX*margin,lineY-stepY*margin
     log.debug(id,': margin ',margin,'%, step ',stepX,' x ',stepY)
     local groupHeight=math.max(abilityBox.height,consumableBox.height)
+    local points={{},{}}
 
     for w=1,2 do
         local position=positions[w]
@@ -247,6 +288,7 @@ local function onAttach(id,vertical,double,objects,params,original)
             if place then
                 local x,y=fan(w,place,counts[w],double,vertical,pitchX,pitchY,cross)
                 x,y=x+dx,y+dy
+                points[w][index]={x=x,y=y}
                 center(button,Widget.measure(button),x,y,scale)
                 -- Text is never mirrored.
                 center(label,labelBox(label),x+labelX,y+labelY,factor)
@@ -259,8 +301,15 @@ local function onAttach(id,vertical,double,objects,params,original)
     -- The native prompt describes swapping the switcher's active panel; bars
     -- show both wheels at once.
     Widget.setOpacity(objects.change_prompt,0)
+    if double then
+        local layout={points=points,toward=cross/2,vertical=vertical,factor=factor}
+        store.layout=layout
+        params.onCleanup(function() if store.layout==layout then store.layout=nil end end)
+    end
     -- A rebuild restores native opacity; apply the current focus.
-    Helpers.onGroupFocus(params,{name='controls.group.focus',group=params.state.controls.group},objects)
+    local event={name='controls.group.focus',group=params.state.controls.group}
+    Helpers.onGroupFocus(params,event,objects)
+    pairLabels(store.layout,params,event.group,globalOf(params,event),objects)
     return original
 end
 
@@ -281,6 +330,8 @@ local function bar(id,label,vertical,double,indicators)
         table.insert(fields,1,{id='.A', label='Position', values=positionChoices[vertical],
             default=vertical and BOTTOM_RIGHT or BOTTOM_CENTER})
     end
+    -- The last attach's Double layout, for its events.
+    local store={}
     return {
         id=id,
         label=label,
@@ -308,10 +359,19 @@ local function bar(id,label,vertical,double,indicators)
             },
         },
         menu={{id=id, label=label, fields=fields}},
-        events={['controls.group.focus']=Helpers.onGroupFocus,
-            ['controls.slots.global']=Helpers.onGlobalKeys},
+        events={
+            ['controls.group.focus']=function(params,event,objects)
+                Helpers.onGroupFocus(params,event,objects)
+                pairLabels(store.layout,params,event.group,globalOf(params,event),objects)
+            end,
+            ['controls.slots.global']=function(params,event,objects)
+                Helpers.onGlobalKeys(params,event,objects)
+                local controls=params.state and params.state.controls
+                pairLabels(store.layout,params,controls and controls.group,event.global,objects)
+            end,
+        },
         attach=function(objects,params,original)
-            return onAttach(id,vertical,double,objects,params,original)
+            return onAttach(id,vertical,double,objects,params,original,store)
         end,
     }
 end

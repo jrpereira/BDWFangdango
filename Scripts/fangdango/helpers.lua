@@ -74,6 +74,7 @@ local slotGroups={{buttons='abilitySlots',labels='abilityLabels'},
 local function globalKey(global,wheel,slot)
     return type(global)=='table' and type(global[wheel])=='table' and global[wheel][slot]==true
 end
+M.globalKey=globalKey
 
 -- controls.group.focus: tint each key of the wheel without focus with
 -- settings.focus.tint, and fade its binding label to the tint's opacity. A key

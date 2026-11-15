@@ -432,12 +432,20 @@ lined(100,80,true,-60,-421,1,true)
 -- other row share a binding: ability T and R sit at -0.5 and 0.5 pitches,
 -- consumables at all four. Consumables are one row (or column) further from
 -- the edge, by the key plus two spacings: keys overlap each label by half of
--- it. Both rows' labels sit halfway between them, so each pair overlaps.
+-- it. Both rows' labels sit halfway between them; a pair names one grouped
+-- key, so only the focused wheel's label shows. own[index] marks a slot whose
+-- labels differ through a Global key: its consumable label moves to the far
+-- side of its key and both show.
 local placed={ability={nil,-0.5,0.5,nil},consumable={-1.5,-0.5,0.5,1.5}}
-local function doubled(vertical,dx,dy,cross)
+local function doubled(vertical,dx,dy,cross,focused,own)
+    focused=focused or 1
+    own=own or {}
     for _,kind in ipairs({'ability','consumable'}) do
-        local toward=kind=='ability' and -cross/2 or cross/2
         for index=1,4 do
+            local toward=kind=='ability' and -cross/2 or cross/2
+            if kind=='consumable' and own[index] then toward=-toward end
+            local paired=placed.ability[index] and placed.consumable[index]
+            local visible=not paired or own[index] or (kind=='ability')==(focused==1)
             local label=objects.labels[kind..'Labels'][index]
             local a=placed[kind][index]
             if a then
@@ -451,16 +459,18 @@ local function doubled(vertical,dx,dy,cross)
                 near(x,ex);near(y,ey)
                 local lx,ly=centerOf(label)
                 if vertical then near(lx,ex+toward);near(ly,ey) else near(lx,ex);near(ly,ey+toward) end
-                assert(label.opacity>0,kind..' shown label must stay visible')
+                assert((label.opacity>0)==(visible==true),kind..' label '..index..' visibility')
             else
                 assert(label.opacity==0,kind..' empty slot label must be hidden')
             end
         end
     end
-    -- Labels of the same slot meet: ability T over consumable T.
-    local ax,ay=centerOf(objects.labels.abilityLabels[2])
-    local cx,cy=centerOf(objects.labels.consumableLabels[2])
-    near(ax,cx);near(ay,cy)
+    -- Labels of the same slot meet unless a Global key parts them.
+    if not own[2] then
+        local ax,ay=centerOf(objects.labels.abilityLabels[2])
+        local cx,cy=centerOf(objects.labels.consumableLabels[2])
+        near(ax,cx);near(ay,cy)
+    end
 end
 -- Double Underbar: labels are 20 high, so consumables sit 80+2*6=92 above, and
 -- the labels between the rows hang from the line by their top edge:
@@ -474,6 +484,27 @@ focusIs(1)
 barsById.DoubleUnderbar.events['controls.group.focus'](params(100,0,7,nil,nil,nil,true),
     {name='controls.group.focus',group={from=1,to=2}},objects)
 focusIs(2)
+-- Focus swaps which label of a shared pair shows.
+doubled(false,0,-24,92,2)
+-- A Global key on ability T gives that slot two keys: the consumable label
+-- moves above its key and both show, the unfocused one dimmed.
+local doubleGlobal={controls={group={from=2,to=1},
+    global={[1]={false,true,false,false},[2]={false,false,false,false}}}}
+assert(layout(params(100,0,7,doubleGlobal,nil,nil,true)))
+doubled(false,0,-24,92,1,{[2]=true})
+near(objects.labels.abilityLabels[2].opacity,1)
+near(objects.labels.consumableLabels[2].opacity,dim)
+-- A Global key on consumable T parts the pair the same way; the Global label
+-- stays lit whatever the focus.
+barsById.DoubleUnderbar.events['controls.slots.global'](params(100,0,7,doubleGlobal,nil,nil,true),
+    {name='controls.slots.global',global={[1]={false,false,false,false},[2]={false,true,false,false}}},objects)
+doubled(false,0,-24,92,1,{[2]=true})
+near(objects.labels.abilityLabels[2].opacity,1)
+near(objects.labels.consumableLabels[2].opacity,1)
+-- Without Global keys the pair shares one place again.
+barsById.DoubleUnderbar.events['controls.slots.global'](params(100,0,7,doubleGlobal,nil,nil,true),
+    {name='controls.slots.global',global={}},objects)
+doubled(false,0,-24,92,1)
 -- Double Sidebar: labels are 30 wide, so consumables sit 100+2*7.5=115 further
 -- left; the labels between the columns center on the X line (-60+115/2=-2.5),
 -- and the bottom one on the Y line (-80-1.5*86=-209).
