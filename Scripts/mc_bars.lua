@@ -150,8 +150,9 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
     -- The wheels' shared box sits flush with the edge; the keys then move onto
     -- the reference lines.
     local unit=Helpers.unit(params.screen)
-    local positions=Helpers.pair({WheelsA=align,WheelsR=0,WheelsS=100},
-        params.screen,abilityBox,consumableBox)
+    local groupWidth=math.max(abilityBox.width,consumableBox.width)
+    local groupHeight=math.max(abilityBox.height,consumableBox.height)
+    local left,top=Helpers.edge(params.screen,align,0,groupWidth,groupHeight)
     local wheels={objects.wheels.abilities,objects.wheels.consumables}
     local slots={objects.buttons.abilitySlots,objects.buttons.consumableSlots}
     local labels={objects.labels.abilityLabels,objects.labels.consumableLabels}
@@ -266,20 +267,17 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
     end
     lineX,lineY=lineX-stepX*margin,lineY-stepY*margin
     log.debug(id,': margin ',margin,'%, step ',stepX,' x ',stepY)
-    local groupWidth=math.max(abilityBox.width,consumableBox.width)
-    local groupHeight=math.max(abilityBox.height,consumableBox.height)
     local points={{},{}}
 
     for w=1,2 do
-        local position=positions[w]
-        local placed, reason=Widget.canvasPosition(wheels[w], position.box, position.x, position.y, 1)
+        local placed, reason=Widget.canvasPosition(wheels[w], boxes[w], left, top, 1)
         assert(placed,reason)
         Helpers.hideDecorations(wheels[w],decorationNames[w],params.onCleanup)
 
         -- Anchors meet the reference lines; a row at Bottom/Center centers on
         -- the shared box, and a column at Middle/Right too.
-        local dx=lineX-(position.x+boxes[w].width/2)-anchorX
-        local dy=lineY-(position.y+boxes[w].height/2)-anchorY
+        local dx=lineX-(left+boxes[w].width/2)-anchorX
+        local dy=lineY-(top+boxes[w].height/2)-anchorY
         if align==BOTTOM_CENTER then dx=groupWidth/2-boxes[w].width/2 end
         if align==MIDDLE_RIGHT then dy=groupHeight/2-boxes[w].height/2 end
         -- A Double bar's label sits halfway towards the other row.

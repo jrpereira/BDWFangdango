@@ -142,15 +142,15 @@ function M.unit(screen)
 end
 
 -- Margin to Screen Edge, in 1080p pixels: 8+64*Margin/100, so 0% is 8 and
--- 100% is 72. Without a setting the layout is flush with the edge.
+-- 100% is 72.
 local function marginPixels(percent)
-    if percent==nil then return 0 end
     return 8+64*percent/100
 end
 
-function M.edge(screen,align,marginPercent,width,height)
+-- The top-left of a width x height box at an edge, pixels (1080p) from it.
+function M.edge(screen,align,pixels,width,height)
     local direction=Widget.relative(align)
-    local margin=marginPixels(marginPercent)*M.unit(screen)
+    local margin=pixels*M.unit(screen)
     return (direction.X+1)*(screen.width-width)/2-direction.X*margin,
         (1-direction.Y)*(screen.height-height)/2+direction.Y*margin
 end
@@ -173,7 +173,7 @@ function M.pair(settings,screen,ability,consumable)
     end
     local width=math.max(first.width,x2+second.width)
     local height=math.max(first.height,y2+second.height)
-    local left,top=M.edge(screen,settings.WheelsA,settings.WheelsM,width,height)
+    local left,top=M.edge(screen,settings.WheelsA,marginPixels(settings.WheelsM),width,height)
     return {{x=left,y=top,box=ability},{x=left+x2,y=top+y2,box=consumable}},scale
 end
 
