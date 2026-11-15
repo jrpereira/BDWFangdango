@@ -603,9 +603,11 @@ for _,kind in ipairs({'ability','consumable'}) do
         near(button.RenderTransform.Translation.X,0);near(button.RenderTransform.Scale.X,1)
     end
 end
--- A shown key without a size must not partially move either group.
+-- A shown key without a size must not partially move either group, and waits
+-- as not ready, which MCT retries without reporting an error.
 objects.buttons.abilitySlots[2].desired.X=0
-assert(not manager:attach(switcher,objects,params()))
+local attached,why=manager:attach(switcher,objects,params())
+assert(not attached and tostring(why):match('^not_ready:'),tostring(why))
 assert(switcher:GetChildrenCount()==0)
 assert(sharedManager:detach(switcher))
 assert(switcher:GetChildAt(0)==objects.abilities and switcher:GetChildAt(1)==objects.consumables)

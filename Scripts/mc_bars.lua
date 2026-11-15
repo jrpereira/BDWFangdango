@@ -80,6 +80,17 @@ local function center(widget,box,x,y,scale)
     Widget.position(widget,box,x+box.width*(1-factor)/2,y+box.height*(1-factor)/2,scale)
 end
 
+-- A shown key without a layout size yet waits: MCT retries a 'not_ready'
+-- attach on its next lifecycle event without reporting an error.
+local function measureKey(button)
+    local ok,box=pcall(Widget.measure,button)
+    if ok then return box end
+    if tostring(box):find('layout size is not ready',1,true) then
+        error('not_ready: key layout',0)
+    end
+    error(box,0)
+end
+
 -- A label may be empty while its key is unbound; it still moves with its key.
 local function labelBox(label)
     local ok,box=pcall(Widget.measure,label)
@@ -166,7 +177,7 @@ local function onAttach(id,vertical,double,objects,params,original,store)
             if filled(slots[w][index],w) then
                 counts[w]=counts[w]+1
                 shown[w][index]=double and index or counts[w]
-                first=first or Widget.measure(slots[w][index])
+                first=first or measureKey(slots[w][index])
             end
         end
     end
@@ -289,7 +300,7 @@ local function onAttach(id,vertical,double,objects,params,original,store)
                 local x,y=fan(w,place,counts[w],double,vertical,pitchX,pitchY,cross)
                 x,y=x+dx,y+dy
                 points[w][index]={x=x,y=y}
-                center(button,Widget.measure(button),x,y,scale)
+                center(button,measureKey(button),x,y,scale)
                 -- Text is never mirrored.
                 center(label,labelBox(label),x+labelX,y+labelY,factor)
             else
