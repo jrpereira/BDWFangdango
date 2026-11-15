@@ -146,6 +146,36 @@ for _,case in ipairs({{3840,2160,1,144},{1920,1080,2,72}}) do
     assert(math.abs(abilitySlot.position.X-(width-200-margin))<1e-6
         and math.abs(abilitySlot.position.Y-(height-320-margin))<1e-6,'the margin keeps its share of the screen')
 end
+-- Every placement at every edge and three sizes. Side by Side runs along the
+-- edge, vertical where it has a right side (the corner included), and Stacked
+-- away from it; Perspective offsets the consumables half a wheel both ways and
+-- Overlap shares one place. The group keeps the 8 px margin of 0%. A scaled
+-- wheel keeps its center pivot, so its drawn top-left is the slot position
+-- moved by half the size it lost.
+local function near(a,b) assert(math.abs(a-b)<1e-6,tostring(a)..' ~= '..tostring(b)) end
+local function drawn(slot,wheel,s)
+    near(wheel.RenderTransform.Scale.X,s)
+    return slot.position.X+100*(1-s),slot.position.Y+80*(1-s)
+end
+for _,size in ipairs({80,100,120}) do
+    local s=size/100
+    local W,H=200*s,160*s
+    for _,align in ipairs({5,6,7}) do
+        local right=align~=7
+        local offsets={[0]={0,0},[1]=right and {0,H} or {W,0},
+            [2]=right and {W,0} or {0,H},[3]={W/2,H/2}}
+        for placement=0,3 do
+            local dx,dy=table.unpack(offsets[placement])
+            local w,h=dx+W,dy+H
+            local x=right and 1920-w-8 or (1920-w)/2
+            local y=align==5 and (1080-h)/2 or 1080-h-8
+            assert(attach(align,placement,nil,0,size)==original)
+            local ax,ay=drawn(abilitySlot,abilities,s)
+            local cx,cy=drawn(consumableSlot,consumables,s)
+            near(ax,x);near(ay,y);near(cx,x+dx);near(cy,y+dy)
+        end
+    end
+end
 attach(6,0)
 assert(prompt.opacity==1,'overlap must retain the native swap prompt')
 assert(wheelAlpha(1)==1 and wheelAlpha(2)==1,'overlapping wheels keep the native look')

@@ -6,7 +6,7 @@ Arrange your ability and consumable slots as wheels or bars, with sizes and scre
 
 [b]What you can change[/b]
 [list]
-[*][b]Wheels:[/b] choose Side by Side, Stacked, Overlap or Perspective placement. Anchor them at Right/Center, Bottom/Right or Bottom/Center.
+[*][b]Wheels:[/b] choose Side by Side, Stacked, Overlap or Perspective placement. Anchor them at Right/Center, Bottom/Right or Bottom/Center. Side by Side runs along the screen edge and Stacked away from it.
 [*][b]Bars:[/b] line up your slots horizontally at the bottom center (Underbar) or vertically at the bottom right (Sidebar). Single bars put both wheels in one row or column and omit empty slots; Double bars give each wheel its own. Underbars can also sit at the bottom right, and a Double Sidebar at the middle of the right edge.
 [*][b]Key indicators:[/b] put them on any side of a Single bar's keys. A Double bar shows one per slot, between its two rows or columns; a slot with a ModCore Controls Global key shows its consumable key indicator on the far side of its key instead.
 [*][b]Size and margin:[/b] choose from five sizes, from Smaller to Larger, and adjust the distance from the screen edge. At 0% a bar lines up with the game's own HUD.

@@ -148,16 +148,19 @@ function M.edge(screen,align,marginPercent,width,height)
         (1-direction.Y)*(screen.height-height)/2+direction.Y*margin
 end
 
+-- Relative Placement: Side by Side runs along the screen edge and Stacked away
+-- from it; an edge with a right side, the corner included, runs vertically.
+-- Perspective offsets the consumables half a wheel both ways; Overlap shares
+-- one place.
 function M.pair(settings,screen,ability,consumable)
     local scale=settings.WheelsS/100
     local first={width=ability.width*scale,height=ability.height*scale}
     local second={width=consumable.width*scale,height=consumable.height*scale}
     local direction=Widget.relative(settings.WheelsA)
     local x2,y2=0,0
-    if settings.WheelsR==1 then
-        if direction.X~=0 then y2=first.height else x2=first.width end
-    elseif settings.WheelsR==2 then
-        y2=first.height
+    if settings.WheelsR==1 or settings.WheelsR==2 then
+        local vertical=(direction.X~=0)==(settings.WheelsR==1)
+        if vertical then y2=first.height else x2=first.width end
     elseif settings.WheelsR==3 then
         x2,y2=first.width/2,first.height/2
     end
