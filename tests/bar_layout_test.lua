@@ -548,6 +548,15 @@ local big=params()
 big.screen={width=3840,height=2160,scale=1,center=1920,middle=1080}
 assert(layout(big))
 lined(100,80,false,nil,-128-30)
+-- Both wheels share the box's left edge; a wider consumable wheel still
+-- leaves the Bottom/Center row centered on the box: the ability wheel's
+-- center sits 50 px left of the box's.
+local nativeSize=objects.consumables.GetDesiredSize
+function objects.consumables:GetDesiredSize() return {X=300,Y=160} end
+assert(layout(params()))
+near(offset('ability',2),50-1.5*107.5)
+near(offset('consumable',1),0.5*107.5)
+objects.consumables.GetDesiredSize=nativeSize
 assert(layout(params()))
 local lastKey=objects.buttons.consumableSlots[4]
 local setScale=lastKey.SetRenderScale
