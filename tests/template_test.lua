@@ -155,9 +155,8 @@ assert(ability.Slot.LayoutData.Offsets.Top==updatedY
     and next(runtime:attachments(template.id)),
     'failed settings update must recover the previous successful layout')
 local dim=template.settings.focus.tint.A
--- A wheel's dimming is that of its keys; the wheel and every key dim alike.
+-- A wheel's dimming is that of its keys; every key dims alike.
 local function alpha(w)
-    assert(w.ColorAndOpacity.A==1,'the wheel itself stays untinted')
     local keysOf=w==ability and keys[1] or keys[2]
     local labelsOf=w==ability and keyLabels[1] or keyLabels[2]
     for index=1,4 do

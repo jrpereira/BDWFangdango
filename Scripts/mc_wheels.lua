@@ -17,7 +17,7 @@ local template = {
     -- switcher into its canvas. This template only owns their layout, the swap
     -- prompt and the focus tint of each key and its label.
     objects={
-        wheels={abilities={},consumables={}, properties={'box','slot','position','size','opacity','color'}},
+        wheels={abilities={},consumables={}, properties={'box','slot','position','size','opacity'}},
         change_prompt={properties={'opacity'}},
         buttons={abilitySlots=Helpers.BUTTONS.abilitySlots,consumableSlots=Helpers.BUTTONS.consumableSlots,
             properties={'color'}},

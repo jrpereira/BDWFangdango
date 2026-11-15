@@ -87,7 +87,7 @@ M.globalKey=globalKey
 
 -- controls.group.focus: tint each key of the wheel without focus with
 -- settings.focus.tint, and fade its binding label to the tint's opacity. A key
--- with a Global key keeps the native look; the wheel itself is never tinted.
+-- with a Global key keeps the native look.
 -- A tint scales the key's own colours, so it looks the same over any background.
 -- A label a layout hid (opacity 0) stays hidden.
 local UNTINTED={R=1,G=1,B=1,A=1}
@@ -96,13 +96,11 @@ function M.onGroupFocus(params,event,objects)
     if focused~=1 and focused~=2 then return end
     local controls=params.state and params.state.controls
     local global=event.global or controls and controls.global
-    local wheels=objects.wheels
     -- Overlapping Wheels keep the native look.
     local overlap=params.settings.WheelsR==0
     local tint=params.settings.focus.tint
     log.trace('focus wheel ',focused,overlap and ' (overlap, no tint)' or '')
-    for index,name in ipairs({'abilities','consumables'}) do
-        if wheels and wheels[name] then Widget.setColor(wheels[name],UNTINTED) end
+    for index=1,2 do
         local group=slotGroups[index]
         local buttons=objects.buttons and objects.buttons[group.buttons] or {}
         local labels=objects.labels and objects.labels[group.labels] or {}

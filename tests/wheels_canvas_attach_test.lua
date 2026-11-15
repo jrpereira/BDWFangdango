@@ -92,10 +92,9 @@ local objects={actions=actions,
 local tint=template.settings.focus.tint
 local dim=tint.A
 local function alpha(w) return w.ColorAndOpacity.A end
--- A wheel reads as dimmed when each of its keys is tinted and each label faded;
--- the wheel itself is never tinted. lit[index] marks a key with a Global key.
+-- A wheel reads as dimmed when each of its keys is tinted and each label faded.
+-- lit[index] marks a key with a Global key.
 local function wheelAlpha(w,lit)
-    assert(alpha(w==1 and abilities or consumables)==1,'the wheel itself stays untinted')
     local keys=w==1 and buttons.abilitySlots or buttons.consumableSlots
     local names=w==1 and labels.abilityLabels or labels.consumableLabels
     local value

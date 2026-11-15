@@ -234,11 +234,10 @@ local function layout(p)
     return wanted:attach(switcher,objects,p)
 end
 local function near(a,b) assert(math.abs(a-b)<0.00001,tostring(a)..' ~= '..tostring(b)) end
--- Focus tints each key of the other wheel and fades its shown label; the wheels
--- themselves stay untinted. lit[kind][index] marks a key with a Global key.
+-- Focus tints each key of the other wheel and fades its shown label.
+-- lit[kind][index] marks a key with a Global key.
 local dim=bar.settings.focus.tint.A
 local function focusIs(group,lit)
-    near(objects.abilities.ColorAndOpacity.A,1);near(objects.consumables.ColorAndOpacity.A,1)
     for w,kind in ipairs({'ability','consumable'}) do
         for index=1,4 do
             local on=w==group or (lit and lit[kind] and lit[kind][index])
@@ -566,7 +565,6 @@ assert(not layout(params(110)))
 lastKey.SetRenderScale=setScale
 assert(active==manager and manager:detach(switcher))
 assert(objects.change_prompt.opacity==1,'detach must restore the native swap prompt')
-near(objects.consumables.ColorAndOpacity.A,1)
 for _,kind in ipairs({'ability','consumable'}) do
     for index=1,4 do
         near(objects.buttons[kind..'Slots'][index].ColorAndOpacity.A,1)
