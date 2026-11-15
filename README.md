@@ -23,7 +23,7 @@ bindings and keeps the key indicators current, it highlights the active wheel.
   and a Double Sidebar at the middle of the right edge.
 - Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
   At 0% a bar lines up with the game's own HUD.
-  The inactive wheel's keys dim with a blue tint and their binding labels fade,
+- The inactive wheel's keys dim with a blue tint and their binding labels fade,
   except in Overlap placement. Keys with a ModCore Controls Global key stay lit.
 
 ## Requirements
@@ -50,8 +50,8 @@ Install all of these:
    UE4SS setup or mod manager and restart the game.
 3. Open **Mod Settings › Controls › Visuals** or the **Quickslot Fangdango**
    page. In the **Quickslots** picker, choose
-   **Wheels**, a **Single** or **Double Underbar**, or a **Single** or **Double
-   Sidebar**, adjust to taste and select **Apply**.
+   **Wheels Plenty**, a **Single** or **Double Underbar**, or a **Single** or
+   **Double Sidebar**, adjust to taste and select **Apply**.
 
 Every setting, its options and the `config.ini` key it is saved under are listed
 in `SETTINGS.md`, next to this file in the installed mod.
