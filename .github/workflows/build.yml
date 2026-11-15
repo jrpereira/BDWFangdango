@@ -18,10 +18,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: Fangdango
+      # Test against the oldest ModCoreTemplates release mod.json accepts, not
+      # its main: '1.8.?+' packages as 1.8.0+, so the tag is v1.8.0.
+      - name: Find the declared ModCoreTemplates minimum
+        id: mct
+        run: |
+          ref=$(python3 -c "import json; deps=json.load(open('Fangdango/mod.json'))['dependencies']; v=next(d['version'] for d in deps if d['id']=='ModCoreTemplates'); print('v'+v.rstrip('+').replace('?','0'))")
+          echo "ModCoreTemplates $ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           repository: jrpereira/ModCoreTemplates
-          ref: main
+          ref: ${{ steps.mct.outputs.ref }}
           path: ModCoreTemplates
       - name: Install Lua 5.4
         run: sudo apt-get update && sudo apt-get install -y lua5.4
