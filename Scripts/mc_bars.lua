@@ -11,11 +11,6 @@ local SPC=0.075
 local LABEL_OVERLAP=0.5
 -- Pixels between a key and its label beside it, scaled like the distances below.
 local LABEL_GAP=4
--- Slots are listed Left, Top, Right, Bottom; the bar runs L, T, R, B per wheel.
-local sequence={1,2,3,4}
--- Key Indicators values by orientation: each lists its bar's own sides first.
-local sides={horizontal={[0]='above','below','left','right'},
-    vertical={[0]='left','right','above','below'}}
 
 -- Screen edges, numbered as MCT's alignments, that a bar's Position offers.
 local MIDDLE_RIGHT,BOTTOM_RIGHT,BOTTOM_CENTER=5,6,7
@@ -76,8 +71,7 @@ local function center(widget,box,x,y,scale)
     slot:SetPadding({Left=0,Top=0,Right=0,Bottom=0})
     slot:SetHorizontalAlignment(2)
     slot:SetVerticalAlignment(2)
-    local factor=math.abs(scale)
-    Widget.position(widget,box,x+box.width*(1-factor)/2,y+box.height*(1-factor)/2,scale)
+    Widget.position(widget,box,x+box.width*(1-scale)/2,y+box.height*(1-scale)/2,scale)
 end
 
 -- A shown key without a layout size yet waits: MCT retries a 'not_ready'
@@ -120,7 +114,7 @@ local function pairLabels(layout,params,group,global,objects)
             local offset=own and -layout.toward or layout.toward
             local x,y=key.x,key.y
             if layout.vertical then x=x+offset else y=y+offset end
-            center(label,labelBox(label),x,y,layout.factor)
+            center(label,labelBox(label),x,y,layout.scale)
             if own then
                 for w=1,2 do
                     local lit=focused==w or Helpers.globalKey(global,w,index)
@@ -141,7 +135,7 @@ local function globalOf(params,event)
 end
 
 -- Settings are named after the template's menu, e.g. SingleUnderbarK.
-local function onAttach(id,vertical,double,objects,params,original,store)
+local function onAttach(id,vertical,double,indicators,objects,params,original,store)
     local settings=params.settings
     local abilityBox=original.wheels.abilities.box
     local consumableBox=original.wheels.consumables.box
@@ -163,9 +157,9 @@ local function onAttach(id,vertical,double,objects,params,original,store)
     local labels={objects.labels.abilityLabels,objects.labels.consumableLabels}
 
     local scale=settings[id..'S']/100
-    local factor=math.abs(scale)
 
-    -- Lay out the shown keys in bar order: L, T, R, B of each wheel. A Single
+    -- Slots are listed Left, Top, Right, Bottom; lay out the shown keys in bar
+    -- order: L, T, R, B of each wheel. A Single
     -- bar packs them; a Double bar keeps each slot's place, so a key and the one
     -- beside it in the other row share a binding unless one of them has a
     -- Global key (see pairLabels). An empty key may have no size,
@@ -173,7 +167,7 @@ local function onAttach(id,vertical,double,objects,params,original,store)
     local shown,counts,first={},{},nil
     for w=1,2 do
         shown[w],counts[w]={},0
-        for _,index in ipairs(sequence) do
+        for index=1,4 do
             if filled(slots[w][index],w) then
                 counts[w]=counts[w]+1
                 shown[w][index]=double and index or counts[w]
@@ -184,14 +178,14 @@ local function onAttach(id,vertical,double,objects,params,original,store)
     log.debug(id,': align ',align,', size ',settings[id..'S'],'%, keys shown ',
         counts[1],' ability, ',counts[2],' consumable')
     if not first then log.debug(id,': no key shown; nothing to lay out') end
-    local W,H=first and first.width*factor or 0,first and first.height*factor or 0
+    local W,H=first and first.width*scale or 0,first and first.height*scale or 0
     local pitchX,pitchY=W*(1+SPC),H*(1+SPC)
     -- The largest shown label sets the labels' reach.
     local labelW,labelH=0,0
     for w=1,2 do
         for index in pairs(shown[w]) do
             local box=labelBox(labels[w][index])
-            labelW,labelH=math.max(labelW,box.width*factor),math.max(labelH,box.height*factor)
+            labelW,labelH=math.max(labelW,box.width*scale),math.max(labelH,box.height*scale)
         end
     end
 
@@ -223,8 +217,9 @@ local function onAttach(id,vertical,double,objects,params,original,store)
         end
     else
         -- Binding labels sit centered on their chosen edge of the key.
-        local side=vertical and (sides.vertical[settings[id..'K']] or 'left')
-            or (sides.horizontal[settings[id..'K']] or 'above')
+        -- Key Indicators name a side, listing the bar's own sides first.
+        local chosen=indicators[settings[id..'K']]
+        local side=chosen and chosen:lower() or (vertical and 'left' or 'above')
         labelX=side=='left' and -W/2 or side=='right' and W/2 or 0
         labelY=side=='above' and -H/2 or side=='below' and H/2 or 0
         -- A column's labels on its left end on the line along it, at the edge
@@ -301,8 +296,7 @@ local function onAttach(id,vertical,double,objects,params,original,store)
                 x,y=x+dx,y+dy
                 points[w][index]={x=x,y=y}
                 center(button,measureKey(button),x,y,scale)
-                -- Text is never mirrored.
-                center(label,labelBox(label),x+labelX,y+labelY,factor)
+                center(label,labelBox(label),x+labelX,y+labelY,scale)
             else
                 -- An empty key draws nothing; hide its label too.
                 Widget.setOpacity(label,0)
@@ -313,7 +307,7 @@ local function onAttach(id,vertical,double,objects,params,original,store)
     -- show both wheels at once.
     Widget.setOpacity(objects.change_prompt,0)
     if double then
-        local layout={points=points,toward=cross/2,vertical=vertical,factor=factor}
+        local layout={points=points,toward=cross/2,vertical=vertical,scale=scale}
         store.layout=layout
         params.onCleanup(function() if store.layout==layout then store.layout=nil end end)
     end
@@ -382,7 +376,7 @@ local function bar(id,label,vertical,double,indicators)
             end,
         },
         attach=function(objects,params,original)
-            return onAttach(id,vertical,double,objects,params,original,store)
+            return onAttach(id,vertical,double,indicators,objects,params,original,store)
         end,
     }
 end
