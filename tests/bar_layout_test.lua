@@ -94,7 +94,7 @@ StaticConstructObject=function(class,outer)
 end
 local objects={switcher=switcher,hud_root=hudRoot,change_prompt=widget('Change prompt'),
     wheels={},panels={},buttons={abilitySlots={},consumableSlots={}},
-    labels={abilityLabels={},consumableLabels={}},decorations={}}
+    labels={abilityLabels={},consumableLabels={}}}
 local nativeBoxes={}
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel,box,panel=widget(kind),widget(kind..'Box'),widget(kind..'Panel')
@@ -113,9 +113,7 @@ for _,kind in ipairs({'ability','consumable'}) do
     if kind=='ability' then
         wheel.Darken=widget(kind..'.Darken');wheel.Glow=widget(kind..'.Glow')
         panel:AddChild(wheel.Darken);panel:AddChild(wheel.Glow)
-        objects.decorations.ability_darken,objects.decorations.ability_glow=wheel.Darken,wheel.Glow
     end
-    objects.decorations[kind..'_cross']=wheel.cross
     box.WidthOverride,box.HeightOverride=321,234
     box.bOverride_WidthOverride,box.bOverride_HeightOverride=false,true
     function box:SetWidthOverride(value) self.WidthOverride=value;self.bOverride_WidthOverride=true end
@@ -185,13 +183,13 @@ local manager=managers.SingleUnderbar
 -- double picks the Double version. Each names its settings after its menu.
 -- ModCore Controls has reported abilities (group 1) as focused. Single key
 -- indicators default Above (Underbar) and Left (Sidebar).
-local function params(size,margin,orientation,state,kh,kv,double,position)
+-- Double bars also merge their key indicators unless merge is 0.
+local function params(size,margin,orientation,state,kh,kv,double,position,merge)
     orientation=orientation or 7
     local id=(double and 'Double' or 'Single')..(orientation==5 and 'Sidebar' or 'Underbar')
     local settings={[id..'S']=size or 'standard',[id..'M']=margin or 0,focus=bar.settings.focus}
-    if not double then
-        settings[id..'K']=(orientation==5 and kv or kh) or (orientation==5 and 'left' or 'above')
-    end
+    settings[id..'K']=(orientation==5 and kv or kh) or (orientation==5 and 'left' or 'above')
+    if double then settings[id..'J']=merge or 1 end
     if double or orientation~=5 then
         settings[id..'A']=position or (orientation==5 and 'bottom_right' or 'bottom_center')
     end
@@ -404,20 +402,19 @@ lined(100,80,true,-60,-421,1,true)
 -- other row share a binding: ability T and R sit at -0.5 and 0.5 pitches,
 -- consumables at all four. Consumables are one row (or column) further from
 -- the edge, by the key plus two spacings: keys overlap each label by half of
--- it. Both rows' labels sit halfway between them; a pair names one grouped
--- key, so only the focused wheel's label shows. own[index] marks a slot whose
--- labels differ through a Global key: its consumable label moves to the far
--- side of its key and both show.
+-- it. Merged, both rows' labels sit halfway between them; a pair names one
+-- grouped key, so only the focused wheel's label shows, and a label without a
+-- pair shows dimmed with its wheel. Unmerged (side given), every shown label
+-- sits on that side of its own key, as in a Single bar, and shows, dimmed
+-- unless its wheel has focus or lit[kind][index] marks a Global key.
 local placed={ability={nil,-0.5,0.5,nil},consumable={-1.5,-0.5,0.5,1.5}}
-local function doubled(vertical,dx,dy,cross,focused,own)
+local sideOffset={above={0,-40},below={0,40},left={-54,0},right={54,0}}
+local function doubled(vertical,dx,dy,cross,focused,side,lit)
     focused=focused or 1
-    own=own or {}
-    for _,kind in ipairs({'ability','consumable'}) do
+    for w,kind in ipairs({'ability','consumable'}) do
         for index=1,4 do
             local toward=kind=='ability' and -cross/2 or cross/2
-            if kind=='consumable' and own[index] then toward=-toward end
             local paired=placed.ability[index] and placed.consumable[index]
-            local visible=not paired or own[index] or (kind=='ability')==(focused==1)
             local label=objects.labels[kind..'Labels'][index]
             local a=placed[kind][index]
             if a then
@@ -430,15 +427,25 @@ local function doubled(vertical,dx,dy,cross,focused,own)
                 end
                 near(x,ex);near(y,ey)
                 local lx,ly=centerOf(label)
-                if vertical then near(lx,ex+toward);near(ly,ey) else near(lx,ex);near(ly,ey+toward) end
-                assert((label.opacity>0)==(visible==true),kind..' label '..index..' visibility')
+                local on=w==focused or (lit and lit[kind] and lit[kind][index])
+                if side then
+                    near(lx,ex+sideOffset[side][1]);near(ly,ey+sideOffset[side][2])
+                    near(label.opacity,on and 1 or dim)
+                else
+                    if vertical then near(lx,ex+toward);near(ly,ey) else near(lx,ex);near(ly,ey+toward) end
+                    if paired then
+                        near(label.opacity,w==focused and 1 or 0)
+                    else
+                        near(label.opacity,on and 1 or dim)
+                    end
+                end
             else
                 assert(label.opacity==0,kind..' empty slot label must be hidden')
             end
         end
     end
-    -- Labels of the same slot meet unless a Global key parts them.
-    if not own[2] then
+    -- Merged labels of the same slot meet.
+    if not side then
         local ax,ay=centerOf(objects.labels.abilityLabels[2])
         local cx,cy=centerOf(objects.labels.consumableLabels[2])
         near(ax,cx);near(ay,cy)
@@ -447,47 +454,227 @@ end
 -- Double Underbar: labels are 20 high, so consumables sit 80+2*6=92 above, and
 -- the labels between the rows hang from the line by their top edge:
 -- -80+92/2+20/2=-24.
-assert(layout(params('standard',0,7,nil,nil,nil,true)))
+local doubleUnder=function(state,kh,merge,position,margin)
+    return params('standard',margin or 0,7,state,kh,nil,true,position,merge)
+end
+assert(layout(doubleUnder()))
 wheelsAt(860,920)
 doubled(false,0,-24,92)
 assert(objects.change_prompt.opacity==0,'bars always hide the swap prompt')
 -- Focus dims the other wheel's keys, as in every bar.
 focusIs(1)
-barsById.DoubleUnderbar.events['controls.group.focus'](params('standard',0,7,nil,nil,nil,true),
+barsById.DoubleUnderbar.events['controls.group.focus'](doubleUnder(),
     {name='controls.group.focus',group={from=1,to=2}},objects)
 focusIs(2)
 -- Focus swaps which label of a shared pair shows.
 doubled(false,0,-24,92,2)
--- A Global key on ability T gives that slot two keys: the consumable label
--- moves above its key and both show, the unfocused one dimmed.
-local doubleGlobal={controls={group={from=2,to=1},
-    global={[1]={false,true,false,false},[2]={false,false,false,false}}}}
-assert(layout(params('standard',0,7,doubleGlobal,nil,nil,true)))
-doubled(false,0,-24,92,1,{[2]=true})
-near(objects.labels.abilityLabels[2].opacity,1)
-near(objects.labels.consumableLabels[2].opacity,dim)
--- A Global key on consumable T parts the pair the same way; the Global label
--- stays lit whatever the focus.
-barsById.DoubleUnderbar.events['controls.slots.global'](params('standard',0,7,doubleGlobal,nil,nil,true),
-    {name='controls.slots.global',global={[1]={false,false,false,false},[2]={false,true,false,false}}},objects)
-doubled(false,0,-24,92,1,{[2]=true})
-near(objects.labels.abilityLabels[2].opacity,1)
-near(objects.labels.consumableLabels[2].opacity,1)
--- Without Global keys the pair shares one place again.
-barsById.DoubleUnderbar.events['controls.slots.global'](params('standard',0,7,doubleGlobal,nil,nil,true),
+-- A Global key on any slot makes merging impossible: every label of both rows
+-- moves to its Key Indicators side, Above by default, and shows, the unfocused
+-- wheel's dimmed unless Global. The keys stay put.
+local noGlobal={[1]={false,false,false,false},[2]={false,false,false,false}}
+local abilityLGlobal={[1]={true,false,false,false},[2]={false,false,false,false}}
+local doubleGlobal={controls={group={from=2,to=1},global=abilityLGlobal}}
+assert(layout(doubleUnder(doubleGlobal)))
+doubled(false,0,-24,96,1,'above')
+-- Ability L is empty: a Global key on a slot that shows nothing un-merges too.
+-- A Global key on consumable T keeps its label lit whatever the focus.
+local consumableTGlobal={[1]={false,false,false,false},[2]={false,true,false,false}}
+barsById.DoubleUnderbar.events['controls.slots.global'](doubleUnder(doubleGlobal),
+    {name='controls.slots.global',global=consumableTGlobal},objects)
+doubled(false,0,-24,96,1,'above',{consumable={false,true,false,false}})
+-- The focus event keeps the reported Global keys.
+local consumableTState={controls={group={from=1,to=2},global=consumableTGlobal}}
+barsById.DoubleUnderbar.events['controls.group.focus'](doubleUnder(consumableTState),
+    {name='controls.group.focus',group={from=1,to=2}},objects)
+doubled(false,0,-24,96,2,'above',{consumable={false,true,false,false}})
+-- Clearing every Global key merges the labels again.
+barsById.DoubleUnderbar.events['controls.slots.global'](doubleUnder(doubleGlobal),
+    {name='controls.slots.global',global=noGlobal},objects)
+doubled(false,0,-24,92,1)
+barsById.DoubleUnderbar.events['controls.slots.global'](doubleUnder(doubleGlobal),
     {name='controls.slots.global',global={}},objects)
 doubled(false,0,-24,92,1)
+-- Merge Off never merges, with or without Global keys.
+assert(layout(doubleUnder(nil,nil,0)))
+doubled(false,0,-24,96,1,'above')
+barsById.DoubleUnderbar.events['controls.slots.global'](doubleUnder(nil,nil,0),
+    {name='controls.slots.global',global=noGlobal},objects)
+doubled(false,0,-24,96,1,'above')
+-- Each Key Indicators side places the unmerged labels; labels beside their
+-- keys keep 4 px clear of them. Above or Below, the labels between the rows
+-- reach 20/2=10 past their key, so the gap widens to 80+10+6=96 and the
+-- consumables move 4 px further from the edge; Left or Right, the labels stay
+-- level with their keys and the gap stays 92. The abilities, nearest the edge,
+-- keep their place.
+local underGap={above=96,below=96,left=92,right=92}
+for _,side in ipairs({'above','below','left','right'}) do
+    assert(layout(doubleUnder(nil,side,0)))
+    doubled(false,0,-24,underGap[side],1,side)
+    -- Merged, the side does not matter.
+    assert(layout(doubleUnder(nil,side)))
+    doubled(false,0,-24,92,1)
+end
+-- Labels below reach past the keys: at -100% their bottom (976+40+10=1026 at
+-- 0%) sits 8 px from the screen's, 46 px lower, merged or not.
+assert(layout(doubleUnder(nil,'below',0,nil,-100)))
+doubled(false,0,-24+46,96,1,'below')
+assert(layout(doubleUnder(nil,'below',1,nil,-100)))
+doubled(false,0,-24+46,92,1)
 -- Double Sidebar: labels are 30 wide, so consumables sit 100+2*7.5=115 further
 -- left; the labels between the columns center on the X line (-60+115/2=-2.5),
 -- and the bottom one on the Y line (-80-1.5*86=-209).
 assert(layout(params('standard',0,5,nil,nil,nil,true)))
 wheelsAt(1720,920)
 doubled(true,-2.5,-209,115)
+-- A Global key un-merges the columns' labels to the Left by default, and
+-- clearing it merges them again.
+barsById.DoubleSidebar.events['controls.slots.global'](params('standard',0,5,nil,nil,nil,true),
+    {name='controls.slots.global',global=consumableTGlobal},objects)
+doubled(true,-2.5,-209,126.5,1,'left',{consumable={false,true,false,false}})
+barsById.DoubleSidebar.events['controls.slots.global'](params('standard',0,5,nil,nil,nil,true),
+    {name='controls.slots.global',global=noGlobal},objects)
+doubled(true,-2.5,-209,115)
+-- Left or Right, the labels between the columns reach 4+30/2=19 past their
+-- key, so the gap widens to 100+19+7.5=126.5; Above or Below keeps 115.
+local sideGap={left=126.5,right=126.5,above=115,below=115}
+for _,side in ipairs({'left','right','above','below'}) do
+    assert(layout(params('standard',0,5,nil,nil,side,true,nil,0)))
+    doubled(true,-2.5,-209,sideGap[side],1,side)
+end
+assert(layout(params('standard',0,5,nil,nil,nil,true)))
 -- At -100% the column's outer edges sit 8 px from the corner: its right edge
 -- moves from 1820-2.5+50=1867.5 to 1912 and its bottom (1.5*86+40 below the
 -- ability wheel's center) from 960 to 1072.
 assert(layout(params('standard',-100,5,nil,nil,nil,true)))
 doubled(true,-2.5+44.5,-209+112,115)
+-- Unmerged at -100%, the abilities keep the same place and only the far
+-- column moves. With labels on the Right, their right edge (54+15 right of
+-- the keys) is the outer edge, merged or not: 1820-2.5+69=1886.5 moves to 1912.
+assert(layout(params('standard',-100,5,nil,nil,'left',true,nil,0)))
+doubled(true,-2.5+44.5,-209+112,126.5,1,'left')
+assert(layout(params('standard',-100,5,nil,nil,'right',true,nil,0)))
+doubled(true,-2.5+25.5,-209+112,126.5,1,'right')
+assert(layout(params('standard',-100,5,nil,nil,'right',true)))
+doubled(true,-2.5+25.5,-209+112,115)
+
+-- Key centers of both rows, to compare layouts.
+local function keyCenters()
+    local all={}
+    for _,kind in ipairs({'ability','consumable'}) do
+        for index=1,4 do
+            if placed[kind][index] then all[kind..index]={offset(kind,index)} end
+        end
+    end
+    return all
+end
+-- A widget's drawn box: its center and scaled half size.
+local function boxOf(widget)
+    local x,y=centerOf(widget)
+    local s=math.abs(widget.RenderTransform.Scale.X)
+    return x-widget.desired.X*s/2,y-widget.desired.Y*s/2,x+widget.desired.X*s/2,y+widget.desired.Y*s/2
+end
+local function overlaps(a,b)
+    local al,at,ar,ab=boxOf(a)
+    local bl,bt,br,bb=boxOf(b)
+    return al<br and bl<ar and at<bb and bt<ab
+end
+-- No shown label overlaps a key of the other row.
+local function clear()
+    for w,kind in ipairs({'ability','consumable'}) do
+        local other=w==1 and 'consumable' or 'ability'
+        for index=1,4 do
+            local label=objects.labels[kind..'Labels'][index]
+            if label.opacity>0 and label.desired.X>0 then
+                for o=1,4 do
+                    if placed[other][o] then
+                        assert(not overlaps(label,objects.buttons[other..'Slots'][o]),
+                            kind..' label '..index..' overlaps '..other..' key '..o)
+                    end
+                end
+            end
+        end
+    end
+end
+-- Assigning a Global key moves the far row away from the edge when the labels
+-- sit across the bar, and clearing it moves it back exactly; the near row stays.
+-- Along the bar, nothing moves. The focus event carries the Global keys too.
+local function globalMoves(id,make,side,wide,narrow)
+    local events=barsById[id].events
+    assert(layout(make(nil,side)))
+    local merged=keyCenters()
+    events['controls.slots.global'](make(nil,side),{name='controls.slots.global',global=consumableTGlobal},objects)
+    clear()
+    local unmerged=keyCenters()
+    local vertical=id=='DoubleSidebar'
+    for name,at in pairs(merged) do
+        local now=unmerged[name]
+        if name:find('^ability') then
+            near(now[1],at[1]);near(now[2],at[2])
+        elseif vertical then
+            near(now[1],at[1]-(wide-narrow));near(now[2],at[2])
+        else
+            near(now[1],at[1]);near(now[2],at[2]-(wide-narrow))
+        end
+    end
+    events['controls.slots.global'](make(nil,side),{name='controls.slots.global',global=noGlobal},objects)
+    for name,at in pairs(keyCenters()) do near(at[1],merged[name][1]);near(at[2],merged[name][2]) end
+    -- A focus event reporting Global keys in its state un-merges as well.
+    events['controls.group.focus'](make({controls={group={from=2,to=1},global=consumableTGlobal}},side),
+        {name='controls.group.focus',group={from=2,to=1}},objects)
+    for name,at in pairs(keyCenters()) do near(at[1],unmerged[name][1]);near(at[2],unmerged[name][2]) end
+    events['controls.group.focus'](make({controls={group={from=2,to=1},global=noGlobal}},side),
+        {name='controls.group.focus',group={from=2,to=1}},objects)
+    for name,at in pairs(keyCenters()) do near(at[1],merged[name][1]);near(at[2],merged[name][2]) end
+end
+local doubleSide=function(state,kv,merge,position,margin)
+    return params('standard',margin or 0,5,state,nil,kv,true,position,merge)
+end
+for side,wide in pairs(underGap) do
+    globalMoves('DoubleUnderbar',doubleUnder,side,wide,92)
+    -- Merge Off lays out the same clear rows.
+    assert(layout(doubleUnder(nil,side,0)))
+    clear()
+end
+for side,wide in pairs(sideGap) do
+    globalMoves('DoubleSidebar',doubleSide,side,wide,115)
+    -- Merge Off lays out the same clear rows.
+    assert(layout(doubleSide(nil,side,0)))
+    clear()
+end
+-- Larger labels widen the gap with their reach: 40 high, the Underbar's
+-- reach 80+20+6=106 apart; 60 wide, the Sidebar's 100+4+30+7.5=141.5. The
+-- merged gaps leave out the labels' reach and stay 92 and 115.
+for _,kind in ipairs({'ability','consumable'}) do
+    for _,label in ipairs(objects.labels[kind..'Labels']) do
+        if label.desired.X>0 then label.desired={X=60,Y=40} end
+    end
+end
+for side,wide in pairs({above=106,below=106,left=92,right=92}) do
+    globalMoves('DoubleUnderbar',doubleUnder,side,wide,92)
+    assert(layout(doubleUnder(nil,side,0)))
+    clear()
+end
+for side,wide in pairs({left=141.5,right=141.5,above=115,below=115}) do
+    globalMoves('DoubleSidebar',doubleSide,side,wide,115)
+    assert(layout(doubleSide(nil,side,0)))
+    clear()
+end
+for _,kind in ipairs({'ability','consumable'}) do
+    for _,label in ipairs(objects.labels[kind..'Labels']) do
+        if label.desired.X>0 then label.desired={X=30,Y=20} end
+    end
+end
+-- Attaching with a Global key already assigned starts in the wide gap.
+assert(layout(doubleUnder({controls={group={from=2,to=1},global=consumableTGlobal}})))
+doubled(false,0,-24,96,1,'above',{consumable={false,true,false,false}})
+-- Merge Off keeps the wide gap whatever the Global keys.
+assert(layout(doubleSide(nil,'left',0)))
+barsById.DoubleSidebar.events['controls.slots.global'](doubleSide(nil,'left',0),
+    {name='controls.slots.global',global=consumableTGlobal},objects)
+doubled(true,-2.5,-209,126.5,1,'left',{consumable={false,true,false,false}})
+barsById.DoubleSidebar.events['controls.slots.global'](doubleSide(nil,'left',0),
+    {name='controls.slots.global',global=noGlobal},objects)
+doubled(true,-2.5,-209,126.5,1,'left')
 -- Position Middle/Right (5) moves the box to the right edge's middle,
 -- (1080-160)/2=460, and centers the full column on it.
 assert(layout(params('standard',0,5,nil,nil,nil,true,'middle_right')))

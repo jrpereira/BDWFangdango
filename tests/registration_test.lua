@@ -45,8 +45,8 @@ assert(bar.objects.buttons.abilitySlots[1]=='ability_button_left'
 for _,property in ipairs(bar.objects.buttons.properties) do
     assert(property~='parent' and property~='order','Bars must not reparent keys')
 end
--- No bar has Relative Placement. Single bars choose their Key Indicators,
--- listing their own bar's sides first; Double bars share them between rows.
+-- No bar has Relative Placement. Every bar chooses its Key Indicators, listing
+-- its own bar's sides first; Double bars may also merge them between rows.
 -- All bars but the Single Sidebar choose their Position first.
 local wheelFields=template.menu[1].fields
 -- Pickers are keyed: each choice saves its key, in the order listed.
@@ -71,15 +71,22 @@ for id,definition in pairs(bars) do
     local fields=definition.menu[1].fields
     local single=id:match('^Single')~=nil
     local positioned=id~='SingleSidebar'
-    assert(#fields==(single and positioned and 4 or 3),id)
+    local first=positioned and 2 or 1
+    assert(#fields==(positioned and 4 or 3)+(single and 0 or 1),id)
     for _,field in ipairs(fields) do
         assert(field.conditions==nil and field.id~='.R',id)
+        assert(field.id~='.J' or not single,id)
     end
-    if single then
-        local keys=fields[positioned and 2 or 1]
-        assert(keys.id=='.K' and keys.default==(id=='SingleUnderbar' and 'above' or 'left'))
-        assert(choices(keys)==(id=='SingleUnderbar' and 'above=Above|below=Below|left=Left|right=Right'
-            or 'left=Left|right=Right|above=Above|below=Below'),id)
+    local keys=fields[first]
+    local underbar=id:match('Underbar$')~=nil
+    assert(keys.id=='.K' and keys.label=='Key Indicators' and keys.default==(underbar and 'above' or 'left'),id)
+    assert(choices(keys)==(underbar and 'above=Above|below=Below|left=Left|right=Right'
+        or 'left=Left|right=Right|above=Above|below=Below'),id)
+    if not single then
+        local merge=fields[first+1]
+        assert(merge.id=='.J' and merge.label=='Merge key indicators when possible'
+            and merge.widget=='switch' and merge.default==1
+            and merge.values[0]=='Off' and merge.values[1]=='On',id)
     end
     if positioned then
         local position=fields[1]
@@ -93,6 +100,14 @@ for id,definition in pairs(bars) do
         end
     end
     sizeFields[#sizeFields+1],marginFields[#marginFields+1]=fields[#fields-1],fields[#fields]
+end
+-- Every field of every template has a one-line description in ModCore Templates' text.
+for _,definition in ipairs(definitions) do
+    for _,field in ipairs(definition.menu[1].fields) do
+        local text=field.description
+        assert(type(text)=='string' and #text>0 and not text:find('[%c|;%[%]]')
+            and text:match('^%u') and text:match('%.$'),localId(definition)..field.id)
+    end
 end
 -- Size matches Wheels; bars' Margin runs either side of the native HUD.
 for _,field in ipairs(sizeFields) do
@@ -192,24 +207,35 @@ for barId,definition in pairs(bars) do
     local single=barId:match('^Single')~=nil
     assert(barDefinition.settings[barId..'R']==nil
         and (barDefinition.settings[barId..'A']~=nil)==(barId~='SingleSidebar'),barId)
-    local keys=rows[barDefinition.settings[barId..'K']]
-    assert((keys~=nil)==single,barId)
-    if single then
-        assert(labels(keys)==(barId=='SingleUnderbar' and 'Above|Below|Left|Right'
-            or 'Left|Right|Above|Below'))
-    end
+    local keys=assert(rows[barDefinition.settings[barId..'K']],barId)
+    assert(labels(keys)==(barId:match('Underbar$') and 'Above|Below|Left|Right'
+        or 'Left|Right|Above|Below'),barId)
+    local merge=rows[barDefinition.settings[barId..'J'] or '']
+    assert((merge~=nil)==not single,barId)
+    if merge then assert(merge.widget=='switch' and labels(merge)=='Off|On' and merge.default==1,barId) end
     values[selector.id]=barValue
     local barSettings=menu.decodeState(values)['player.quickslots'].selections[definition.id]
     local position,side
     if barId=='DoubleSidebar' then position='bottom_right' elseif barId~='SingleSidebar' then position='bottom_center' end
-    if single then side=barId=='SingleUnderbar' and 'above' or 'left' end
+    side=barId:match('Underbar$') and 'above' or 'left'
     assert(barSettings[barId..'S']=='standard' and barSettings[barId..'M']==0
-        and barSettings[barId..'K']==side and barSettings[barId..'A']==position)
+        and barSettings[barId..'K']==side and barSettings[barId..'A']==position
+        and barSettings[barId..'J']==(not single and 1 or nil),barId)
 end
 print('Fangdango Wheels and bars registration and settings contract passed')
 
 assert(#definitions==5 and localId(definitions[1])=='Wheels')
 for index,id in ipairs(barIds) do assert(localId(definitions[index+1])==id) end
+-- MCT's ability_cross, ability_darken, ability_glow and consumable_cross targets never
+-- resolve in game (the decorations are not blueprint members), and a declared target that
+-- does not resolve keeps a template from attaching: no template may declare them.
+for _,definition in ipairs(definitions) do
+    for _,group in pairs(definition.objects or {}) do
+        for _,name in ipairs({'ability_cross','ability_darken','ability_glow','consumable_cross'}) do
+            assert(type(group)~='table' or group[name]==nil,localId(definition)..' declares '..name)
+        end
+    end
+end
 print('Fangdango registered template list passed')
 
 local originalStartup=package.loaded['mc.lua_startup']

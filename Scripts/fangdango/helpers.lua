@@ -14,8 +14,9 @@ local M={}
 M.log=Log.new({name='Fangdango',path=root..'/log_level.txt'})
 local log=M.log
 
--- Wheel decorations a layout hides that no MCT target reaches (the Dpad, in a nested
--- Bindings widget), found by name in one walk of the wheel's widget tree. Each one found is
+-- Wheel decorations a layout hides, found by name in one walk of the wheel's widget tree:
+-- no MCT target reaches them (they are not blueprint members, and the Dpad sits in a
+-- nested Bindings widget). Each one found is
 -- kept as a weak handle and its opacity restored through onCleanup: a wrapper kept past
 -- the attach reads freed memory once a save-load has torn the HUD down. The walk
 -- stops once every wanted name is found; the first match in depth-first order wins.
@@ -121,6 +122,11 @@ function M.onGlobalKeys(params,event,objects)
     local controls=params.state and params.state.controls
     M.onGroupFocus(params,{group=controls and controls.group,global=event.global},objects)
 end
+
+-- Every template's live preview on the module page: ModCore Templates lends it the
+-- game's own wheels while the page is open and plays focus and Global key changes
+-- (player.quickslots' preview), over this picture of the game.
+M.PREVIEW={background='images/preview_background.jpg'}
 
 -- Template settings shared by Wheels and Bars: the unfocused wheel takes a blue tint
 -- at 50% opacity.

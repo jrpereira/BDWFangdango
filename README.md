@@ -15,16 +15,19 @@ bindings and keeps the key indicators current, it highlights the active wheel.
   along the screen edge and Stacked away from it.
 - **Bars:** Underbar, a horizontal bar at the bottom center, or Sidebar, a
   vertical bar at the bottom right. A Single bar lines up both wheels in one
-  row or column, omits empty slots and puts key indicators on any side of the
-  keys. A Double bar gives each wheel its own row or column, with one key
-  indicator per slot between them; a slot with a ModCore Controls Global key
-  shows its consumable key indicator on the far side of its key instead.
+  row or column and omits empty slots. A Double bar gives each wheel its own
+  row or column. Every bar puts key indicators on the side of the keys you
+  choose. A Double bar can instead merge them into one key indicator per slot
+  between its rows or columns, while no quickslot has a ModCore Controls Global
+  key.
   Underbars can also sit at the bottom right,
   and a Double Sidebar at the middle of the right edge.
 - Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
   At 0% a bar lines up with the game's own HUD.
 - The inactive wheel's keys dim with a blue tint and their binding labels fade,
   except in Overlap placement. Keys with a ModCore Controls Global key stay lit.
+- The Quickslot Fangdango page previews your layout live on the game's own wheels
+  as you change it, before you apply it.
 
 ## Requirements
 

@@ -6,6 +6,7 @@
     "mod.json": "mod.json",
     "VERSION": "VERSION",
     "enabled.txt": "enabled.txt",
+    "images/preview_background.jpg": "images/preview_background.jpg",
     "Scripts/fangdango/helpers.lua": "Scripts/fangdango/helpers.lua",
     "Scripts/main.lua": "Scripts/main.lua",
     "Scripts/mc_bars.lua": "Scripts/mc_bars.lua",

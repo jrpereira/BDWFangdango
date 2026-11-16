@@ -51,6 +51,8 @@ Arrange quickslot keys in two rows.
 | Setting | Options | Default | Key |
 |---|---|---|---|
 | Position | Bottom/Right (`bottom_right`), Bottom/Center (`bottom_center`) | Bottom/Center | `MCT_Fangdango_DoubleUnderbar_DoubleUnderbarA` |
+| Key Indicators | Above (`above`), Below (`below`), Left (`left`), Right (`right`) | Above | `MCT_Fangdango_DoubleUnderbar_DoubleUnderbarK` |
+| Merge key indicators when possible | Off (`0`), On (`1`) | On | `MCT_Fangdango_DoubleUnderbar_DoubleUnderbarJ` |
 | Size | Smaller (`smaller`), Small (`small`), Standard (`standard`), Large (`large`), Larger (`larger`) | Standard | `MCT_Fangdango_DoubleUnderbar_DoubleUnderbarS` |
 | Margin to Screen Edge | -100% to 100%, in steps of 5 | 0% | `MCT_Fangdango_DoubleUnderbar_DoubleUnderbarM` |
 
@@ -79,5 +81,7 @@ Arrange quickslot keys in two columns.
 | Setting | Options | Default | Key |
 |---|---|---|---|
 | Position | Middle/Right (`middle_right`), Bottom/Right (`bottom_right`) | Bottom/Right | `MCT_Fangdango_DoubleSidebar_DoubleSidebarA` |
+| Key Indicators | Left (`left`), Right (`right`), Above (`above`), Below (`below`) | Left | `MCT_Fangdango_DoubleSidebar_DoubleSidebarK` |
+| Merge key indicators when possible | Off (`0`), On (`1`) | On | `MCT_Fangdango_DoubleSidebar_DoubleSidebarJ` |
 | Size | Smaller (`smaller`), Small (`small`), Standard (`standard`), Large (`large`), Larger (`larger`) | Standard | `MCT_Fangdango_DoubleSidebar_DoubleSidebarS` |
 | Margin to Screen Edge | -100% to 100%, in steps of 5 | 0% | `MCT_Fangdango_DoubleSidebar_DoubleSidebarM` |

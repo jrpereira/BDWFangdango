@@ -1,28 +1,33 @@
 # Changelog
 
-## v1.2.0
+## v1.2.1
 
-- Requires ModCore Settings 1.9.0, ModCore Templates 1.9.0 and UE4SS Lua Event Bridge 1.3.0
-  or newer.
-- Pickers now save their choice by name (Align to Screen Edge, Relative Placement,
-  Overall Size, Position, Key Indicators and Size), so adding or reordering choices
-  never moves a saved one. Choices saved before for these pickers reset to their
-  defaults once.
-- Bars hides the wheel crosses, the ability wheel's darken and glow through ModCore
-  Templates targets; only the Dpad is still found by name.
-
-## v1.1.0
-
+- Requires ModCore Settings 1.9.0, ModCore Templates 1.9.0, ModCore Controls 1.3.0 and
+  UE4SS Lua Event Bridge 1.3.0 or newer. ModCore Controls was only recommended before;
+  it reports Global keys and drives the inactive-wheel dimming.
+- The Quickslot Fangdango page has a live preview: while it is open, the game's own
+  wheels move into the preview, over a picture of the game, laid out by the page's
+  template at its current values, applied or not. Focus moves between the wheels every
+  2 s, and once a loop a Global key shows on one consumable slot. On close the wheels
+  return to the HUD with the applied layout. The preview needs a loaded game; from the
+  main menu it shows only the picture.
 - The inactive wheel dims key by key: each of its keys takes the blue tint and its
   binding label fades to the tint's 50% opacity. The wheel itself is no longer tinted.
   A binding label a layout hides stays hidden.
 - Keys with a ModCore Controls Global key stay lit on the inactive wheel, since they
-  fire whichever wheel has focus. ModCore Controls reports them through
-  `controls.slots.global`.
-- Requires ModCore Controls 1.3.0 or later, which reports Global keys and drives the
-  inactive-wheel tint and was only recommended before, and ModCore Templates 1.8.0 or
-  later, which passes `controls.slots.global` to templates. ModCore Settings 1.7.0 or
-  later is still enough.
+  fire whichever wheel has focus.
+- Double bars choose the side of their keys for Key Indicators, as Single bars do.
+- Double bars add Merge key indicators when possible, On by default: one key indicator
+  per slot sits between the rows while no quickslot has a ModCore Controls Global key.
+  Otherwise every key shows its own key indicator on the Key Indicators side, and the
+  layout switches as Global keys are assigned or cleared. With key indicators on a side
+  facing the other row or column, the far one moves out to leave them room; the one
+  nearest the screen edge stays in place.
+- Every Wheels and Bars setting has a description in the menu.
+- Pickers now save their choice by name (Align to Screen Edge, Relative Placement,
+  Overall Size, Position, Key Indicators and Size), so adding or reordering choices
+  never moves a saved one. Choices saved before for these pickers reset to their
+  defaults once.
 
 ## v1.0.11
 

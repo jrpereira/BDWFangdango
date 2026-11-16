@@ -9,6 +9,7 @@ local template = {
     category='player.quickslots',
     uniqueBy='category',
     settings=Helpers.SETTINGS,
+    preview=Helpers.PREVIEW,
     events={
         ['controls.group.focus']=Helpers.onGroupFocus,
         ['controls.slots.global']=Helpers.onGlobalKeys,
@@ -27,11 +28,15 @@ local template = {
     menu = {
         {id='Wheels', label='Visual Options', fields={
             {id='.A', label='Align to Screen Edge',
-                values=Helpers.edges({'middle_right','bottom_right','bottom_center'}), default='bottom_right'},
-            {id='.R', label='Relative Placement', values=Helpers.PLACEMENTS, default='side_by_side'},
+                values=Helpers.edges({'middle_right','bottom_right','bottom_center'}), default='bottom_right',
+                description='The screen edge or corner the wheels sit at.'},
+            {id='.R', label='Relative Placement', values=Helpers.PLACEMENTS, default='side_by_side',
+                description='How the two wheels sit together: overlapping, side by side along the edge, stacked away from it, or offset in perspective.'},
 
-            {id='.S', label='Overall Size', values=Helpers.SIZES, default='standard'},
-            {id='.M', label='Margin to Screen Edge', values=Helpers.MARGINS, default=50},
+            {id='.S', label='Overall Size', values=Helpers.SIZES, default='standard',
+                description='The size of both wheels.'},
+            {id='.M', label='Margin to Screen Edge', values=Helpers.MARGINS, default=50,
+                description='How far the wheels sit from the screen edge.'},
         }},
     }
 }
