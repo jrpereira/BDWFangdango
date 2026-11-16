@@ -2,7 +2,7 @@
 
 ## v1.2.1
 
-- Requires ModCore Settings 1.9.0, ModCore Templates 1.9.0, ModCore Controls 1.3.0 and
+- Requires ModCore Settings 1.9.0, ModCore Templates 1.9.1, ModCore Controls 1.3.0 and
   UE4SS Lua Event Bridge 1.3.0 or newer. ModCore Controls was only recommended before;
   it reports Global keys and drives the inactive-wheel dimming.
 - The Quickslot Fangdango page has a live preview: while it is open, the game's own
