@@ -49,7 +49,20 @@ end
 -- listing their own bar's sides first; Double bars share them between rows.
 -- All bars but the Single Sidebar choose their Position first.
 local wheelFields=template.menu[1].fields
-local sizes={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}
+-- Pickers are keyed: each choice saves its key, in the order listed.
+local function choices(field)
+    local out={}
+    for index,choice in ipairs(field.values) do
+        assert(type(choice.key)=='string' and choice.value==nil,'keyed choice expected')
+        out[index]=choice.key..'='..choice.label
+    end
+    return table.concat(out,'|')
+end
+local sizes='smaller=Smaller|small=Small|standard=Standard|large=Large|larger=Larger'
+assert(wheelFields[1].id=='.A' and wheelFields[1].default=='bottom_right'
+    and choices(wheelFields[1])=='middle_right=Middle/Right|bottom_right=Bottom/Right|bottom_center=Bottom/Center')
+assert(wheelFields[2].id=='.R' and wheelFields[2].default=='side_by_side'
+    and choices(wheelFields[2])=='overlap=Overlap|side_by_side=Side by Side|stacked=Stacked|perspective=Perspective')
 local sizeFields,marginFields={wheelFields[3]},{}
 local wheelMargin=wheelFields[4]
 assert(wheelMargin.id=='.M' and wheelMargin.default==50 and wheelMargin.values.min==0
@@ -64,33 +77,26 @@ for id,definition in pairs(bars) do
     end
     if single then
         local keys=fields[positioned and 2 or 1]
-        assert(keys.id=='.K' and keys.default==0)
-        local labels=id=='SingleUnderbar' and {'Above','Below','Left','Right'}
-            or {'Left','Right','Above','Below'}
-        for value=0,3 do assert(keys.values[value]==labels[value+1],id) end
+        assert(keys.id=='.K' and keys.default==(id=='SingleUnderbar' and 'above' or 'left'))
+        assert(choices(keys)==(id=='SingleUnderbar' and 'above=Above|below=Below|left=Left|right=Right'
+            or 'left=Left|right=Right|above=Above|below=Below'),id)
     end
     if positioned then
-        -- Positions are numbered as MCT's alignments.
         local position=fields[1]
         assert(position.id=='.A' and position.label=='Position')
         if id:match('Sidebar$') then
-            assert(position.values[5]=='Middle/Right' and position.values[6]=='Bottom/Right'
-                and position.values[7]==nil and position.default==6)
+            assert(choices(position)=='middle_right=Middle/Right|bottom_right=Bottom/Right'
+                and position.default=='bottom_right')
         else
-            assert(position.values[7]=='Bottom/Center' and position.values[6]=='Bottom/Right'
-                and position.values[5]==nil and position.default==7)
+            assert(choices(position)=='bottom_right=Bottom/Right|bottom_center=Bottom/Center'
+                and position.default=='bottom_center')
         end
     end
     sizeFields[#sizeFields+1],marginFields[#marginFields+1]=fields[#fields-1],fields[#fields]
 end
 -- Size matches Wheels; bars' Margin runs either side of the native HUD.
 for _,field in ipairs(sizeFields) do
-    assert(field.id=='.S' and field.default==100)
-    local count=0
-    for value,label in pairs(field.values) do
-        assert(sizes[value]==label);count=count+1
-    end
-    assert(count==5)
+    assert(field.id=='.S' and field.default=='standard' and choices(field)==sizes)
 end
 for _,field in ipairs(marginFields) do
     assert(field.id=='.M' and field.default==0 and field.values.min==-100
@@ -171,8 +177,12 @@ assert(align and labels(align)=='Middle/Right|Bottom/Right|Bottom/Center')
 assert(gated(page.menu,selector.id,value))
 assert(placement and labels(placement)=='Overlap|Side by Side|Stacked|Perspective')
 local settings=menu.decodeState(values)['player.quickslots'].selections[template.id]
-assert(settings.WheelsA==6 and settings.WheelsM==50
-    and settings.WheelsR==1 and settings.WheelsS==100)
+assert(settings.WheelsA=='bottom_right' and settings.WheelsM==50
+    and settings.WheelsR=='side_by_side' and settings.WheelsS=='standard')
+-- ModCore Templates offers a keyed picker's keys only: an old numeric value is refused.
+local Menu=require('mc.menu')
+assert(Menu.keyed(align) and Menu.keyed(placement) and Menu.keyed(rows[definition.settings.WheelsS]))
+assert(Menu.accepts(align,'middle_right') and not Menu.accepts(align,6) and not Menu.accepts(align,'6'))
 -- Each bar's rows show only while that bar is selected; its settings are named
 -- after its menu.
 for barId,definition in pairs(bars) do
@@ -190,10 +200,11 @@ for barId,definition in pairs(bars) do
     end
     values[selector.id]=barValue
     local barSettings=menu.decodeState(values)['player.quickslots'].selections[definition.id]
-    local position
-    if barId=='DoubleSidebar' then position=6 elseif barId~='SingleSidebar' then position=7 end
-    assert(barSettings[barId..'S']==100 and barSettings[barId..'M']==0
-        and barSettings[barId..'K']==(single and 0 or nil) and barSettings[barId..'A']==position)
+    local position,side
+    if barId=='DoubleSidebar' then position='bottom_right' elseif barId~='SingleSidebar' then position='bottom_center' end
+    if single then side=barId=='SingleUnderbar' and 'above' or 'left' end
+    assert(barSettings[barId..'S']=='standard' and barSettings[barId..'M']==0
+        and barSettings[barId..'K']==side and barSettings[barId..'A']==position)
 end
 print('Fangdango Wheels and bars registration and settings contract passed')
 

@@ -12,8 +12,9 @@ local LABEL_OVERLAP=0.5
 -- Pixels between a key and its label beside it, scaled like the distances below.
 local LABEL_GAP=4
 
--- Screen edges, numbered as MCT's alignments, that a bar's Position offers.
-local MIDDLE_RIGHT,BOTTOM_RIGHT,BOTTOM_CENTER=5,6,7
+-- Screen edges, numbered as MCT's alignments; a bar's Position offers them by key.
+local MIDDLE_RIGHT,BOTTOM_RIGHT,BOTTOM_CENTER=Helpers.ALIGNS.middle_right,Helpers.ALIGNS.bottom_right,
+    Helpers.ALIGNS.bottom_center
 -- Distances here are pixels of a 1080-high screen, scaled to the screen's own
 -- units by Helpers.unit. At Margin 0% a bar's anchors sit REFERENCE pixels
 -- above the bottom and, at a right edge, in from the right, lining it up with
@@ -28,10 +29,17 @@ local shiftPixels={above=16,below=41.6,left=48,right=48}
 -- it, for each side of its labels.
 local shiftPercent={left={-30,-40}}
 local MARGINS={min=-100,max=100,step=5,suffix='%'}
+-- Each orientation's Position choices and its default edge.
 local positionChoices={
-    [true]={[MIDDLE_RIGHT]='Middle/Right',[BOTTOM_RIGHT]='Bottom/Right'},
-    [false]={[BOTTOM_CENTER]='Bottom/Center',[BOTTOM_RIGHT]='Bottom/Right'},
+    [true]=Helpers.edges({'middle_right','bottom_right'}),
+    [false]=Helpers.edges({'bottom_right','bottom_center'}),
 }
+local positionDefault={[true]='bottom_right',[false]='bottom_center'}
+-- Whether a list of keyed choices offers a key.
+local function offers(choices,key)
+    for _,choice in ipairs(choices) do if choice.key==key then return true end end
+    return false
+end
 
 -- Offset of a key from the shared center, one pitch per place; horizontal runs
 -- right and vertical runs down.
@@ -62,8 +70,9 @@ local function filled(button,w)
     return Objects.valid(ability) and Objects.call(ability,'IsVisible')~=false
 end
 
--- Wheel decorations a bar has no use for.
-local decorationNames={{'cross','Darken','Glow','Dpad'},{'cross','Dpad'}}
+-- Wheel decorations a bar has no use for, as MCT names them; MCT restores their opacity.
+-- The Dpad has no MCT target and is hidden by name (Helpers.hideDecorations).
+local DECORATIONS={'ability_cross','ability_darken','ability_glow','consumable_cross'}
 
 -- Center a widget in its overlay, then place its scaled center at x,y from there.
 local function center(widget,box,x,y,scale)
@@ -144,8 +153,8 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
     -- A vertical bar sits in the bottom-right corner and a horizontal one at
     -- bottom center, unless the bar's Position chooses another edge.
     local align=vertical and BOTTOM_RIGHT or BOTTOM_CENTER
-    if (double or not vertical) and positionChoices[vertical][settings[id..'A']] then
-        align=settings[id..'A']
+    if (double or not vertical) and offers(positionChoices[vertical],settings[id..'A']) then
+        align=Helpers.ALIGNS[settings[id..'A']]
     end
     -- The wheels' shared box sits flush with the edge; the keys then move onto
     -- the reference lines.
@@ -157,7 +166,7 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
     local slots={objects.buttons.abilitySlots,objects.buttons.consumableSlots}
     local labels={objects.labels.abilityLabels,objects.labels.consumableLabels}
 
-    local scale=settings[id..'S']/100
+    local scale=Helpers.SCALES[settings[id..'S']] or 1
 
     -- Slots are listed Left, Top, Right, Bottom; lay out the shown keys in bar
     -- order: L, T, R, B of each wheel. A Single
@@ -176,7 +185,7 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
             end
         end
     end
-    log.debug(id,': align ',align,', size ',settings[id..'S'],'%, keys shown ',
+    log.debug(id,': align ',align,', size ',settings[id..'S'],', keys shown ',
         counts[1],' ability, ',counts[2],' consumable')
     if not first then log.debug(id,': no key shown; nothing to lay out') end
     local W,H=first and first.width*scale or 0,first and first.height*scale or 0
@@ -219,8 +228,8 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
     else
         -- Binding labels sit centered on their chosen edge of the key.
         -- Key Indicators name a side, listing the bar's own sides first.
-        local chosen=indicators[settings[id..'K']]
-        local side=chosen and chosen:lower() or (vertical and 'left' or 'above')
+        local side=settings[id..'K']
+        if not offers(indicators,side) then side=indicators[1].key end
         labelX=side=='left' and -W/2 or side=='right' and W/2 or 0
         labelY=side=='above' and -H/2 or side=='below' and H/2 or 0
         -- A column's labels on its left end on the line along it, at the edge
@@ -269,10 +278,14 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
     log.debug(id,': margin ',margin,'%, step ',stepX,' x ',stepY)
     local points={{},{}}
 
+    for _,name in ipairs(DECORATIONS) do
+        local decoration=objects.decorations and objects.decorations[name]
+        if decoration then Widget.setOpacity(decoration,0) end
+    end
     for w=1,2 do
         local placed, reason=Widget.canvasPosition(wheels[w], boxes[w], left, top, 1)
         assert(placed,reason)
-        Helpers.hideDecorations(wheels[w],decorationNames[w],params.onCleanup)
+        Helpers.hideDecorations(wheels[w],{'Dpad'},params.onCleanup)
 
         -- Anchors meet the reference lines; a row at Bottom/Center centers on
         -- the shared box, and a column at Middle/Right too.
@@ -323,15 +336,15 @@ end
 -- their Position.
 local function bar(id,label,vertical,double,indicators)
     local fields={
-        {id='.S', label='Size', values=Helpers.SIZES, default=100},
+        {id='.S', label='Size', values=Helpers.SIZES, default='standard'},
         {id='.M', label='Margin to Screen Edge', values=MARGINS, default=0},
     }
     if not double then
-        table.insert(fields,1,{id='.K', label='Key Indicators', values=indicators, default=0})
+        table.insert(fields,1,{id='.K', label='Key Indicators', values=indicators, default=indicators[1].key})
     end
     if double or not vertical then
         table.insert(fields,1,{id='.A', label='Position', values=positionChoices[vertical],
-            default=vertical and BOTTOM_RIGHT or BOTTOM_CENTER})
+            default=positionDefault[vertical]})
     end
     -- The last attach's Double layout, for its events.
     local store={}
@@ -350,6 +363,8 @@ local function bar(id,label,vertical,double,indicators)
             wheels={abilities={},consumables={},
                 properties={'box','slot','position','size','opacity'}},
             change_prompt={properties={'opacity'}},
+            decorations={ability_cross={},ability_darken={},ability_glow={},consumable_cross={},
+                properties={'opacity'}},
             buttons={
                 abilitySlots=Helpers.BUTTONS.abilitySlots,
                 consumableSlots=Helpers.BUTTONS.consumableSlots,
@@ -379,8 +394,11 @@ local function bar(id,label,vertical,double,indicators)
     }
 end
 
-local horizontal={[0]='Above',[1]='Below',[2]='Left',[3]='Right'}
-local vertical={[0]='Left',[1]='Right',[2]='Above',[3]='Below'}
+-- Key Indicators: the side of its key each label sits on, the first the default.
+local horizontal={{key='above',label='Above'},{key='below',label='Below'},{key='left',label='Left'},
+    {key='right',label='Right'}}
+local vertical={{key='left',label='Left'},{key='right',label='Right'},{key='above',label='Above'},
+    {key='below',label='Below'}}
 return {
     bar('SingleUnderbar','Single Underbar',false,false,horizontal),
     bar('DoubleUnderbar','Double Underbar',false,true),

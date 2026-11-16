@@ -14,8 +14,8 @@ local M={}
 M.log=Log.new({name='Fangdango',path=root..'/log_level.txt'})
 local log=M.log
 
--- Wheel decorations a layout hides, found by name in one walk of the wheel's widget tree;
--- the Dpad sits in a nested Bindings widget that no MCT target reaches. Each one found is
+-- Wheel decorations a layout hides that no MCT target reaches (the Dpad, in a nested
+-- Bindings widget), found by name in one walk of the wheel's widget tree. Each one found is
 -- kept as a weak handle and its opacity restored through onCleanup: a wrapper kept past
 -- the attach reads freed memory once a save-load has torn the HUD down. The walk
 -- stops once every wanted name is found; the first match in depth-first order wins.
@@ -97,7 +97,7 @@ function M.onGroupFocus(params,event,objects)
     local controls=params.state and params.state.controls
     local global=event.global or controls and controls.global
     -- Overlapping Wheels keep the native look.
-    local overlap=params.settings.WheelsR==0
+    local overlap=params.settings.WheelsR=='overlap'
     local tint=params.settings.focus.tint
     log.trace('focus wheel ',focused,overlap and ' (overlap, no tint)' or '')
     for index=1,2 do
@@ -126,11 +126,29 @@ end
 -- at 50% opacity.
 M.SETTINGS={focus={tint={R=0.6,G=0.65,B=0.9,A=0.5}}}
 
--- Relative Placement, shared by Wheels and Bars.
-M.PLACEMENTS={[0]='Overlap',[1]='Side by Side',[2]='Stacked',[3]='Perspective'}
+-- Pickers save their choice's key. ModCore Templates hands a template only keys its
+-- picker offers: an unknown saved one is replaced with the default.
 
--- Size and Margin to Screen Edge, shared by Wheels and Bars.
-M.SIZES={[80]='Smaller',[90]='Small',[100]='Standard',[110]='Large',[120]='Larger'}
+-- Relative Placement, used by Wheels.
+M.PLACEMENTS={{key='overlap',label='Overlap'},{key='side_by_side',label='Side by Side'},
+    {key='stacked',label='Stacked'},{key='perspective',label='Perspective'}}
+
+-- Size, shared by Wheels and Bars, and the scale each choice applies.
+M.SIZES={{key='smaller',label='Smaller'},{key='small',label='Small'},{key='standard',label='Standard'},
+    {key='large',label='Large'},{key='larger',label='Larger'}}
+M.SCALES={smaller=0.8,small=0.9,standard=1,large=1.1,larger=1.2}
+
+-- Screen edges a layout aligns to, as MCT's alignments (Widget.relative).
+M.ALIGNS={middle_right=5,bottom_right=6,bottom_center=7}
+local EDGE_LABELS={middle_right='Middle/Right',bottom_right='Bottom/Right',bottom_center='Bottom/Center'}
+-- A picker offering these edges, in this order.
+function M.edges(keys)
+    local choices={}
+    for index,key in ipairs(keys) do choices[index]={key=key,label=assert(EDGE_LABELS[key],key)} end
+    return choices
+end
+
+-- Margin to Screen Edge, shared by Wheels and Bars.
 M.MARGINS={min=0,max=100,step=10,suffix='%'}
 
 -- Fixed distances are given in pixels of a 1080-high screen. This is the
@@ -160,20 +178,23 @@ end
 -- Perspective offsets the consumables half a wheel both ways; Overlap shares
 -- one place.
 function M.pair(settings,screen,ability,consumable)
-    local scale=settings.WheelsS/100
+    local scale=M.SCALES[settings.WheelsS] or 1
+    local align=M.ALIGNS[settings.WheelsA] or M.ALIGNS.bottom_right
+    local placement=settings.WheelsR
+    if placement~='overlap' and placement~='stacked' and placement~='perspective' then placement='side_by_side' end
     local first={width=ability.width*scale,height=ability.height*scale}
     local second={width=consumable.width*scale,height=consumable.height*scale}
-    local direction=Widget.relative(settings.WheelsA)
+    local direction=Widget.relative(align)
     local x2,y2=0,0
-    if settings.WheelsR==1 or settings.WheelsR==2 then
-        local vertical=(direction.X~=0)==(settings.WheelsR==1)
+    if placement=='side_by_side' or placement=='stacked' then
+        local vertical=(direction.X~=0)==(placement=='side_by_side')
         if vertical then y2=first.height else x2=first.width end
-    elseif settings.WheelsR==3 then
+    elseif placement=='perspective' then
         x2,y2=first.width/2,first.height/2
     end
     local width=math.max(first.width,x2+second.width)
     local height=math.max(first.height,y2+second.height)
-    local left,top=M.edge(screen,settings.WheelsA,marginPixels(settings.WheelsM),width,height)
+    local left,top=M.edge(screen,align,marginPixels(settings.WheelsM),width,height)
     return {{x=left,y=top,box=ability},{x=left+x2,y=top+y2,box=consumable}},scale
 end
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.0
+
+- Requires ModCore Settings 1.9.0, ModCore Templates 1.9.0 and UE4SS Lua Event Bridge 1.3.0
+  or newer.
+- Pickers now save their choice by name (Align to Screen Edge, Relative Placement,
+  Overall Size, Position, Key Indicators and Size), so adding or reordering choices
+  never moves a saved one. Choices saved before for these pickers reset to their
+  defaults once.
+- Bars hides the wheel crosses, the ability wheel's darken and glow through ModCore
+  Templates targets; only the Dpad is still found by name.
+
 ## v1.1.0
 
 - The inactive wheel dims key by key: each of its keys takes the blue tint and its

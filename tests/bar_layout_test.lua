@@ -94,7 +94,7 @@ StaticConstructObject=function(class,outer)
 end
 local objects={switcher=switcher,hud_root=hudRoot,change_prompt=widget('Change prompt'),
     wheels={},panels={},buttons={abilitySlots={},consumableSlots={}},
-    labels={abilityLabels={},consumableLabels={}}}
+    labels={abilityLabels={},consumableLabels={}},decorations={}}
 local nativeBoxes={}
 for _,kind in ipairs({'ability','consumable'}) do
     local wheel,box,panel=widget(kind),widget(kind..'Box'),widget(kind..'Panel')
@@ -113,7 +113,9 @@ for _,kind in ipairs({'ability','consumable'}) do
     if kind=='ability' then
         wheel.Darken=widget(kind..'.Darken');wheel.Glow=widget(kind..'.Glow')
         panel:AddChild(wheel.Darken);panel:AddChild(wheel.Glow)
+        objects.decorations.ability_darken,objects.decorations.ability_glow=wheel.Darken,wheel.Glow
     end
+    objects.decorations[kind..'_cross']=wheel.cross
     box.WidthOverride,box.HeightOverride=321,234
     box.bOverride_WidthOverride,box.bOverride_HeightOverride=false,true
     function box:SetWidthOverride(value) self.WidthOverride=value;self.bOverride_WidthOverride=true end
@@ -186,9 +188,13 @@ local manager=managers.SingleUnderbar
 local function params(size,margin,orientation,state,kh,kv,double,position)
     orientation=orientation or 7
     local id=(double and 'Double' or 'Single')..(orientation==5 and 'Sidebar' or 'Underbar')
-    local settings={[id..'S']=size or 100,[id..'M']=margin or 0,focus=bar.settings.focus}
-    if not double then settings[id..'K']=(orientation==5 and kv or kh) or 0 end
-    if double or orientation~=5 then settings[id..'A']=position or (orientation==5 and 6 or 7) end
+    local settings={[id..'S']=size or 'standard',[id..'M']=margin or 0,focus=bar.settings.focus}
+    if not double then
+        settings[id..'K']=(orientation==5 and kv or kh) or (orientation==5 and 'left' or 'above')
+    end
+    if double or orientation~=5 then
+        settings[id..'A']=position or (orientation==5 and 'bottom_right' or 'bottom_center')
+    end
     return {id=id,settings=settings,
         screen={width=1920,height=1080,scale=1,center=960,middle=540},
         state=state or {controls={group={from=1,to=1}}}}
@@ -316,44 +322,44 @@ focusIs(1)
 -- the native look.
 local global={controls={group={from=2,to=1},
     global={[1]={false,false,false,false},[2]={true,false,false,true}}}}
-bar.events['controls.group.focus'](params(100,0,7,global),
+bar.events['controls.group.focus'](params('standard',0,7,global),
     {name='controls.group.focus',group={from=2,to=1}},objects)
 focusIs(1,{consumable={true,false,false,true}})
 -- A rebuild applies the current focus from the state.
-assert(layout(params(100,0,7,{controls={group={from=1,to=2}}})))
+assert(layout(params('standard',0,7,{controls={group={from=1,to=2}}})))
 focusIs(2)
 -- Margin steps so -100% leaves 8 px below the bar: at 0% the keys' bottom is
 -- at 1000-14+40=1026, so each percent moves (1080-1026-8)/100=0.46 px. 50%
 -- raises the keys 23 px; the box stays flush.
-assert(layout(params(100,50)))
+assert(layout(params('standard',50)))
 focusIs(1)
 wheelsAt(860,920)
 lined(100,80,false,nil,-14-23)
 -- -50% lowers them as far, and -100% puts their bottom at 1080-8=1072.
-assert(layout(params(100,-50)))
+assert(layout(params('standard',-50)))
 lined(100,80,false,nil,-14+23)
-assert(layout(params(100,-100)))
+assert(layout(params('standard',-100)))
 lined(100,80,false,nil,1072-40-1000)
 -- Horizontal labels can sit below their keys instead; the keys then center on
 -- the line, which sits 41.6 px lower.
-assert(layout(params(100,0,7,nil,1)))
+assert(layout(params('standard',0,7,nil,'below')))
 lined(100,80,false,nil,-80+41.6,1)
--- Position Bottom/Right (6) puts the box in the corner, at the keys' height
+-- Position Bottom/Right puts the box in the corner, at the keys' height
 -- as at Bottom/Center. The full row's right edge, 3.5*107.5+50=426.25 right of
 -- its center, keeps as far from the right edge as its bottom from the bottom
 -- (1080-1026=54): 1920-54-1820-426.25=-380.25.
-assert(layout(params(100,0,7,nil,0,nil,nil,6)))
+assert(layout(params('standard',0,7,nil,'above',nil,nil,'bottom_right')))
 wheelsAt(1720,920)
 lined(100,80,false,-380.25,-14)
--- Horizontal Key Indicators also offer Left (2) and Right (3); the line then
+-- Horizontal Key Indicators also offer Left and Right; the line then
 -- sits 48 px lower.
-assert(layout(params(100,0,7,nil,2)))
+assert(layout(params('standard',0,7,nil,'left')))
 lined(100,80,false,nil,-80+48,-1,true)
-assert(layout(params(100,0,7,nil,3)))
+assert(layout(params('standard',0,7,nil,'right')))
 lined(100,80,false,nil,-80+48,1,true)
 -- The gap is in 1080p pixels like every other distance: at UI scale 2 a
 -- 1920x1080-unit screen keeps it at 4.
-local scaled=params(100,0,7,nil,2)
+local scaled=params('standard',0,7,nil,'left')
 scaled.screen.scale=2
 assert(layout(scaled))
 lined(100,80,false,nil,-80+48,-1,true)
@@ -368,30 +374,30 @@ lined(100,80,false,nil,-80+48,-1,true)
 -- percent, so the keys sit at -25+20.1=-4.9 and -381+44.8=-336.2. Each axis
 -- keeps its own step from there. Abilities sit above the shared center,
 -- consumables below, the nearest of each half a pitch (43) from it.
-assert(layout(params(100,0,5)))
+assert(layout(params('standard',0,5)))
 wheelsAt(1720,920)
 lined(100,80,true,-4.9,-336.2)
 local _,abilityNearest=offset('ability',3)
 local _,consumableNearest=offset('consumable',1)
 near(abilityNearest,-336.2-43);near(consumableNearest,-336.2+43)
 -- At -100% its right edge and bottom sit 8 px from the corner.
-assert(layout(params(100,-100,5)))
+assert(layout(params('standard',-100,5)))
 lined(100,80,true,1912-50-1820,1072-341-1000)
 -- With labels on the right, the keys center on the line instead: -60.
-assert(layout(params(100,0,5,nil,0,1)))
+assert(layout(params('standard',0,5,nil,nil,'right')))
 lined(100,80,true,-60,-381,1)
 -- The Single Sidebar has no Position; a saved one is ignored.
-local saved=params(100,0,5)
-saved.settings.SingleSidebarA=5
+local saved=params('standard',0,5)
+saved.settings.SingleSidebarA='middle_right'
 assert(layout(saved))
 wheelsAt(1720,920)
 lined(100,80,true,-4.9,-336.2)
--- Vertical Key Indicators also offer Above (2) and Below (3); the keys center
+-- Vertical Key Indicators also offer Above and Below; the keys center
 -- on the X line, and the bottom label, half a key off its key, stays on the Y
 -- line.
-assert(layout(params(100,0,5,nil,0,2)))
+assert(layout(params('standard',0,5,nil,nil,'above')))
 lined(100,80,true,-60,-341,-1,true)
-assert(layout(params(100,0,5,nil,0,3)))
+assert(layout(params('standard',0,5,nil,nil,'below')))
 lined(100,80,true,-60,-421,1,true)
 -- Double bars give each wheel its own full bar centered on the center, every
 -- slot in its own place even when empty, so a key and the one beside it in the
@@ -441,13 +447,13 @@ end
 -- Double Underbar: labels are 20 high, so consumables sit 80+2*6=92 above, and
 -- the labels between the rows hang from the line by their top edge:
 -- -80+92/2+20/2=-24.
-assert(layout(params(100,0,7,nil,nil,nil,true)))
+assert(layout(params('standard',0,7,nil,nil,nil,true)))
 wheelsAt(860,920)
 doubled(false,0,-24,92)
 assert(objects.change_prompt.opacity==0,'bars always hide the swap prompt')
 -- Focus dims the other wheel's keys, as in every bar.
 focusIs(1)
-barsById.DoubleUnderbar.events['controls.group.focus'](params(100,0,7,nil,nil,nil,true),
+barsById.DoubleUnderbar.events['controls.group.focus'](params('standard',0,7,nil,nil,nil,true),
     {name='controls.group.focus',group={from=1,to=2}},objects)
 focusIs(2)
 -- Focus swaps which label of a shared pair shows.
@@ -456,55 +462,61 @@ doubled(false,0,-24,92,2)
 -- moves above its key and both show, the unfocused one dimmed.
 local doubleGlobal={controls={group={from=2,to=1},
     global={[1]={false,true,false,false},[2]={false,false,false,false}}}}
-assert(layout(params(100,0,7,doubleGlobal,nil,nil,true)))
+assert(layout(params('standard',0,7,doubleGlobal,nil,nil,true)))
 doubled(false,0,-24,92,1,{[2]=true})
 near(objects.labels.abilityLabels[2].opacity,1)
 near(objects.labels.consumableLabels[2].opacity,dim)
 -- A Global key on consumable T parts the pair the same way; the Global label
 -- stays lit whatever the focus.
-barsById.DoubleUnderbar.events['controls.slots.global'](params(100,0,7,doubleGlobal,nil,nil,true),
+barsById.DoubleUnderbar.events['controls.slots.global'](params('standard',0,7,doubleGlobal,nil,nil,true),
     {name='controls.slots.global',global={[1]={false,false,false,false},[2]={false,true,false,false}}},objects)
 doubled(false,0,-24,92,1,{[2]=true})
 near(objects.labels.abilityLabels[2].opacity,1)
 near(objects.labels.consumableLabels[2].opacity,1)
 -- Without Global keys the pair shares one place again.
-barsById.DoubleUnderbar.events['controls.slots.global'](params(100,0,7,doubleGlobal,nil,nil,true),
+barsById.DoubleUnderbar.events['controls.slots.global'](params('standard',0,7,doubleGlobal,nil,nil,true),
     {name='controls.slots.global',global={}},objects)
 doubled(false,0,-24,92,1)
 -- Double Sidebar: labels are 30 wide, so consumables sit 100+2*7.5=115 further
 -- left; the labels between the columns center on the X line (-60+115/2=-2.5),
 -- and the bottom one on the Y line (-80-1.5*86=-209).
-assert(layout(params(100,0,5,nil,nil,nil,true)))
+assert(layout(params('standard',0,5,nil,nil,nil,true)))
 wheelsAt(1720,920)
 doubled(true,-2.5,-209,115)
 -- At -100% the column's outer edges sit 8 px from the corner: its right edge
 -- moves from 1820-2.5+50=1867.5 to 1912 and its bottom (1.5*86+40 below the
 -- ability wheel's center) from 960 to 1072.
-assert(layout(params(100,-100,5,nil,nil,nil,true)))
+assert(layout(params('standard',-100,5,nil,nil,nil,true)))
 doubled(true,-2.5+44.5,-209+112,115)
 -- Position Middle/Right (5) moves the box to the right edge's middle,
 -- (1080-160)/2=460, and centers the full column on it.
-assert(layout(params(100,0,5,nil,nil,nil,true,5)))
+assert(layout(params('standard',0,5,nil,nil,nil,true,'middle_right')))
 wheelsAt(1720,460)
 doubled(true,-2.5,0,115)
--- Double Underbar at Bottom/Right (6): the box sits in the corner, and the
+-- Double Underbar at Bottom/Right: the box sits in the corner, and the
 -- full row's right edge (1.5*107.5+50 right of its center) keeps as far from
 -- the right edge as its bottom (1000-24+40=1016) from the bottom, 64 px:
 -- 1920-64-1820-211.25=-175.25.
-assert(layout(params(100,0,7,nil,nil,nil,true,6)))
+assert(layout(params('standard',0,7,nil,nil,nil,true,'bottom_right')))
 wheelsAt(1720,920)
 doubled(false,-175.25,-24,92)
 -- An unknown saved Position falls back to the bar's default edge.
-assert(layout(params(100,0,7,nil,nil,nil,true,5)))
+assert(layout(params('standard',0,7,nil,nil,nil,true,'middle_right')))
 wheelsAt(860,920)
 doubled(false,0,-24,92)
+-- Choices are saved as keys: a numeric one, as saved before, lays out as the defaults.
+local numeric=params()
+numeric.settings.SingleUnderbarA,numeric.settings.SingleUnderbarK,numeric.settings.SingleUnderbarS=6,1,120
+assert(layout(numeric))
+wheelsAt(860,920)
+lined(100,80,false,nil,-14)
 -- Size scales each shown key in place, and the pitch with it.
-assert(layout(params(80)))
+assert(layout(params('smaller')))
 lined(80,64,false,nil,-80+32+8+16)
 for index,button in ipairs(objects.buttons.abilitySlots) do
     near(button.RenderTransform.Scale.X,along.ability[index] and 0.8 or 1)
 end
-assert(layout(params(120)))
+assert(layout(params('larger')))
 lined(120,96,false,nil,-80+48+12+16)
 -- The reference line's distances are 1080p pixels scaled to the screen: on a
 -- 3840x2160 screen they double. The wheels' box sits flush at 2160-160=2000;
@@ -531,7 +543,7 @@ function lastKey:SetRenderScale(value)
     if fail then fail=false;error('injected Bar key failure') end
     return setScale(self,value)
 end
-assert(not layout(params(110)))
+assert(not layout(params('large')))
 lastKey.SetRenderScale=setScale
 assert(active==manager and manager:detach(switcher))
 assert(objects.change_prompt.opacity==1,'detach must restore the native swap prompt')

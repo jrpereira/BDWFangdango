@@ -105,7 +105,7 @@ template=model.templates[1]
 local state={revision=0,controls={group={}}}
 local runtime=Runtime.new(host,model.categories,model.templates,state)
 local function select(margin)
-    runtime:select(category.id,{[template.id]={WheelsA=7,WheelsM=margin,WheelsR=1,WheelsS=100}})
+    runtime:select(category.id,{[template.id]={WheelsA='bottom_center',WheelsM=margin,WheelsR='side_by_side',WheelsS='standard'}})
 end
 runtime:start()
 assert(made==0,'unselected category must leave the native hierarchy intact')

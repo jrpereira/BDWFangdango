@@ -26,10 +26,11 @@ local template = {
     },
     menu = {
         {id='Wheels', label='Visual Options', fields={
-            {id='.A', label='Align to Screen Edge', values={[5]='Middle/Right', [6]='Bottom/Right', [7]='Bottom/Center',}, default=6},
-            {id='.R', label='Relative Placement', values=Helpers.PLACEMENTS, default=1},
+            {id='.A', label='Align to Screen Edge',
+                values=Helpers.edges({'middle_right','bottom_right','bottom_center'}), default='bottom_right'},
+            {id='.R', label='Relative Placement', values=Helpers.PLACEMENTS, default='side_by_side'},
 
-            {id='.S', label='Overall Size', values=Helpers.SIZES, default=100},
+            {id='.S', label='Overall Size', values=Helpers.SIZES, default='standard'},
             {id='.M', label='Margin to Screen Edge', values=Helpers.MARGINS, default=50},
         }},
     }
@@ -42,7 +43,7 @@ template.attach = function(objects, params, original)
     local settings=params.settings
     local positions,scale=Helpers.pair(settings,params.screen, abilityBox ,consumableBox)
     Helpers.log.debug('Wheels: align ',settings.WheelsA,', placement ',settings.WheelsR,
-        ', size ',settings.WheelsS,'%, margin ',settings.WheelsM,'%')
+        ', size ',settings.WheelsS,', margin ',settings.WheelsM,'%')
     local wheels={objects.wheels.abilities,objects.wheels.consumables}
     for w=1,2 do
         local position=positions[w]
@@ -51,7 +52,7 @@ template.attach = function(objects, params, original)
     end
     -- The native prompt describes swapping the switcher's active panel. It is
     -- meaningful only when both wheel layouts deliberately overlap.
-    Widget.setOpacity(objects.change_prompt,params.settings.WheelsR==0 and 1 or 0)
+    Widget.setOpacity(objects.change_prompt,params.settings.WheelsR=='overlap' and 1 or 0)
     -- A rebuild restores native opacity; apply the current focus.
     Helpers.onGroupFocus(params,{name='controls.group.focus',group=params.state.controls.group},objects)
     return original

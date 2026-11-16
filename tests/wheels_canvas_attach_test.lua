@@ -92,10 +92,12 @@ end
 -- ModCore Controls has reported abilities (group 1) as focused.
 local function attach(align,placement,to,margin,size)
     return template.attach(objects,
-        {settings={WheelsA=align,WheelsM=margin or 0,WheelsR=placement or 1,WheelsS=size or 100,focus={tint=tint}},
+        {settings={WheelsA=align,WheelsM=margin or 0,WheelsR=placement or 'side_by_side',WheelsS=size or 'standard',
+            focus={tint=tint}},
             screen={width=1920,height=1080,scale=1},
             state={controls={group={from=1,to=to or 1}}}},original)
 end
+local function near(a,b) assert(math.abs(a-b)<1e-6,tostring(a)..' ~= '..tostring(b)) end
 local function check(align,x,y,x2,y2,margin)
     assert(attach(align,nil,nil,margin)==original)
     assert(abilities.parent==actions and consumables.parent==actions)
@@ -109,15 +111,22 @@ local function check(align,x,y,x2,y2,margin)
         'attach must apply the initial focus')
 end
 -- The margin is 8+64*Margin/100 px: 0% is 8 px and 100% is 72 px.
-check(5,1712,380,1712,540) -- Middle/Right: vertical edge
-check(6,1712,752,1712,912) -- Bottom/Right: includes vertical edge
-check(7,760,912,960,912) -- Bottom/Center: horizontal edge
-check(6,1648,688,1648,848,100)
+check('middle_right',1712,380,1712,540) -- vertical edge
+check('bottom_right',1712,752,1712,912) -- includes vertical edge
+check('bottom_center',760,912,960,912) -- horizontal edge
+check('bottom_right',1648,688,1648,848,100)
+-- Choices are saved as keys: numeric ones, as saved before, lay out as the defaults
+-- (Bottom/Right, Side by Side, Standard).
+assert(attach(7,0,nil,0,120)==original)
+assert(abilitySlot.position.X==1712 and abilitySlot.position.Y==752
+    and consumableSlot.position.X==1712 and consumableSlot.position.Y==912)
+near(abilities.RenderTransform.Scale.X,1)
 -- The margin is in 1080p pixels, scaled to the screen: on a 3840x2160 screen at
 -- scale 1 the 100% margin is 144 px, and at scale 2 (1920x1080 units) 72.
 for _,case in ipairs({{3840,2160,1,144},{1920,1080,2,72}}) do
     local width,height,scale,margin=table.unpack(case)
-    template.attach(objects,{settings={WheelsA=6,WheelsM=100,WheelsR=1,WheelsS=100,focus={tint=tint}},
+    template.attach(objects,{settings={WheelsA='bottom_right',WheelsM=100,WheelsR='side_by_side',
+        WheelsS='standard',focus={tint=tint}},
         screen={width=width,height=height,scale=scale},
         state={controls={group={from=1,to=1}}}},original)
     assert(math.abs(abilitySlot.position.X-(width-200-margin))<1e-6
@@ -129,23 +138,22 @@ end
 -- Overlap shares one place. The group keeps the 8 px margin of 0%. A scaled
 -- wheel keeps its center pivot, so its drawn top-left is the slot position
 -- moved by half the size it lost.
-local function near(a,b) assert(math.abs(a-b)<1e-6,tostring(a)..' ~= '..tostring(b)) end
 local function drawn(slot,wheel,s)
     near(wheel.RenderTransform.Scale.X,s)
     return slot.position.X+100*(1-s),slot.position.Y+80*(1-s)
 end
-for _,size in ipairs({80,100,120}) do
-    local s=size/100
+for _,case in ipairs({{'smaller',0.8},{'standard',1},{'larger',1.2}}) do
+    local size,s=table.unpack(case)
     local W,H=200*s,160*s
-    for _,align in ipairs({5,6,7}) do
-        local right=align~=7
-        local offsets={[0]={0,0},[1]=right and {0,H} or {W,0},
-            [2]=right and {W,0} or {0,H},[3]={W/2,H/2}}
-        for placement=0,3 do
+    for _,align in ipairs({'middle_right','bottom_right','bottom_center'}) do
+        local right=align~='bottom_center'
+        local offsets={overlap={0,0},side_by_side=right and {0,H} or {W,0},
+            stacked=right and {W,0} or {0,H},perspective={W/2,H/2}}
+        for _,placement in ipairs({'overlap','side_by_side','stacked','perspective'}) do
             local dx,dy=table.unpack(offsets[placement])
             local w,h=dx+W,dy+H
             local x=right and 1920-w-8 or (1920-w)/2
-            local y=align==5 and (1080-h)/2 or 1080-h-8
+            local y=align=='middle_right' and (1080-h)/2 or 1080-h-8
             assert(attach(align,placement,nil,0,size)==original)
             local ax,ay=drawn(abilitySlot,abilities,s)
             local cx,cy=drawn(consumableSlot,consumables,s)
@@ -153,32 +161,32 @@ for _,size in ipairs({80,100,120}) do
         end
     end
 end
-attach(6,0)
+attach('bottom_right','overlap')
 assert(prompt.opacity==1,'overlap must retain the native swap prompt')
 assert(wheelAlpha(1)==1 and wheelAlpha(2)==1,'overlapping wheels keep the native look')
 local function focus(placement,global)
     template.events['controls.group.focus'](
-        {settings={WheelsA=6,WheelsM=20,WheelsR=placement,WheelsS=100,focus={tint=tint}},
+        {settings={WheelsA='bottom_right',WheelsM=20,WheelsR=placement,WheelsS='standard',focus={tint=tint}},
             screen={width=1920,height=1080,scale=1},state={controls={global=global}}},
         {name='controls.group.focus',group={from=1,to=2}},objects)
 end
-attach(6,1)
-focus(1)
+attach('bottom_right','side_by_side')
+focus('side_by_side')
 assert(wheelAlpha(1)==dim and wheelAlpha(2)==1,'the unfocused wheel\'s keys must dim')
 -- Keys with a ModCore Controls Global key fire whatever the focus.
-focus(1,{[1]={false,true,false,false},[2]={true,true,true,true}})
+focus('side_by_side',{[1]={false,true,false,false},[2]={true,true,true,true}})
 assert(wheelAlpha(1,{false,true})==dim and wheelAlpha(2)==1,'a Global key keeps its key undimmed')
-focus(1)
+focus('side_by_side')
 assert(wheelAlpha(1)==dim,'a key dims again once its Global key is gone')
 -- The Global keys event reapplies the current focus from the state.
 template.events['controls.slots.global'](
-    {settings={WheelsA=6,WheelsM=20,WheelsR=1,WheelsS=100,focus={tint=tint}},
+    {settings={WheelsA='bottom_right',WheelsM=20,WheelsR='side_by_side',WheelsS='standard',focus={tint=tint}},
         state={controls={group={from=2,to=1}}}},
     {name='controls.slots.global',global={[1]={false,false,false,false},[2]={false,false,true,false}}},objects)
 assert(wheelAlpha(1)==1 and wheelAlpha(2,{false,false,true})==dim,'the Global keys event must reapply focus')
-focus(0)
+focus('overlap')
 assert(wheelAlpha(1)==1 and wheelAlpha(2)==1,'overlapping wheels keep the native look')
-attach(6,1,2)
+attach('bottom_right','side_by_side',2)
 assert(wheelAlpha(1)==dim and wheelAlpha(2)==1,'attach must apply the current focus')
 local key=buttons.abilitySlots[1]
 assert(key.ColorAndOpacity.B>key.ColorAndOpacity.R,'the tint leans blue')
