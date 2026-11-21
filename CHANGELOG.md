@@ -10,7 +10,7 @@
   template at its current values, applied or not. Focus moves between the wheels every
   2 s, and once a loop a Global key shows on one consumable slot. On close the wheels
   return to the HUD with the applied layout. The preview needs a loaded game; from the
-  main menu it shows only the picture.
+  main menu it shows "Load a game to preview your Quickslots" over the picture.
 - The inactive wheel dims key by key: each of its keys takes the blue tint and its
   binding label fades to the tint's 50% opacity. The wheel itself is no longer tinted.
   A binding label a layout hides stays hidden.
