@@ -151,11 +151,6 @@ local function pairLabels(layout,params,group,global,objects,merged)
     end
 end
 
-local function globalOf(params,event)
-    local controls=params.state and params.state.controls
-    return event.global or controls and controls.global
-end
-
 -- Place every shown key of a layout, its rows layout.cross apart; a Single
 -- bar's labels go with their keys, and an empty key's label hides.
 local function placeKeys(layout,objects)
@@ -361,7 +356,7 @@ local function onAttach(id,vertical,double,indicators,objects,params,original,st
     log.debug(id,': margin ',margin,'%, step ',stepX,' x ',stepY)
     -- A Double bar's rows start in the gap for the current Global keys.
     local event={name='controls.group.focus',group=params.state.controls.group}
-    local global=globalOf(params,event)
+    local global=Helpers.globalOf(params,event)
     local layout={id=id,shown=shown,counts=counts,double=double,vertical=vertical,
         pitchX=pitchX,pitchY=pitchY,scale=scale,boxes=keyBoxes,dx={},dy={},
         labelX=labelX,labelY=labelY,toward=mergedCross/2,merge=settings[id..'J']~=0,
@@ -453,12 +448,11 @@ local function bar(id,label,vertical,double,indicators)
         events={
             ['controls.group.focus']=function(params,event,objects)
                 Helpers.onGroupFocus(params,event,objects)
-                refresh(store.layout,params,event.group,globalOf(params,event),objects)
+                refresh(store.layout,params,event.group,Helpers.globalOf(params,event),objects)
             end,
             ['controls.slots.global']=function(params,event,objects)
                 Helpers.onGlobalKeys(params,event,objects)
-                local controls=params.state and params.state.controls
-                refresh(store.layout,params,controls and controls.group,event.global,objects)
+                refresh(store.layout,params,params.state.controls.group,event.global,objects)
             end,
         },
         attach=function(objects,params,original)

@@ -85,6 +85,10 @@ local function globalKey(global,wheel,slot)
     return type(global)=='table' and type(global[wheel])=='table' and global[wheel][slot]==true
 end
 M.globalKey=globalKey
+-- The Global keys an event reports, else the latest ModCore Templates keeps.
+function M.globalOf(params,event)
+    return event.global or params.state.controls.global
+end
 
 -- controls.group.focus: tint each key of the wheel without focus with
 -- settings.focus.tint, and fade its binding label to the tint's opacity. A key
@@ -95,8 +99,7 @@ local UNTINTED={R=1,G=1,B=1,A=1}
 function M.onGroupFocus(params,event,objects)
     local focused=event.group and event.group.to
     if focused~=1 and focused~=2 then return end
-    local controls=params.state and params.state.controls
-    local global=event.global or controls and controls.global
+    local global=M.globalOf(params,event)
     -- Overlapping Wheels keep the native look.
     local overlap=params.settings.WheelsR=='overlap'
     local tint=params.settings.focus.tint
@@ -119,8 +122,7 @@ end
 -- controls.slots.global: ModCore Controls reports which slots have a Global key,
 -- on every attach and Apply, often unchanged; reapply the current focus with them.
 function M.onGlobalKeys(params,event,objects)
-    local controls=params.state and params.state.controls
-    M.onGroupFocus(params,{group=controls and controls.group,global=event.global},objects)
+    M.onGroupFocus(params,{group=params.state.controls.group,global=event.global},objects)
 end
 
 -- Every template's live preview on the module page: ModCore Templates lends it the
