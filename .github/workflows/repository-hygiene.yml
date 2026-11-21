@@ -1,6 +1,6 @@
 name: Repository hygiene
-# Runs through build.yml (and release.yml, which calls it) on every push and
-# pull request; its own push trigger would run it twice.
+# Runs through build.yml (which main's required check "repository-hygiene / repository-hygiene"
+# comes from) or by hand; its own push trigger only ran the same job twice.
 on:
   workflow_dispatch:
   workflow_call:
