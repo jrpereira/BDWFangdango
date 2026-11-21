@@ -181,7 +181,20 @@ for _,row in ipairs(page.rows) do
     if row.default~=nil then values[row.id]=row.default end
 end
 values[selector.id]=value
-assert(rows[selector.id].style=='title')
+-- The template picker, labelled Quickslots, heads the slot's rows and the module page's
+-- (ModCore Templates' slot pages); a bar's group, named after it, is unheaded there.
+local function menuField(menu,id)
+    for _,field in ipairs(menu.fields) do if field.id==id then return field end end
+end
+for _,shown in ipairs({page.menu,entry.menu}) do
+    local picker=assert(menuField(shown,selector.id))
+    assert(picker.style=='category' and picker.label=='Quickslots')
+    local barRow=assert(menuField(shown,menu.definitions['player.quickslots'][barValues.SingleUnderbar].settings.SingleUnderbarK))
+    for _,group in ipairs(shown.groups) do
+        if group.id==barRow.group then assert(group.label=='Single Underbar' and group.style=='none') end
+        if group.label=='Visual Options' then assert(group.style==nil,'Wheels keeps its own heading') end
+    end
+end
 local count=0
 for _ in pairs(definition.settings) do count=count+1 end
 assert(count==4)
