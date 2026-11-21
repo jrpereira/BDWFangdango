@@ -19,7 +19,8 @@ jobs:
         with:
           path: Fangdango
       # Test against the oldest ModCoreTemplates release mod.json accepts, not
-      # its main: '1.8.?+' packages as 1.8.0+, so the tag is v1.8.0.
+      # its main: 'X.Y.?+' packages as X.Y.0+, so the tag is vX.Y.0, and
+      # 'X.Y.Z+' gives vX.Y.Z.
       - name: Find the declared ModCoreTemplates minimum
         id: mct
         run: |
