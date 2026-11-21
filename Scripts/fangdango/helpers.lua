@@ -9,9 +9,8 @@ local Log=assert(loadfile(scripts..'/vendor/mc_log.lua'))()
 
 local M={}
 
--- Shared by every Fangdango template. The level comes from log_level.txt in the mod
--- folder; WARN without it.
-M.log=Log.new({name='Fangdango',path=root..'/log_level.txt'})
+-- Shared by every Fangdango template.
+M.log=Log.new({name='Fangdango'})
 local log=M.log
 
 -- Wheel decorations a layout hides, found by name in one walk of the wheel's widget tree:

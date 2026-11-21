@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Log levels no longer come from `log_level.txt`. With the UE4SS Lua Log Bridge installed they
+  are set on its Logs page or under `[Levels]` in its `config.ini`; without it, WARN and above.
+
 ## v1.2.1
 
 - Requires ModCore Settings 1.9.0, ModCore Templates 1.9.1, ModCore Controls 1.3.0 and

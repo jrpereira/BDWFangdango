@@ -43,7 +43,7 @@ Change your controls through ModCore Controls; let Fangdango handle the choreogr
 [*][b]The layout is hard to see:[/b] try [b]Standard[/b] size and the default margin.
 [*][b]Neither wheel dims:[/b] check that ModCore Controls is installed and enabled. Overlap placement does not dim either wheel, and keys with a Global key never dim.
 [*][b]Another mod changes the quickslot HUD:[/b] try disabling it to check for a conflict.
-[*][b]To see what the layout decided:[/b] put [font=Courier New]DEBUG[/font] in a [font=Courier New]log_level.txt[/font] file in the [font=Courier New]9_ModCore_Fangdango[/font] folder, restart the game and check [font=Courier New]UE4SS.log[/font].
+[*][b]To see what the layout decided:[/b] install the UE4SS Lua Log Bridge, set Fangdango to Debug on its Logs page and check [font=Courier New]UE4SS.log[/font].
 [/list]
 [b]Updating or removing[/b]
 
