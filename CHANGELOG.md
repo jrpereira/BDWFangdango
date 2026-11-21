@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Wheels Plenty's options show directly under the Quickslots picker, like the bars', without a "Visual Options" heading.
 - Log levels no longer come from `log_level.txt`. With the UE4SS Lua Log Bridge installed they
   are set on its Logs page or under `[Levels]` in its `config.ini`; without it, WARN and above.
 

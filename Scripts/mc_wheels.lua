@@ -26,7 +26,7 @@ local template = {
             properties={'opacity'}},
     },
     menu = {
-        {id='Wheels', label='Visual Options', fields={
+        {id='Wheels', label='Wheels Plenty', fields={
             {id='.A', label='Align to Screen Edge',
                 values=Helpers.edges({'middle_right','bottom_right','bottom_center'}), default='bottom_right',
                 description='The screen edge or corner the wheels sit at.'},
