@@ -401,11 +401,14 @@ lined(100,80,true,-60,-421,1,true)
 -- grouped key, so only the focused wheel's label shows, and a label without a
 -- pair shows dimmed with its wheel. Unmerged (side given), every shown label
 -- sits on that side of its own key, as in a Single bar, and shows, dimmed
--- unless its wheel has focus or lit[kind][index] marks a Global key.
+-- unless its wheel has focus or lit[kind][index] marks a Global key. Keys and
+-- labels take the size scale k, 1 unless given; the 4 px gap beside a key
+-- does not.
 local placed={ability={nil,-0.5,0.5,nil},consumable={-1.5,-0.5,0.5,1.5}}
-local sideOffset={above={0,-40},below={0,40},left={-54,0},right={54,0}}
-local function doubled(vertical,dx,dy,cross,focused,side,lit)
+local sideOffset={above={0,-40},below={0,40},left={-50,0},right={50,0}}
+local function doubled(vertical,dx,dy,cross,focused,side,lit,k)
     focused=focused or 1
+    k=k or 1
     for w,kind in ipairs({'ability','consumable'}) do
         for index=1,4 do
             local toward=kind=='ability' and -cross/2 or cross/2
@@ -414,8 +417,8 @@ local function doubled(vertical,dx,dy,cross,focused,side,lit)
             local a=placed[kind][index]
             if a then
                 local x,y=offset(kind,index)
-                local ex,ey=a*100*1.075,0
-                if vertical then ex,ey=0,a*80*1.075 end
+                local ex,ey=a*100*k*1.075,0
+                if vertical then ex,ey=0,a*80*k*1.075 end
                 ex,ey=ex+dx,ey+dy
                 if kind=='consumable' then
                     if vertical then ex=ex-cross else ey=ey-cross end
@@ -424,7 +427,9 @@ local function doubled(vertical,dx,dy,cross,focused,side,lit)
                 local lx,ly=centerOf(label)
                 local on=w==focused or (lit and lit[kind] and lit[kind][index])
                 if side then
-                    near(lx,ex+sideOffset[side][1]);near(ly,ey+sideOffset[side][2])
+                    local ox,oy=sideOffset[side][1]*k,sideOffset[side][2]*k
+                    if ox~=0 then ox=ox+(ox<0 and -4 or 4) end
+                    near(lx,ex+ox);near(ly,ey+oy)
                     near(label.opacity,on and 1 or dim)
                 else
                     if vertical then near(lx,ex+toward);near(ly,ey) else near(lx,ex);near(ly,ey+toward) end
@@ -659,6 +664,22 @@ for _,kind in ipairs({'ability','consumable'}) do
         if label.desired.X>0 then label.desired={X=30,Y=20} end
     end
 end
+-- Size scales a Double bar's keys and labels, and its gaps with them. At
+-- Larger (1.2) the Underbar's rows sit 1.2*92=110.4 apart merged and
+-- 1.2*96=115.2 unmerged Above, and its line moves to -80+110.4/2+24/2=-12.8.
+-- The Sidebar's columns sit 1.2*115=138 apart merged; unmerged Left, the 4 px
+-- gap stays unscaled: 120+4+18+9=151. Its lines move to -60+138/2=9 across
+-- and -80-1.5*1.2*86=-234.8 along.
+assert(layout(params('larger',0,7,nil,nil,nil,true)))
+doubled(false,0,-12.8,110.4,1,nil,nil,1.2)
+assert(layout(params('larger',0,7,nil,'above',nil,true,nil,0)))
+doubled(false,0,-12.8,115.2,1,'above',nil,1.2)
+clear()
+assert(layout(params('larger',0,5,nil,nil,nil,true)))
+doubled(true,9,-234.8,138,1,nil,nil,1.2)
+assert(layout(params('larger',0,5,nil,nil,'left',true,nil,0)))
+doubled(true,9,-234.8,151,1,'left',nil,1.2)
+clear()
 -- Attaching with a Global key already assigned starts in the wide gap.
 assert(layout(doubleUnder({controls={group={from=2,to=1},global=consumableTGlobal}})))
 doubled(false,0,-24,96,1,'above',{consumable={false,true,false,false}})
