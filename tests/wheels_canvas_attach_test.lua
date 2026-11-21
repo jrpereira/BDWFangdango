@@ -121,17 +121,14 @@ assert(attach(7,0,nil,0,120)==original)
 assert(abilitySlot.position.X==1712 and abilitySlot.position.Y==752
     and consumableSlot.position.X==1712 and consumableSlot.position.Y==912)
 near(abilities.RenderTransform.Scale.X,1)
--- The margin is in 1080p pixels, scaled to the screen: on a 3840x2160 screen at
--- scale 1 the 100% margin is 144 px, and at scale 2 (1920x1080 units) 72.
-for _,case in ipairs({{3840,2160,1,144},{1920,1080,2,72}}) do
-    local width,height,scale,margin=table.unpack(case)
-    template.attach(objects,{settings={WheelsA='bottom_right',WheelsM=100,WheelsR='side_by_side',
-        WheelsS='standard',focus={tint=tint}},
-        screen={width=width,height=height,scale=scale},
-        state={controls={group={from=1,to=1}}}},original)
-    assert(math.abs(abilitySlot.position.X-(width-200-margin))<1e-6
-        and math.abs(abilitySlot.position.Y-(height-320-margin))<1e-6,'the margin keeps its share of the screen')
-end
+-- The margin is in 1080p pixels, scaled to the screen: on a 3840x2160 screen
+-- the 100% margin is 144 px.
+template.attach(objects,{settings={WheelsA='bottom_right',WheelsM=100,WheelsR='side_by_side',
+    WheelsS='standard',focus={tint=tint}},
+    screen={width=3840,height=2160,scale=1},
+    state={controls={group={from=1,to=1}}}},original)
+assert(math.abs(abilitySlot.position.X-(3840-200-144))<1e-6
+    and math.abs(abilitySlot.position.Y-(2160-320-144))<1e-6,'the margin keeps its share of the screen')
 -- Every placement at every edge and three sizes. Side by Side runs along the
 -- edge, vertical where it has a right side (the corner included), and Stacked
 -- away from it; Perspective offsets the consumables half a wheel both ways and

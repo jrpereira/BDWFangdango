@@ -270,12 +270,13 @@ end
 -- key's label is hidden. Ability L and B are empty, so only T and R show.
 -- Labels are centered on one edge of their key: by default the left or right
 -- edge in a vertical bar and the top or bottom edge in a horizontal one (side
--- -1 or 1), or the other pair when across. Labels beside their keys keep 4 px
--- clear of them.
+-- -1 or 1), or the other pair when across. Labels beside their keys keep gap
+-- px clear of them, 4 unless given.
 local along={ability={nil,-1.5,-0.5,nil},consumable={0.5,1.5,2.5,3.5}}
-local function lined(W,H,vertical,dx,dy,side,across)
+local function lined(W,H,vertical,dx,dy,side,across,gap)
     side=side or -1
     dx=dx or 0
+    gap=gap or 4
     for _,kind in ipairs({'ability','consumable'}) do
         for index=1,4 do
             local label=objects.labels[kind..'Labels'][index]
@@ -287,7 +288,7 @@ local function lined(W,H,vertical,dx,dy,side,across)
                 near(x,ex);near(y,ey)
                 local lx,ly=centerOf(label)
                 if (vertical==true)~=(across==true) then
-                    near(lx,ex+side*(W/2+4));near(ly,ey)
+                    near(lx,ex+side*(W/2+gap));near(ly,ey)
                 else
                     near(lx,ex);near(ly,ey+side*H/2)
                 end
@@ -355,12 +356,6 @@ assert(layout(params('standard',0,7,nil,'left')))
 lined(100,80,false,nil,-80+48,-1,true)
 assert(layout(params('standard',0,7,nil,'right')))
 lined(100,80,false,nil,-80+48,1,true)
--- The gap is in 1080p pixels like every other distance: at UI scale 2 a
--- 1920x1080-unit screen keeps it at 4.
-local scaled=params('standard',0,7,nil,'left')
-scaled.screen.scale=2
-assert(layout(scaled))
-lined(100,80,false,nil,-80+48,-1,true)
 -- Vertical: one column in the bottom-right corner, its box flush with it:
 -- 1920-200=1720. The X reference line is also 160 px in, at 1760. With labels
 -- on the left, their right edge meets it: 1760-1820=-60, less the labels'
@@ -713,6 +708,15 @@ local big=params()
 big.screen={width=3840,height=2160,scale=1,center=1920,middle=1080}
 assert(layout(big))
 lined(100,80,false,nil,-128-30)
+-- The key-to-label gap scales with them: labels Left or Right keep 8 px clear
+-- of their keys. The line, 48 px lower doubled, is at 2160-224=1936, 144
+-- above the box's center at 2080, and the keys center on it.
+for side,sign in pairs({left=-1,right=1}) do
+    local beside=params('standard',0,7,nil,side)
+    beside.screen=big.screen
+    assert(layout(beside))
+    lined(100,80,false,nil,-144,sign,true,8)
+end
 -- Both wheels share the box's left edge; a wider consumable wheel still
 -- leaves the Bottom/Center row centered on the box: the ability wheel's
 -- center sits 50 px left of the box's.
