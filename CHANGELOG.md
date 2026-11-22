@@ -30,19 +30,16 @@
   facing the other row or column, the far one moves out to leave them room; the one
   nearest the screen edge stays in place.
 - Every Wheels and Bars setting has a description in the menu.
-- Pickers now save their choice by name (Align to Screen Edge, Relative Placement,
-  Overall Size, Position, Key Indicators and Size), so adding or reordering choices
-  never moves a saved one. Choices saved before for these pickers reset to their
-  defaults once.
+- Choices in Align to Screen Edge, Relative Placement, Overall Size, Position, Key
+  Indicators and Size stay as you saved them when later versions add choices. Choices
+  saved before this version for these pickers reset to their defaults once.
 
 ## v1.0.11
 
 - The inactive wheel now also takes a blue tint as it fades to 50% opacity, so it
   reads as inactive over any background. ModCore Templates restores the wheel's
   colour when the layout is removed.
-- Requires ModCore Settings 1.6.0 or later and ModCore Templates 1.7.0 or later, which
-  provides the colour property and moves the wheels without leaving placeholders in the
-  game's quickslot switcher.
+- Requires ModCore Settings 1.6.0 or later and ModCore Templates 1.7.0 or later.
 
 ## v1.0.10
 
@@ -51,15 +48,14 @@
 
 ## v1.0.9
 
-- Requires ModCore Settings 1.4.0 or later and ModCore Templates 1.5.0 or later, for `uniqueBy`.
-- Wheels and every bar set `uniqueBy='category'`, which replaces ModCore Templates'
-  category `single`, so only one of them is active at a time as before. No change to
-  bars, wheels or settings.
+- Requires ModCore Settings 1.4.0 or later and ModCore Templates 1.5.0 or later.
+  Only one of Wheels and the bars is active at a time, as before. No change to bars,
+  wheels or settings.
 
 ## v1.0.8
 
-- Requires UE4SSLuaEventBridge 1.2.0 or later. Requirements follow minor versions
-  now, so ModCore Settings 1.3.0 and ModCore Templates 1.4.0 or later are enough. No change to bars, wheels or settings.
+- Requires UE4SS Lua Event Bridge 1.2.0 or later, ModCore Settings 1.3.0 or later and
+  ModCore Templates 1.4.0 or later. No change to bars, wheels or settings.
 
 ## v1.0.7
 
@@ -67,53 +63,45 @@
 
 ## v1.0.6
 
-- Requires ModCore Templates 1.4.0 or later and UE4SSLuaEventBridge 1.1.0 or later.
+- Requires ModCore Templates 1.4.0 or later and UE4SS Lua Event Bridge 1.1.0 or later.
   No change to bars, wheels or settings.
 
 ## v1.0.5
 
-- Requires ModCore Settings 1.3.0 or later, which reads the `conditions` rules in its
-  menu data. No change to bars, wheels or settings.
+- Requires ModCore Settings 1.3.0 or later. No change to bars, wheels or settings.
 
 ## v1.0.4
 
-- Fixed distances in the bars and wheels, including Margin to Screen Edge, are measured
-  in pixels of a 1080-high screen and scaled to the screen's own units, so the layout
-  keeps its place at any resolution and UI scale.
+- The bars and wheels, including Margin to Screen Edge, keep their place at any
+  resolution and UI scale.
 - `SETTINGS.md` lists every setting, its options and the `config.ini` key it is saved
   under; it installs beside the README, with a `MOD_SETTINGS.txt` that points to it.
 
 ## v1.0.3
 
-- Requires ModCore Settings 1.2.0 or later, which ModCore Templates 1.2.0 needs for
-  its Templates tab. ModCore Templates 1.1.0 or later still works.
-- No change to bars, wheels or settings; the release follows ModCore's category
-  ids and heading rows in its checks.
+- Requires ModCore Settings 1.2.0 or later. ModCore Templates 1.1.0 or later still works.
+- No change to bars, wheels or settings.
 
 ## v1.0.2
 
 - Bars line up with the game's own HUD. Margin to Screen Edge in the bars now runs
-  from -100% to 100% in 5% steps: at 0% (default) a bar sits on the native HUD's
-  lines, -100% brings its keys and indicators to 8 pixels from the screen edge, and
-  100% moves it as far again the other way. An Underbar at Bottom/Right keeps as far
+  from -100% to 100% in 5% steps: at 0% (default) a bar lines up with the game's own
+  HUD, -100% brings its keys and indicators to the screen edge, and 100% moves it as
+  far again the other way. An Underbar at Bottom/Right keeps as far
   from the right edge as from the bottom. Wheels keep their 0% to 100% margin.
 - Underbars choose a Position of Bottom/Center or Bottom/Right. Double bars sit
-  closer to their shared key indicators, and indicators beside a key keep 4 pixels
-  clear of it.
+  closer to their shared key indicators, and indicators beside a key keep clear of it.
 - The mod is listed in the ModCore collection with its own icon and categories.
-- Fix a possible crash after loading a save: hidden wheel decorations are restored
-  through weak handles instead of objects the game may already have freed.
+- Fix a possible crash after loading a save.
 - Requires ModCore Templates 1.1.0 or later and UE4SS Lua Event Bridge 1.0.12 or
   later.
-- Log through the shared ModCore leveled logger, quiet below warnings by default.
-  Put `DEBUG` or `TRACE` in a `log_level.txt` in the mod folder to see layout
-  details in the UE4SS log.
+- The UE4SS log shows only warnings and errors by default. Put `DEBUG` or `TRACE` in
+  a `log_level.txt` in the mod folder to see layout details.
 
 ## v1.0.1
 
 - Rename the mod from Action Fandango to Quickslot Fangdango. The installed
-  folder is now `9_ModCore_Fangdango` and the source moves to
-  [BDWFangdango](https://github.com/jrpereira/BDWFangdango). Remove the old
+  folder is now `9_ModCore_Fangdango`. Remove the old
   `ActionFandango` folder when updating.
 - Rework **Wheels**. The Swap and Distant styles and their X, Y, Size and
   Opacity settings are replaced by:
@@ -136,19 +124,16 @@
   - Each wheel's keys run Left, Top, Right, Bottom.
 - Size in Wheels and the bars is a picker: Smaller (80%), Small (90%), Standard
   (100%, default), Large (110%) or Larger (120%).
-- Margin to Screen Edge in Wheels and the bars runs from 0% to 100%, placing the
-  layout 8 + 64 × Margin/100 pixels from the edge: 8 at 0%, 40 at 50%
-  (default) and 72 at 100%.
+- Margin to Screen Edge in Wheels and the bars runs from 0% (closest to the edge) to
+  100%, with 50% as the default.
 - Dim the wheel without focus to 70% in Wheels (except Overlap) and the bars,
-  following ModCore Controls' focus through ModCoreTemplates. The Default wheel
+  following ModCore Controls' focus. The Default wheel
   set in ModCore Controls has focus at the start; without ModCore Controls
   nothing dims.
-- The wheels are placed directly in the ModCoreTemplates canvas, and selecting
-  another template restores the game's own layout.
+- Selecting another template restores the game's own layout.
 - Template names drop the module suffix (Wheels, Single Underbar, ...); ModCore
   Templates shows the module on the picker's second line.
-- Register each template individually through `mc.registerTemplate`.
-- Dawnwalker Mod Menu is no longer a direct requirement; ModCoreSettings brings
+- Dawnwalker Mod Menu is no longer a direct requirement; ModCore Settings brings
   it in.
 
 ## v0.2.1 — Wheels update
@@ -158,6 +143,5 @@
 - Add **Distant**, which shows abilities and consumables together.
 - Adjust position, size, and opacity together in Swap or separately in Distant.
 - Keep each style's appearance settings when switching between them.
-
-- Add a combined player guide and project metadata.
+- Add a player guide.
 
