@@ -10,24 +10,26 @@ Fangdango arranges your four ability slots and four consumable slots in
 **The Blood of Dawnwalker**. Together with **ModCore Controls**, which changes their
 bindings and keeps the key indicators current, it highlights the active wheel.
 
+## Features
+
 - **Wheels:** choose Side by Side, Stacked, Overlap or Perspective placement,
   anchored at Middle/Right, Bottom/Right or Bottom/Center. Side by Side runs
   along the screen edge and Stacked away from it.
 - **Bars:** Underbar, a horizontal bar at the bottom center, or Sidebar, a
   vertical bar at the bottom right. A Single bar lines up both wheels in one
-  row or column and omits empty slots. A Double bar gives each wheel its own
-  row or column. Every bar puts key indicators on the side of the keys you
-  choose. A Double bar can instead merge them into one key indicator per slot
-  between its rows or columns, while no quickslot has a ModCore Controls Global
-  key.
-  Underbars can also sit at the bottom right,
-  and a Double Sidebar at the middle of the right edge.
-- Choose from five sizes, from Smaller to Larger, and adjust the screen margin.
-  At 0% a bar lines up with the game's own HUD.
-- The inactive wheel's keys dim with a blue tint and their binding labels fade,
-  except in Overlap placement. Keys with a ModCore Controls Global key stay lit.
-- The Quickslot Fangdango page previews your layout live on the game's own wheels
-  as you change it, before you apply it.
+  row or column and omits empty slots; a Double bar gives each wheel its own.
+  Underbars can also sit at the bottom right, and a Double Sidebar at the
+  middle of the right edge.
+- **Key indicators:** put them on any side of a bar's keys. A Double bar can
+  merge them into one key indicator per slot between its rows or columns,
+  while no quickslot has a ModCore Controls Global key.
+- **Size and margin:** five sizes, from Smaller to Larger, and an adjustable
+  distance from the screen edge. At 0% a bar lines up with the game's own HUD.
+- **Active wheel:** the inactive wheel's keys dim with a blue tint and their
+  binding labels fade, except in Overlap placement. Keys with a ModCore
+  Controls Global key stay lit, since they work whichever wheel has focus.
+- **Live preview:** the Quickslot Fangdango page shows your layout on the
+  game's own wheels as you change it, before you apply it.
 
 ## Requirements
 
@@ -51,8 +53,8 @@ Install all of these:
    the game's `ue4ss/Mods` folder. Avoid an extra nested
    `9_ModCore_Fangdango/9_ModCore_Fangdango` folder. Enable the mods in your
    UE4SS setup or mod manager and restart the game.
-3. Open **Mod Settings › Controls › Visuals** or the **Quickslot Fangdango**
-   page. In the **Quickslots** picker, choose
+3. Open the **Controls** tab of the ModCore Settings page, or the **Quickslot
+   Fangdango** page. In the **Quickslots** picker, choose
    **Wheels Plenty**, a **Single** or **Double Underbar**, or a **Single** or
    **Double Sidebar**, adjust to taste and select **Apply**.
 
@@ -72,7 +74,8 @@ for bars. A larger margin moves the layout farther from the screen edge; a bar's
 - If the layout is hard to see, try **Standard** size and the default margin.
 - If another mod rearranges the quickslot HUD, try disabling it to check for a conflict.
 - To see what the layout decided, install the UE4SS Lua Log Bridge, set Fangdango to
-  Debug on its Logs page and check `UE4SS.log`.
+  Debug in the Logs section of the ModCore Settings page's **Extensions** tab and
+  check `UE4SS.log`.
 
 ## Updating or removing
 

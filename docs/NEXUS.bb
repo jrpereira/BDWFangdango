@@ -14,9 +14,10 @@ Arrange your ability and consumable slots as wheels or bars, with sizes and scre
 [*][b]Bars:[/b] line up your slots horizontally at the bottom center (Underbar) or vertically at the bottom right (Sidebar). Single bars put both wheels in one row or column and omit empty slots; Double bars give each wheel its own. Underbars can also sit at the bottom right, and a Double Sidebar at the middle of the right edge.
 [*][b]Key indicators:[/b] put them on any side of a bar's keys. A Double bar can merge them into one per slot, between its two rows or columns, while no quickslot has a ModCore Controls Global key.
 [*][b]Size and margin:[/b] choose from five sizes, from Smaller to Larger, and adjust the distance from the screen edge. At 0% a bar lines up with the game's own HUD.
+[*][b]Active wheel:[/b] the inactive wheel's keys dim with a blue tint and their binding labels fade, except in Overlap placement. Keys with a ModCore Controls Global key stay lit, since they work whichever wheel has focus.
 [*][b]Live preview:[/b] the Quickslot Fangdango page shows your layout on the game's own wheels as you change it, before you apply it.
 [/list]
-Change your bindings and keep the key indicators current with [b]ModCore Controls[/b]. The inactive wheel's keys dim with a blue tint and their binding labels fade to show which wheel has focus, except when you choose Overlap placement. Keys with a ModCore Controls Global key stay lit, since they work whichever wheel has focus.
+Change your bindings and keep the key indicators current with [b]ModCore Controls[/b], which also tells Fangdango which wheel has focus.
 
 [b]Requirements[/b]
 
@@ -35,7 +36,7 @@ Install these before Fangdango:
 [*]Close the game and install the requirements using their instructions. UE4SS itself does not install inside the Mods folder.
 [*]Extract this download so [font=Courier New]9_ModCore_Fangdango[/font] sits directly inside the game's [font=Courier New]ue4ss/Mods[/font] folder. Avoid an extra nested [font=Courier New]9_ModCore_Fangdango/9_ModCore_Fangdango[/font] folder.
 [*]Enable the mods in your UE4SS setup or mod manager, then restart the game.
-[*]Open [b]Mod Settings → Controls → Visuals[/b] or the [b]Quickslot Fangdango[/b] page. In [b]Quickslots[/b], choose [b]Wheels Plenty[/b], a [b]Single[/b] or [b]Double Underbar[/b], or a [b]Single[/b] or [b]Double Sidebar[/b], then select [b]Apply[/b].
+[*]Open the [b]Controls[/b] tab of the ModCore Settings page, or the [b]Quickslot Fangdango[/b] page. In [b]Quickslots[/b], choose [b]Wheels Plenty[/b], a [b]Single[/b] or [b]Double Underbar[/b], or a [b]Single[/b] or [b]Double Sidebar[/b], then select [b]Apply[/b].
 [/list]
 Start with [b]Standard[/b] size and the default margin ([b]50%[/b] for Wheels, [b]0%[/b] for bars), then adjust to taste. Increasing the margin moves the layout farther from the screen edge; a bar's -100% brings it to the edge.
 
@@ -47,7 +48,7 @@ Change your controls through ModCore Controls; let Fangdango handle the choreogr
 [*][b]The layout is hard to see:[/b] try [b]Standard[/b] size and the default margin.
 [*][b]Neither wheel dims:[/b] check that ModCore Controls is installed and enabled. Overlap placement does not dim either wheel, and keys with a Global key never dim.
 [*][b]Another mod changes the quickslot HUD:[/b] try disabling it to check for a conflict.
-[*][b]To see what the layout decided:[/b] install the UE4SS Lua Log Bridge, set Fangdango to Debug on its Logs page and check [font=Courier New]UE4SS.log[/font].
+[*][b]To see what the layout decided:[/b] install the UE4SS Lua Log Bridge, set Fangdango to Debug in the Logs section of the ModCore Settings page's [b]Extensions[/b] tab and check [font=Courier New]UE4SS.log[/font].
 [/list]
 [b]Updating or removing[/b]
 
