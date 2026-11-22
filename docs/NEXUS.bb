@@ -1,5 +1,9 @@
 [size=5][b]Quickslot Fangdango[/b][/size]
 
+[center][b]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/b]
+[size=4][b]Tested for The Blood of Dawnwalker 1.2[/b][/size]
+[b]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/b][/center]
+
 [i]Control your Actions. Make them dance.[/i]
 
 Arrange your ability and consumable slots as wheels or bars, with sizes and screen margins to suit your setup. Combat has enough surprises without your HUD joining in.
