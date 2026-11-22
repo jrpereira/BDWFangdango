@@ -10,7 +10,7 @@ Change these settings in the mod menu and press Apply. Each template below names
 
 Position and size both quickslot wheels on the screen.
 
-- **Category:** Player Quickslots. The settings appear in the Controls page's Visuals section, and on this module's page.
+- **Category:** Player Quickslots. The settings appear on the Controls tab of the ModCore Settings page, and on this module's page.
 - **Turn on:** choose Wheels Plenty in the Player Quickslots template picker (`[Templates] PlayerQuickslots=Fangdango_Wheels`). Only one template of this category is active at a time.
 - **Saved in:** `3_ModCore_Templates/Scripts/cache/config.ini`, section `[Fangdango.Wheels]`.
 
@@ -25,7 +25,7 @@ Position and size both quickslot wheels on the screen.
 
 Arrange quickslot keys in one row.
 
-- **Category:** Player Quickslots. The settings appear in the Controls page's Visuals section, and on this module's page.
+- **Category:** Player Quickslots. The settings appear on the Controls tab of the ModCore Settings page, and on this module's page.
 - **Turn on:** choose Single Underbar in the Player Quickslots template picker (`[Templates] PlayerQuickslots=Fangdango_SingleUnderbar`). Only one template of this category is active at a time.
 - **Saved in:** `3_ModCore_Templates/Scripts/cache/config.ini`, section `[Fangdango.SingleUnderbar]`.
 
@@ -40,7 +40,7 @@ Arrange quickslot keys in one row.
 
 Arrange quickslot keys in two rows.
 
-- **Category:** Player Quickslots. The settings appear in the Controls page's Visuals section, and on this module's page.
+- **Category:** Player Quickslots. The settings appear on the Controls tab of the ModCore Settings page, and on this module's page.
 - **Turn on:** choose Double Underbar in the Player Quickslots template picker (`[Templates] PlayerQuickslots=Fangdango_DoubleUnderbar`). Only one template of this category is active at a time.
 - **Saved in:** `3_ModCore_Templates/Scripts/cache/config.ini`, section `[Fangdango.DoubleUnderbar]`.
 
@@ -56,7 +56,7 @@ Arrange quickslot keys in two rows.
 
 Arrange quickslot keys in one column.
 
-- **Category:** Player Quickslots. The settings appear in the Controls page's Visuals section, and on this module's page.
+- **Category:** Player Quickslots. The settings appear on the Controls tab of the ModCore Settings page, and on this module's page.
 - **Turn on:** choose Single Sidebar in the Player Quickslots template picker (`[Templates] PlayerQuickslots=Fangdango_SingleSidebar`). Only one template of this category is active at a time.
 - **Saved in:** `3_ModCore_Templates/Scripts/cache/config.ini`, section `[Fangdango.SingleSidebar]`.
 
@@ -70,7 +70,7 @@ Arrange quickslot keys in one column.
 
 Arrange quickslot keys in two columns.
 
-- **Category:** Player Quickslots. The settings appear in the Controls page's Visuals section, and on this module's page.
+- **Category:** Player Quickslots. The settings appear on the Controls tab of the ModCore Settings page, and on this module's page.
 - **Turn on:** choose Double Sidebar in the Player Quickslots template picker (`[Templates] PlayerQuickslots=Fangdango_DoubleSidebar`). Only one template of this category is active at a time.
 - **Saved in:** `3_ModCore_Templates/Scripts/cache/config.ini`, section `[Fangdango.DoubleSidebar]`.
 
