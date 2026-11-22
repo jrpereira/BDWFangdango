@@ -25,10 +25,10 @@ Install these before Fangdango:
 [list]
 [*][b]UE4SS compatible with your game version.[/b] See the loader links in the [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu requirements[/url].
 [*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/271]Dawnwalker Mod Menu[/url].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.9.0 or later[/b].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.9.1 or later[/b].
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Event Bridge[/url], [b]1.3.0 or later[/b], which ModCore Templates also requires.
-[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url], [b]1.3.0 or later[/b], for rebinding, updated key indicators and active-wheel dimming.
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/590]ModCore Settings[/url], [b]1.10.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/641]ModCore Templates[/url], [b]1.10.0 or later[/b].
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Extensions[/url], [b]1.4.0 or later[/b], which ModCore Templates also requires.
+[*][url=https://www.nexusmods.com/thebloodofdawnwalker/mods/640]ModCore Controls[/url], [b]1.4.0 or later[/b], for rebinding, updated key indicators and active-wheel dimming.
 [/list]
 
 [b]Install and dance[/b]
@@ -48,7 +48,7 @@ Change your controls through ModCore Controls; let Fangdango handle the choreogr
 [*][b]The layout is hard to see:[/b] try [b]Standard[/b] size and the default margin.
 [*][b]Neither wheel dims:[/b] check that ModCore Controls is installed and enabled. Overlap placement does not dim either wheel, and keys with a Global key never dim.
 [*][b]Another mod changes the quickslot HUD:[/b] try disabling it to check for a conflict.
-[*][b]To see what the layout decided:[/b] install the UE4SS Lua Log Bridge, set Fangdango to Debug in the Logs section of the ModCore Settings page's [b]Extensions[/b] tab and check [font=Courier New]UE4SS.log[/font].
+[*][b]To see what the layout decided:[/b] install [url=https://www.nexusmods.com/thebloodofdawnwalker/mods/526]UE4SS Lua Extensions[/url], set Fangdango to Debug in the Logs section of the ModCore Settings page's [b]Extensions[/b] tab and check [font=Courier New]UE4SS.log[/font].
 [/list]
 [b]Updating or removing[/b]
 

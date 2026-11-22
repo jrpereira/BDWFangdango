@@ -2,10 +2,13 @@
 
 ## v1.3.0
 
+- Requires UE4SS Lua Extensions 1.4.0, ModCore Settings 1.10.0, ModCore Templates 1.10.0
+  and ModCore Controls 1.4.0 or newer. UE4SS Lua Extensions replaces the separate
+  UE4SS Lua Event Bridge requirement.
 - Wheels Plenty's options show directly under the Quickslots picker, like the bars',
   without a "Visual Options" heading.
-- Log levels are set with the UE4SS Lua Log Bridge: in the Logs section of the
-  ModCore Settings page's Extensions tab, or under `[Levels]` in its `config.ini`.
+- Log levels are set with the Log Bridge in UE4SS Lua Extensions: in the Logs section
+  of the Extensions tab of the ModCore Settings page, or under `[Levels]` in its `config.ini`.
   Without it, Fangdango logs WARN and above. `log_level.txt` is no longer read.
 
 ## v1.2.1
